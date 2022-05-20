@@ -1,28 +1,19 @@
 using Test
 
-module mutil001
+module mprob001
 using Test
 using LinearAlgebra
-using Sparspak.SpkUtilities
+using SparseArrays
+using Sparspak.SpkProblem
 
 function _test()
-    extend = SpkUtilities.extend
-    a = [ 9.91099e-01
-    8.26992e-01
-    4.78277e-02
-    7.21746e-01
-    2.77298e-01
-    8.00130e-01
-    8.07221e-01]
-    b = deepcopy(a)
-    a = extend(a, 3)
-    @test norm(a - b[1:3]) / norm(a) < 1.0e-9
-    a = extend(a, 5, -1.0)
-    c = vcat(b[1:3], [-1.0, -1.0])
-    @test norm(a - c) / norm(a) < 1.0e-9
-    a = deepcopy(b)
-    a = extend(a, 5, -1.0)
-    @test norm(a - b[1:5]) / norm(a) < 1.0e-9
+    M, N = 5, 5
+    p = SpkProblem.Problem(M, N)
+    spm = sprand(M, N, 0.2)
+    spm = spm + spm'
+    SpkProblem.insparse(p, spm)
+    A = SpkProblem.outsparse(p)
+    @test spm - A == sparse(Int64[], Int64[], Float64[], 5, 5)
     return true
 end
 
@@ -30,7 +21,7 @@ _test()
 end # module
 
 
-module mutil002
+module mprob002
 using Test
 using LinearAlgebra
 using Sparspak.SpkUtilities
