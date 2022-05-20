@@ -2,3 +2,9 @@ name = "Sparspak"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
 version = "0.1.0"
+
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
