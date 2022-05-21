@@ -5,7 +5,7 @@ nV - the number of vertices in the graph.
 
 The adjacency lists of the graph are stored in consecutive locations
 in the array adj. The adjacency list for the i - th vertex in the graph
-is stored in positions adj(k), k = xadj(i), .... xadj(i + 1) - 1.0
+is stored in positions adj(k), k = xadj(i), .... xadj(i + 1) - 1.
 #
 When the graph is symmetric, if vertex i is in vertex j"s adjacency
  vertex j is in vertex i"s list. Using the representation above

@@ -1,11 +1,11 @@
 using Test
 
-module mgrap001
+module msprs001
 using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkProblem
-using Sparspak.SpkGraph
+using Sparspak.SpkSparseBase
 
 function _test()
     # Matrix from Figure 3.1.3
@@ -16,9 +16,7 @@ function _test()
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
     SpkProblem.insparse(p, spm)
-    graph = SpkGraph.Graph(p)
-    @test graph.xadj == [1, 3, 6, 8, 9, 11, 13]
-    @test graph.adj == [2, 6, 1, 3, 4, 2, 5, 2, 3, 6, 1, 5]
+    s = SpkSparseBase.SparseBase(p)
     return true
 end
 

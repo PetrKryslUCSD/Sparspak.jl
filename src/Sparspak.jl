@@ -4,5 +4,7 @@ include("Utilities/SpkUtilities.jl")
 include("Problem/SpkProblem.jl")
 include("Ordering/SpkOrdering.jl")
 include("Graph/SpkGraph.jl")
+include("ETree/SpkETree.jl")
+include("SparseMethod/SpkSparseBase.jl")
 
 end # module

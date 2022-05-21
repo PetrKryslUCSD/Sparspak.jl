@@ -15,3 +15,11 @@ end
 @time @testset "Graph" begin
     include("test_graph.jl")
 end
+
+@time @testset "ETree" begin
+    include("test_etree.jl")
+end
+
+@time @testset "Sparse method" begin
+    include("test_sparse.jl")
+end
