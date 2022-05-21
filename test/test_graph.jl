@@ -8,13 +8,17 @@ using Sparspak.SpkProblem
 using Sparspak.SpkGraph
 
 function _test()
-    M, N = 21, 21
+    # Matrix from Figure 3.1.3
+    M, N = 6, 6
+    I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
+    J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
+    V = [1.0 for _ in I]
+    spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    spm = sprand(M, N, 0.2)
-    spm = spm + spm'
     SpkProblem.insparse(p, spm)
     graph = SpkGraph.Graph(p)
-    @show graph
+    @test graph.xadj == [1, 3, 6, 8, 9, 11, 13]
+    @test graph.adj == [2, 6, 1, 3, 4, 2, 5, 2, 3, 6, 1, 5]
     return true
 end
 
