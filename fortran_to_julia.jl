@@ -39,6 +39,7 @@ function doit()
     # Spaces around - operators, except after e
     # r"([^e][\-])(\S)" => s"\1 \2",
     r"(?<!\W\de)(\h*\-\h*)" => s" - ",
+    r"(= =)" => "==",
     # Space after all commas
     r"(,)(\S)" => s"\1 \2",
     # Replace space after all (

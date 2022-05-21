@@ -28,3 +28,6 @@ Manifest.toml
 *.html
 *.f
 *.txt
+*-auto-translated.jl
+*.zip
+
