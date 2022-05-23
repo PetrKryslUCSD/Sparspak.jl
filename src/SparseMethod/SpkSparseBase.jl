@@ -1,4 +1,5 @@
-""" SparseBase class:
+""" 
+SparseBase class:
 This class contains the variables for the data structure for the
 SparseSolver.
 #
@@ -90,9 +91,10 @@ by Prentice - Hall, 1981.0
 module SpkSparseBase
 
 using ..SpkOrdering: Ordering
-using ..SpkGraph: Graph
+using ..SpkGraph: Graph, makestructuresymmetric
 using ..SpkETree: ETree
 using ..SpkProblem: Problem
+using ..SpkMmd: mmd
 
 mutable struct SparseBase{IT, FT}
     order::Ordering
@@ -167,6 +169,20 @@ function SparseBase(p::Problem{IT,FT}) where {IT,FT}
         tempsizeneed, factorops, solveops, realstore, integerstore,
         colcnt, snode, xsuper, xlindx, lindx, xlnz, xunz, ipiv,
         lnz, unz)
+end
+
+function findorder(s::SparseBase, orderfunction::F) where {IT, F}
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem, no ordering found."
+        return false
+    end
+    makestructuresymmetric(s.g)     # Make it symmetric
+    mmd(s.g, s.order)   # Default ordering function
+    return true
+end
+
+function findorder(s::SparseBase) where {IT, F}
+    return findorder(s, mmd)
 end
 
 end

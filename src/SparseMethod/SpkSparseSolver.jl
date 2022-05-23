@@ -10,6 +10,7 @@ module SpkSparseSolver
 
 using ..SpkProblem: Problem
 using ..SpkSparseBase: SparseBase
+import ..SpkSparseBase: findorder
 
 mutable struct SparseSolver{IT}
     slvr::SparseBase
@@ -52,6 +53,15 @@ function findorder(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
         return true 
     end
     findorder(s.slvr, orderfunction)
+    s.orderdone = true
+    return true
+end
+
+function findorder(s::SparseSolver{IT}) where {IT, F}
+    if (s.orderdone)
+        return true 
+    end
+    findorder(s.slvr)
     s.orderdone = true
     return true
 end
@@ -105,11 +115,11 @@ function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 end
 
 """
-    sparsefactor(s::SparseSolver{IT}) where {IT}
+    factor(s::SparseSolver{IT}) where {IT}
 
 
 """
-function sparsefactor(s::SparseSolver{IT}) where {IT}
+function factor(s::SparseSolver{IT}) where {IT}
     if ( ! s.inmatrixdone)
         @error "$(@__FILE__): Sequence error. Matrix input not done yet."
         return false
@@ -124,11 +134,11 @@ function sparsefactor(s::SparseSolver{IT}) where {IT}
 end
 
 """
-    sparsesolve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 
 
 """
-function sparsesolve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+function solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
     findorder(s)
     symbolicfactor(s)
     inmatrix(s, p)
