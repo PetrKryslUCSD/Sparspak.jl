@@ -80,8 +80,6 @@ mutable struct Problem{IT, FT}
     rhs::Vector{FT}
 end
 
-
-
 """
 """
 function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, objectname="problem") where {IT, FT}
@@ -112,13 +110,7 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, objectname="prob
         rscales, cscales, x, rhs)
 end
 
-function inij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
-    # type (problem) :: p
-    # integer, intent(in) :: rnum, cnum
-    # real (double), optional, intent(in) :: aij
-    # character (len = *), parameter :: fname = "inijproblem:"
-    # integer :: ptr, lastptr
-
+function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
     if (rnum < 1 || cnum < 1)
         @warn "$(@__FILE__): invalid matrix subscripts $(rnum), $(cnum): input ignored"
         return false
@@ -194,10 +186,25 @@ function inij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
     return true
 end 
 
+function inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
+    if (rnum < 1)
+        @error "$(@__FILE__): Invalid rhs subscript $(rnum)."
+        return false
+    end
+
+    p.nrows = max(rnum, p.nrows)
+    if (p.nrows > p.lenrhs)
+        p.lenrhs = 2 * p.nrows; p.rhs = extend(p.rhs, p.lenrhs) 
+    end
+
+    p.rhs[rnum] = p.rhs[rnum] + bi 
+    return true
+end
+
 function insparse(p::Problem{IT,FT}, spm) where {IT,FT}
     I, J, V = findnz(spm)
     for i in eachindex(I)
-        if !inij(p, I[i], J[i], V[i])
+        if !inaij(p, I[i], J[i], V[i])
             return false 
         end
     end
