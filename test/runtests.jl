@@ -23,3 +23,7 @@ end
 @time @testset "Sparse method" begin
     include("test_sparse.jl")
 end
+
+@time @testset "System" begin
+    include("test_system.jl")
+end
