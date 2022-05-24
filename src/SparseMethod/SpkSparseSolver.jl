@@ -10,7 +10,7 @@ module SpkSparseSolver
 
 using ..SpkProblem: Problem
 using ..SpkSparseBase: SparseBase
-import ..SpkSparseBase: findorder
+import ..SpkSparseBase: findorder, symbolicfactor
 
 mutable struct SparseSolver{IT}
     slvr::SparseBase
