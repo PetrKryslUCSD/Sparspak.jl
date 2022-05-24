@@ -25,6 +25,7 @@ and stored in Graph objects as nRows and nCols as well.
 """
 module SpkGraph
 
+using ..SpkUtilities: extend
 using ..SpkProblem: Problem
 
 mutable struct Graph{IT}
@@ -92,10 +93,6 @@ function Graph(p::Problem{IT}, diagonal=false) where {IT}
 end
 
 function makestructuresymmetric(g::Graph{IT}) where {IT}
-    # type (graph) ::  g, h
-    # character (len = *), parameter :: fname = "makestructuresymmetricgraph:"
-    # integer :: i, j, k, flag, m, c(g.nv), first(g.nv)
-
     if (isstructuresymmetric(g))
         return true
     end
@@ -118,7 +115,7 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
     c = fill(zero(IT), g.nv)
     first = fill(zero(IT), g.nv)
     c .= 0
-    first .= g.xadj
+    first .= g.xadj[1:g.nv]
 
     for i in 1:g.nv       # For each "column" list ...
         for j in first[i]:(g.xadj[i+1]-1)
@@ -256,7 +253,12 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
     # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     #       Release storage for g, and  assign h to g.
     # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-    g = deepcopy(h)
+    g.nv = h.nv
+    g.nedges = h.nedges
+    g.nrows = h.nrows
+    g.ncols = h.ncols
+    g.xadj = h.xadj
+    g.adj = h.adj
     # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     #       Sort the edges of the new graph in increasing order.
     #       By convention, graphs are maintained in this state for
