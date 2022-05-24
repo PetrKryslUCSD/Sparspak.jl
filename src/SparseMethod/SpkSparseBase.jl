@@ -171,7 +171,7 @@ function SparseBase(p::Problem{IT,FT}) where {IT,FT}
         lnz, unz)
 end
 
-function findorder(s::SparseBase, orderfunction::F) where {IT, F}
+function findorder(s::SparseBase{IT}, orderfunction::F) where {IT, F}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem, no ordering found."
         return false
@@ -181,8 +181,77 @@ function findorder(s::SparseBase, orderfunction::F) where {IT, F}
     return true
 end
 
-function findorder(s::SparseBase) where {IT, F}
+function findorder(s::SparseBase{IT}) where {IT}
     return findorder(s, mmd)
+end
+
+function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
+# """
+#     This subroutine computes the storage requirements and sets up
+#     data structures for the symbolic and numerical factorization.
+##
+# Input parameters: solver object
+##
+# The "output" is the modified solver object.
+#
+#
+# """
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem. No symbolic factorization done."
+        return false
+    end
+
+    s.colcnt = fill(zero(IT), s.n)
+    s.snode = fill(zero(IT), s.n)
+    s.xsuper = fill(zero(IT), s.n + 1)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       Compute elimination tree
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    getetree(s.g, s.order, s.t)
+    getpostorder(s.t, s.order)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       Compute row and column factor nonzero counts.
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    findcolumncounts(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
+    getpostorder(s.t, s.order, s.colcnt)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       Find supernodes. Split them so none are larger than maxBlockSize
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
+    s.xsuper = extend(s.xsuper, s.nsuper + 1)
+
+    s.lindx = fill(zero(IT), s.nsub)
+    s.xlindx = fill(zero(IT), s.nsuper + 1)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       setup for symbolic factorization.
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    s.xlnz = fill(zero(IT), s.n + 1)
+    s.xunz = fill(zero(IT), s.n + 1)
+    s.ipiv = fill(zero(IT), s.n)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       Set up the data structure for the Cholesky factor.
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    findnonzeroindexs(s.n, s.colcnt, s.nsuper, s.xsuper, s.xlnz, s.xunz, s.tempsizeneed)
+
+    symbolicfact(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.colcnt, s.nsuper, s.xsuper, s.snode, s.nsub, s.xlindx, s.lindx)
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#       We now know how many elements we need, so allocate for it.
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    s.lnz = fill(zero(FT), s.xlnz[s.n + 1] - 1)
+    s.unz = fill(zero(FT), s.xunz[s.n + 1] - 1)
+
+
+    s.lnz[1:s.xlnz[s.n + 1] - 1] = zero(FT)
+    s.unz[1:s.xunz[s.n + 1] - 1] = zero(FT)
+    s.ipiv[1:s.n] = zero(IT)
+
+    return true
 end
 
 end
