@@ -6,7 +6,7 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi
+using Sparspak.SpkProblem: inaij, inbi, outsparse
 using Sparspak.SpkSparseSolver: SparseSolver, solve
 
 function maketridiagproblem(n)
@@ -24,6 +24,7 @@ end
 
 function _test()
     p = maketridiagproblem(11)
+    # @show outsparse(p)
     s = SparseSolver(p)
     solve(s, p)
     return true
