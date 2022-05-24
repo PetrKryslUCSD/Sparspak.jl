@@ -86,10 +86,8 @@ function generalmmd(n, xadj, adj, perm, invp)
     #       Initialize the degree doubly linked lists.
     #
     for node in 1:n
-        ndeg = xadj[node+1] - xadj[node]
-        fnode = deghead[ndeg]
-        deghead[ndeg] = node
-        degnext[node] = fnode
+        ndeg = xadj[node+1] - xadj[node]; fnode = deghead[ndeg]
+        deghead[ndeg] = node; degnext[node] = fnode
         if (fnode > 0)
             degprev[fnode] = node
         end
@@ -119,11 +117,9 @@ function generalmmd(n, xadj, adj, perm, invp)
     tag = 1
     mindeg = 1   # We"ve already eliminated all 0 - degree (isolated) nodes
     while (num <= n)
-        @show deghead
         while (deghead[mindeg] <= 0)
             mindeg = mindeg + 1
         end
-        @show mindeg
         #  
         #           Use value of delta to set up mindegLimit, which governs
         #           when a degree update is to be performed.
@@ -167,9 +163,9 @@ function generalmmd(n, xadj, adj, perm, invp)
                 tag = 1
                 marker[findall(marker .< maxint)] .= 0
             end
-
+            
             mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
-
+            
             num = num + supersize[mdnode]
             #  -
             #               Add mdNode to the list of nodes
@@ -186,7 +182,7 @@ function generalmmd(n, xadj, adj, perm, invp)
         if (num > n)
             @goto main
         end
-        mmdupdate(elimhead, n, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+        mindeg, tag = mmdupdate(elimhead, n, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     end # 
     @label main
     mmdnumber(n, perm, invp, mergeparent)
@@ -372,9 +368,6 @@ end
 """
 function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     maxint = typemax(eltype(xadj))
-
-    deghead1 = fill(zero(eltype(xadj)), neqns)
-    deghead = OffsetArray(deghead1, 0:(neqns-1))
 #
     mindeglimit = mindeg + delta
 
@@ -554,7 +547,74 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
 # -
         tag = mtag ; elimnode = elimnext[elimnode]
     end
-    return true
+    return mindeg, tag
 end
+
+
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
+#       ^  mmdNumber ..... multiple minimum degree numbering  ^
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
+#       Purpose - This routine performs the final step in
+#       producing the permutation and inverse permutation
+#       vectors in the multiple elimination version of the
+#       minimum degree Ordering algorithm.
+#       No parameters are in fact used, since this is a routine within
+#       genmmd, but we list any modifications.
+#       Input parameters -
+#       neqns - number of equations.
+#       Output parameters -
+#       perm - the minimum degree Ordering.
+#       Updated parameters -
+#       invp - On input, new number for roots in merged forest.
+#       On output, this plus remaining inverse of perm.
+#       mergeParent - the parent map for the merged forest (compressed).
+#       Working arrays -
+#       mergeLastnum (r) - last number used for a merged tree rooted at r.
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
+function mmdnumber(neqns, perm, invp, mergeparent)
+    
+# ----------------------------------------
+#           Initially, no nodes except roots in the
+#           merged forest have been numbered.
+# ----------------------------------------
+    mergelastnum = fill(zero(eltype(perm)), neqns)
+    ix = findall(mergeparent .== 0)
+    mergelastnum[ix] = invp[ix]
+# -------------------------------------------------------
+#           For each node which has been merged, do the following.
+# -------------------------------------------------------
+    for node in 1:neqns
+        parent = mergeparent[node]
+        if (parent > 0)
+# ------------------------------------------
+#                   Trace the merged tree until one which has
+#                   not been merged is found, it root.
+# ------------------------------------------
+            while (parent > 0)
+                root = parent ; parent = mergeparent[parent]
+            end
+# -----------------------------------------
+#                   Number node after those already numbered
+#                   in merged subtree rooted at root.
+# -----------------------------------------
+            num = mergelastnum[root] + 1
+            invp[node] = num ; mergelastnum[root] = num
+# ------------------------------------
+#                   Compress the path just traversed so
+#                   that future queries are faster.
+# ------------------------------------
+            node2 = node
+            while (node2 != root)
+                parent = mergeparent[node2]
+                mergeparent[node2] = root ; node2 = parent
+            end
+        end
+    end
+# ------------------------------
+#           Inverse invp to compute perm.
+# ------------------------------
+    perm[invp[1:neqns]] = 1:neqns
+end
+
 
 end
