@@ -119,9 +119,11 @@ function generalmmd(n, xadj, adj, perm, invp)
     tag = 1
     mindeg = 1   # We"ve already eliminated all 0 - degree (isolated) nodes
     while (num <= n)
+        @show deghead
         while (deghead[mindeg] <= 0)
             mindeg = mindeg + 1
         end
+        @show mindeg
         #  
         #           Use value of delta to set up mindegLimit, which governs
         #           when a degree update is to be performed.
@@ -184,11 +186,375 @@ function generalmmd(n, xadj, adj, perm, invp)
         if (num > n)
             @goto main
         end
-
         mmdupdate(elimhead, n, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     end # 
     @label main
+    mmdnumber(n, perm, invp, mergeparent)
+    return true
+end
 
+# """    Purpose - This routine eliminates the node mdNode of
+#       minimum degree from the adjacency structure, which
+#       is stored in the quotient Graph format.  It also
+#       transforms the quotient Graph representation of the
+#       elimination Graph.
+#    Input parameters -
+#       mdNode - node of minimum degree.
+#       tag - tag value.
+#       invp - the inverse of an incomplete minimum degree Ordering.
+#                 (It is zero at positions where the Ordering is unknown.)
+#    Updated parameters -
+#       (xadj, adjncy) - updated adjacency structure (xadj is not updated).
+#       degHead (deg) - points to first node with degree deg, or 0 if there
+#                    are no such nodes.
+#       degNext (node) - points to the next node in the degree list
+#                    associated with node, or 0 if node was the last in the
+#                    degree list.
+#       degPrev (node) - points to the previous node in a degree list
+#                    associated with node, or the negative of the degree of
+#                    node (if node was the last in the degree list), or 0
+#                    if the node is not in the degree lists.
+#       superSIze - the size of the supernodes.
+#       elimNext (node) - points to the next node in a eliminated supernode
+#                    or 0 if there are no more after node.
+#       marker - marker vector.
+#       mergeParent - the parent map for the merged forest.
+#        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
+# """
+"""
+"""
+function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+    maxint = typemax(eltype(xadj))
+# 
+#       Find reachable set and place in data structure.
+# 
+    marker[mdnode] = tag
+# 
+#       elmnt points to the beginning of the list of eliminated
+#       neighbors of mdNode, and rloc gives the storage
+#       location for the next reachable node.
+# 
+    elmnt = 0
+    rloc = xadj[mdnode] ; rlmt = xadj[mdnode + 1] - 1
+    for i = xadj[mdnode]:(xadj[mdnode + 1] - 1)
+        neighbor = adjncy[i]
+        if (neighbor == 0) break; end
+        if (marker[neighbor] < tag)
+            marker[neighbor] = tag
+            if (invp[neighbor] == 0)
+                adjncy[rloc] = neighbor ; rloc = rloc + 1
+            else
+                elimnext[neighbor] = elmnt ; elmnt = neighbor
+            end
+        end
+    end
+# 
+#       Merge with reachable nodes from generalized elements.
+# 
+    while (elmnt > 0)
+        adjncy[rlmt] = - elmnt
+        j = xadj[elmnt] ; jstop = xadj[elmnt + 1] ; node = adjncy[j]
+        while (node != 0)
+            if (node < 0)
+                j = xadj[- node] ; jstop = xadj[- node + 1]
+            else
+                if (marker[node] < tag && degnext[node] >= 0)
+                    marker[node] = tag
+# 
+#                       Use storage from eliminated nodes if necessary.
+# 
+                    while (rloc >= rlmt)
+                        link = - adjncy[rlmt]
+                        rloc = xadj[link] ; rlmt = xadj[link + 1] - 1
+                    end
+                    adjncy[rloc] = node ; rloc = rloc + 1
+                end
+                j = j + 1
+            end
+            if (j >= jstop) break; end
+            node = adjncy[j]
+        end
+        elmnt = elimnext[elmnt]
+    end 
+    if (rloc <= rlmt) adjncy[rloc] = 0; end
+# 
+#       For each node in the reachable set, do the following ...
+# 
+    i = xadj[mdnode] ; istop = xadj[mdnode + 1] ; rnode = adjncy[i]
+    while (rnode != 0)
+        if (rnode < 0)
+            i = xadj[- rnode] ; istop = xadj[- rnode + 1]
+        else
+# 
+#               If rnode is in the degree list structure ...
+# 
+            pvnode = degprev[rnode]
+            if (pvnode != 0)
+# 
+#                   Then remove rnode from the structure.
+# 
+                nxnode = degnext[rnode]
+                if (nxnode > 0) degprev[nxnode] = pvnode; end
+                if (pvnode > 0)
+                    degnext[pvnode] = nxnode
+                else
+                    deghead[- pvnode] = nxnode
+                end
+            end
+# 
+#               Purge inactive quotient neighbors of rnode.
+# 
+            xqnbr = xadj[rnode]
+            for j in xadj[rnode]:(xadj[rnode + 1] - 1)
+                neighbor = adjncy[j]
+                if (neighbor == 0) break; end
+                if (marker[neighbor] < tag)
+                    adjncy[xqnbr] = neighbor ; xqnbr = xqnbr + 1
+                end
+            end
+# 
+#               If no active neighbor after the purging ...
+# 
+            nqnbrs = xqnbr - xadj[rnode]
+            if (nqnbrs <= 0)
+# 
+#                   Then merge rnode with mdNode.
+# 
+                supersize[mdnode] = supersize[mdnode] + supersize[rnode]
+                supersize[rnode] = 0 ; mergeparent[rnode] = mdnode
+                marker[rnode] = maxint
+            else
+# 
+#                   Else flag rnode for degree update, and
+#                   add mdNode as a neighbor of rnode.
+# 
+                needsupdate[rnode] = nqnbrs + 1
+                adjncy[xqnbr] = mdnode ; xqnbr = xqnbr + 1
+                if (xqnbr < xadj[rnode + 1]) adjncy[xqnbr] = 0; end
+            end
+            degprev[rnode] = 0 ; i = i + 1
+        end
+        if (i >= istop) break; end
+        rnode = adjncy[i]
+    end
+end
+
+# """    Purpose - This routine updates the degrees of nodes
+#       after a multiple elimination step.
+#    Input parameters -
+#       elimHead - the beginning of the list of eliminated
+#                nodes (i.e., newly formed elements).
+#       neqns - number of equations.
+#       (xadj, adjncy) - adjacency structure.
+#       delta - tolerance value for multiple elimination.
+#       invp - the inverse of an incomplete minimum degree Ordering.
+#                (It is zero at positions where the Ordering is unknown.)
+#    Updated parameters -
+#       mindeg - new minimum degree after degree update.
+#       degHead (deg) - points to first node with degree deg, or 0 if there
+#                    are no such nodes.
+#       degNext (node) - points to the next node in the degree list
+#                    associated with node, or 0 if node was the last in the
+#                    degree list.
+#       degPrev (node) - points to the previous node in a degree list
+#                    associated with node, or the negative of the degree of
+#                    node (if node was the last in the degree list), or 0
+#                    if the node is not in the degree lists.
+#       superSIze - the size of the supernodes.
+#       elimNext (node) - points to the next node in a eliminated supernode
+#                    or 0 if there are no more after node.
+#       marker - marker vector for degree update.
+#       tag - tag value.
+#       mergeParent - the parent map for the merged forest.
+#        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
+# """
+"""
+"""
+function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+    maxint = typemax(eltype(xadj))
+
+    deghead1 = fill(zero(eltype(xadj)), neqns)
+    deghead = OffsetArray(deghead1, 0:(neqns-1))
+#
+    mindeglimit = mindeg + delta
+
+    deg = zero(eltype(xadj))
+    enode = zero(eltype(xadj))
+
+    function updateexternaldegree()
+        deg = deg - supersize[enode] ; firstnode = deghead[deg]
+        deghead[deg] = enode ; degnext[enode] = firstnode
+        degprev[enode] = - deg ; needsupdate[enode] = 0
+        if (firstnode > 0) degprev[firstnode] = enode; end
+        if (deg < mindeg) mindeg = deg; end
+    end
+# -
+#       For each of the newly formed element, do the following.
+# -
+    elimnode = elimhead
+    while (elimnode > 0)
+# -
+#           (Reset tag value if necessary.)
+# -
+        mtag = tag + mindeglimit
+        if (mtag >= maxint)
+            tag = 1 ; mtag = tag + mindeglimit
+            marker[findall(marker .< maxint)] .= 0
+        end
+# -
+#           Create two linked lists from nodes associated with elimNode: one
+#           with two neighbors (q2head) in adjacency structure, and the other
+#           with more than two neighbors (qxhead).  Also compute elimsize,
+#           the number of nodes in this element.
+# -
+        q2head = 0 ; qxhead = 0 ; elimsize = 0
+        i = xadj[elimnode] ; istop = xadj[elimnode + 1] ; enode = adjncy[i]
+        while (enode != 0)
+            if (enode < 0)
+                i = xadj[- enode] ; istop = xadj[- enode + 1]
+            else
+                if (supersize[enode] != 0)
+                    elimsize = elimsize + supersize[enode] ;
+                    marker[enode] = mtag
+# -
+#                       If enode requires a degree update,
+#                        do the following.
+# -
+                    if (needsupdate[enode] > 0)
+# -
+#                           Place either in qxhead or q2head lists.
+# -
+                        if (needsupdate[enode] != 2)
+                            elimnext[enode] = qxhead ; qxhead = enode
+                        else
+                            elimnext[enode] = q2head ; q2head = enode
+                        end
+                    end
+                end
+                i = i + 1
+            end
+            if (i >= istop) break; end
+            enode = adjncy[i]
+        end
+# -
+#           For each enode in q2 list, do the following.
+# -
+        enode = q2head
+        while (enode > 0)
+            if (needsupdate[enode] > 0)
+                tag = tag + 1 ; deg = elimsize
+# -
+#                   Identify the other adjacent element neighbor.
+# -
+                istart = xadj[enode] ; neighbor = adjncy[istart]
+                if (neighbor == elimnode) neighbor = adjncy[istart + 1]; end
+# -
+#                   If neighbor is uneliminated, increase degree count.
+# -
+                if (invp[neighbor] == 0)
+                    deg = deg + supersize[neighbor]
+                else
+# - -
+#                       Otherwise, for each node in the 2nd element,
+#                       do the following.
+# -
+                    i = xadj[neighbor] ; istop = xadj[neighbor + 1] ;
+                    node = adjncy[i]
+                    while (node != 0)
+                        if (node < 0)
+                            i = xadj[- node] ; istop = xadj[- node + 1]
+                        else
+                            if (node != enode && supersize[node] != 0)
+# 
+#                                   Case when node is not yet considered.
+# 
+                                if (marker[node] < tag)
+                                    marker[node] = tag ;
+                                    deg = deg + supersize[node]
+# -
+#                                       Case when node is indistinguishable
+#                                       Merge them into new supernode.
+# -
+                                elseif (needsupdate[node] > 0)
+                                    if (needsupdate[node] == 2)
+# -
+#                                           Case when node is not outmatched
+# -
+                                        supersize[enode] = supersize[enode] + supersize[node]
+                                        supersize[node] = 0
+                                        marker[node] = maxint
+                                        mergeparent[node] = enode
+                                    end
+                                    needsupdate[node] = 0
+                                    degprev[node] = 0
+                                end
+                            end
+                            i = i + 1
+                        end
+                        if (i >= istop) break ; end
+                        node = adjncy[i]
+                    end
+                end
+                updateexternaldegree()
+            end # if
+            enode = elimnext[enode]
+        end # while
+# -
+#           For each enode in the qx list, do the following.
+# -
+        enode = qxhead
+        while (enode > 0)
+            if (needsupdate[enode] > 0)
+                tag = tag + 1 ; deg = elimsize
+# -
+#                   For each unmarked neighbor of enode, do the following.
+# -
+                for i in xadj[enode]:(xadj[enode + 1] - 1)
+                    neighbor = adjncy[i]
+                    if (neighbor == 0) break; end
+                    if (marker[neighbor] < tag)
+                        marker[neighbor] = tag
+# - -
+#                           If uneliminated, include it in deg count.
+# - -
+                        if (invp[neighbor] == 0)
+                            deg = deg + supersize[neighbor]
+                        else
+# -
+#                               If eliminated, include unmarked nodes
+#                               in this element into the degree count.
+# -
+                            j = xadj[neighbor] ; jstop = xadj(neighbor + 1)
+                            node = adjncy[j]
+                            while (node != 0)
+                                if (node < 0)
+                                    j = xadj[- node]; jstop = xadj[- node + 1]
+                                else
+                                    if (marker[node] < tag)
+                                        marker[node] = tag ;
+                                        deg = deg + supersize[node]
+                                    end
+                                    j = j + 1
+                                end
+                                if (j >= jstop) break; end
+                                node = adjncy[j]
+                            end
+                        end
+                    end
+                end
+                updateexternaldegree()
+            end
+# -
+#               Get next enode in current element.
+# -
+            enode = elimnext[enode]
+        end
+# -
+#           Get next element in the list.
+# -
+        tag = mtag ; elimnode = elimnext[elimnode]
+    end
+    return true
 end
 
 end
