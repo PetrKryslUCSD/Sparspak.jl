@@ -30,4 +30,5 @@ Manifest.toml
 *.txt
 *-auto-translated.jl
 *.zip
+sparspak_sources/*
 
