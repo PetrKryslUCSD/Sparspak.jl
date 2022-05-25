@@ -94,6 +94,7 @@ using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
 using ..SpkETree: ETree, getetree, getpostorder
 using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
+using ..SpkLUFactor: lufactor
 using ..SpkProblem: Problem
 using ..SpkUtilities: extend
 using ..SpkMmd: mmd
@@ -288,6 +289,138 @@ function findnonzeroindexs(n, colcnt, nsuper, xsuper, xlnz, xunz, maxtemp)
     xlnz[n + 1] = point; point = 1
     xunz[n + 1] = upoint
 
+end
+
+"""
+    This subroutine retrieves a matrix from a problem object p and
+    inserts its elements into the data structure for the Cholesky
+    factor L. The data structure involves the arrays xlindx, lindx,
+    xlnz, lnz, xunz and unz as described in the comments at the
+    beginning of this module.
+    The components of the problem object are decribed in the
+    comments at the beginning of the SpkProblem module.
+    Note that the Cholesky factor L corresponds to the matrix
+    problem after it has had its rows and columns permuted.
+    Thus, a reordering is applied to its elements before they are
+    inserted into the data structure.
+#
+Input parameters: problem and solver objects
+
+The "output" is the modified solver object.
+"""
+function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
+# type (sparsebase)  ::  s
+# type (problem)  ::  p
+# type (ordering) ::  order
+# character (len = *), parameter :: fname = "sparsebaseinmatrix:"
+# integer :: rnum, cnum, i, k, ptr, nnzloc, nxtsub, irow
+# integer :: inew, jnew, itemp, jsup, fstcol, lstcol, fstsub, lstsub
+# integer :: lnzoff, width
+# real (double) :: value
+
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem. No matrix."
+        return false
+    end
+
+    s.lnz .= zero(FT)
+    s.unz .= zero(FT)
+    s.ipiv .= zero(IT)
+
+
+    for i in 1:p.ncols
+        ptr = p.head[i]
+        while (ptr > 0)  # scan column i ....
+            inew = s.order.rinvp[p.rowsubs[ptr]];
+            jnew = s.order.cinvp[i]
+            value = p.values[ptr];
+
+            if (inew >= s.xsuper[s.snode[jnew]])
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#                 Lies in L.  get pointers and lengths needed to search
+#                 column jnew of L for location l(inew, jnew).
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+                jsup = s.snode[jnew];
+                fstcol = s.xsuper[jsup]
+                fstsub = s.xlindx[jsup]
+                lstsub = s.xlindx[jsup + 1] - 1
+                nnzloc = 0;
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#                 search for row subscript inew in jnew"s subscript list.
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+                for nxtsub in fstsub:lstsub
+                    irow = s.lindx[nxtsub]
+                    if  (irow > inew)
+                        @error "$(@__FILE__): For matrix element $(inew), $(jnew)."
+                        return false
+                    end
+
+                    if  (irow == inew)
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#                       find a proper offset into lnz and increment by value
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+                        s.lnz[s.xlnz[jnew] + nnzloc] = s.lnz[s.xlnz[jnew] + nnzloc] + value
+                        break
+                    end
+                    nnzloc = nnzloc + 1
+                end
+            else
+# -  -  -  -  -  -  -  -  -
+#                 Lies in U
+# -  -  -  -  -  -  -  -  -
+                jsup = s.snode[inew]
+                fstcol = s.xsuper[jsup]
+                lstcol = s.xsuper[jsup + 1] - 1
+                width = lstcol - fstcol + 1
+                lstsub = s.xlindx[jsup + 1] - 1
+                fstsub = s.xlindx[jsup] + width
+
+                nnzloc = 0;
+                for nxtsub in fstsub:lstsub
+                    irow = s.lindx[nxtsub]
+                    if  (irow > jnew)
+                        @error "$(@__FILE__): For matrix element $(inew), $(jnew)."
+                        return false
+                    end
+
+                    if  (irow == jnew)
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#                       find a proper offset into unz and increment by value
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+                        s.unz[s.xunz[inew] + nnzloc] = s.unz[s.xunz[inew] + nnzloc] + value
+                        exit
+                    end
+
+                    nnzloc = nnzloc + 1
+                end
+            end
+            ptr = p.link[ptr]
+        end
+    end
+    return true
+end
+
+function factor(s::SparseBase{IT, FT}) where {IT, FT}
+# """
+# This routine calls the lower - level routine LUFactor which
+# computes and L U factorization of the matrix stored in the
+# solver object s. The components of the solver object are described
+#  in the comments at the beginning of this module.
+# """
+
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem. No matrix."
+        return false
+    end
+
+    s.errflag = lufactor(s.n, s.nsuper, s.xsuper, s.snode, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, s.ipiv)
+
+    if (s.errflag != 0)
+        @error "$(@__FILE__): An empty problem. No matrix."
+        return false
+    end
+    return true
 end
 
 end
