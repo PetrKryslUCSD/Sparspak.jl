@@ -6,6 +6,7 @@ include("Ordering/SpkOrdering.jl")
 include("Graph/SpkGraph.jl")
 include("ETree/SpkETree.jl")
 include("SparseSpdMethod/SpkMMD.jl")
+include("SparseSpdMethod/SpkSymfct.jl")
 include("SparseMethod/SpkSparseBase.jl")
 include("SparseMethod/SpkSparseSolver.jl")
 
