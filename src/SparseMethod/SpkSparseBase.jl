@@ -92,8 +92,10 @@ module SpkSparseBase
 
 using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
-using ..SpkETree: ETree
+using ..SpkETree: ETree, getetree, getpostorder
+using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
 using ..SpkProblem: Problem
+using ..SpkUtilities: extend
 using ..SpkMmd: mmd
 
 mutable struct SparseBase{IT, FT}
@@ -217,10 +219,11 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
     findcolumncounts(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
     getpostorder(s.t, s.order, s.colcnt)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #       Find supernodes. Split them so none are larger than maxBlockSize
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-    findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    @show s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize
+    s.nsub, s.nsuper = findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
     s.xsuper = extend(s.xsuper, s.nsuper + 1)
 
     s.lindx = fill(zero(IT), s.nsub)
@@ -237,7 +240,7 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
 #       Set up the data structure for the Cholesky factor.
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     findnonzeroindexs(s.n, s.colcnt, s.nsuper, s.xsuper, s.xlnz, s.xunz, s.tempsizeneed)
-
+    @show s.lindx, s.nsub
     symbolicfact(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.colcnt, s.nsuper, s.xsuper, s.snode, s.nsub, s.xlindx, s.lindx)
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -247,11 +250,44 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
     s.unz = fill(zero(FT), s.xunz[s.n + 1] - 1)
 
 
-    s.lnz[1:s.xlnz[s.n + 1] - 1] = zero(FT)
-    s.unz[1:s.xunz[s.n + 1] - 1] = zero(FT)
-    s.ipiv[1:s.n] = zero(IT)
+    s.lnz[1:s.xlnz[s.n + 1] - 1] .= zero(FT)
+    s.unz[1:s.xunz[s.n + 1] - 1] .= zero(FT)
+    s.ipiv[1:s.n] .= zero(IT)
 
     return true
+end
+
+function findnonzeroindexs(n, colcnt, nsuper, xsuper, xlnz, xunz, maxtemp)
+# """
+#    This routine inserts the index offsets for the arrays xlnz and xunz.
+# """
+#
+        # integer :: nsuper, maxtemp, n
+        # integer :: xsuper(*)
+        # integer :: colcnt(*), xlnz(*), xunz(*)
+        # integer :: fstcol, ksup, lstcol, point, width, nnzinsuper
+        # integer :: upoint, jcol
+
+    upoint = 1; point = 1; nnzinsuper = 0
+
+    for ksup in 1:nsuper
+        fstcol = xsuper[ksup]; lstcol = xsuper[ksup + 1] - 1
+        maxtemp = max(maxtemp, nnzinsuper)
+        nnzinsuper = 0
+        width = lstcol - fstcol + 1
+        for jcol in fstcol:lstcol
+            xlnz[jcol] = point
+            xunz[jcol] = upoint
+            nnzinsuper = nnzinsuper + colcnt[fstcol]
+            point = point + colcnt[fstcol]
+            upoint = upoint + colcnt[fstcol] - width
+        end
+        nnzinsuper = nnzinsuper + colcnt[fstcol]
+    end
+
+    xlnz[n + 1] = point; point = 1
+    xunz[n + 1] = upoint
+
 end
 
 end
