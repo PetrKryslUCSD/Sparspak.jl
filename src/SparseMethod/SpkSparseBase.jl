@@ -237,16 +237,16 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
     s.xunz = fill(zero(IT), s.n + 1)
     s.ipiv = fill(zero(IT), s.n)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #       Set up the data structure for the Cholesky factor.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
     findnonzeroindexs(s.n, s.colcnt, s.nsuper, s.xsuper, s.xlnz, s.xunz, s.tempsizeneed)
-    @show s.lindx, s.nsub
+    
     symbolicfact(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.colcnt, s.nsuper, s.xsuper, s.snode, s.nsub, s.xlindx, s.lindx)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #       We now know how many elements we need, so allocate for it.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -
     s.lnz = fill(zero(FT), s.xlnz[s.n + 1] - 1)
     s.unz = fill(zero(FT), s.xunz[s.n + 1] - 1)
 
@@ -336,19 +336,19 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
             value = p.values[ptr];
 
             if (inew >= s.xsuper[s.snode[jnew]])
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #                 Lies in L.  get pointers and lengths needed to search
 #                 column jnew of L for location l(inew, jnew).
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
                 jsup = s.snode[jnew];
                 fstcol = s.xsuper[jsup]
                 fstsub = s.xlindx[jsup]
                 lstsub = s.xlindx[jsup + 1] - 1
                 nnzloc = 0;
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -  -  -
 #                 search for row subscript inew in jnew"s subscript list.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# --  -
                 for nxtsub in fstsub:lstsub
                     irow = s.lindx[nxtsub]
                     if  (irow > inew)
@@ -357,9 +357,9 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                     end
 
                     if  (irow == inew)
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #                       find a proper offset into lnz and increment by value
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
                         s.lnz[s.xlnz[jnew] + nnzloc] = s.lnz[s.xlnz[jnew] + nnzloc] + value
                         break
                     end
@@ -385,9 +385,9 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                     end
 
                     if  (irow == jnew)
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #                       find a proper offset into unz and increment by value
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
                         s.unz[s.xunz[inew] + nnzloc] = s.unz[s.xunz[inew] + nnzloc] + value
                         exit
                     end
