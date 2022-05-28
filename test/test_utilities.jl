@@ -60,3 +60,46 @@ end
 
 _test()
 end # module
+
+
+module mutil003
+using Test
+using LinearAlgebra
+using Sparspak.SpkSpdMMops
+
+function _test()
+    vswap = SpkSpdMMops.vswap
+    oa = [ 1   2   3   4   5]
+    ob = [-5  -4  -3  -2  -1]
+    a = deepcopy(oa)
+    b = deepcopy(ob)
+    m = length(a); 
+    vswap(m, a, b)
+    @test a == ob
+    @test b == oa
+    return true
+end
+
+_test()
+end # module
+
+
+module mutil004
+using Test
+using LinearAlgebra
+using Sparspak.SpkSpdMMops
+
+function _test()
+    luswap = SpkSpdMMops.luswap
+    a = Float64[ 1   2   3   4   5  -7
+         -5  -4  -3  -2  -1  +8
+          4   5   6   7   8   0]
+    b = a[:]
+    m, n = size(a); lda = m; ipvt = [2, 6, 4, 3, 5, 1]
+    luswap(m, n, b, lda, ipvt)
+    @test a[:, ipvt] == reshape(b, m, n)
+    return true
+end
+
+_test()
+end # module
