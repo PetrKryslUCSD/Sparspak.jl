@@ -208,31 +208,30 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
     s.snode = fill(zero(IT), s.n)
     s.xsuper = fill(zero(IT), s.n + 1)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -  -  -  -  -  -  -  -  -
 #       Compute elimination tree
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -  -
     getetree(s.g, s.order, s.t)
     getpostorder(s.t, s.order)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #       Compute row and column factor nonzero counts.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
     findcolumncounts(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
     getpostorder(s.t, s.order, s.colcnt)
 
-#-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+#-  -    -
 #       Find supernodes. Split them so none are larger than maxBlockSize
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-    @show s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize
+# -  -  -
     s.nsub, s.nsuper = findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
     s.xsuper = extend(s.xsuper, s.nsuper + 1)
 
     s.lindx = fill(zero(IT), s.nsub)
     s.xlindx = fill(zero(IT), s.nsuper + 1)
 
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
 #       setup for symbolic factorization.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
     s.xlnz = fill(zero(IT), s.n + 1)
     s.xunz = fill(zero(IT), s.n + 1)
     s.ipiv = fill(zero(IT), s.n)
@@ -246,7 +245,7 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
 
 # -
 #       We now know how many elements we need, so allocate for it.
-# -  -  -  -  -  -  -  -  -  -  -  -  -  -
+# -
     s.lnz = fill(zero(FT), s.xlnz[s.n + 1] - 1)
     s.unz = fill(zero(FT), s.xunz[s.n + 1] - 1)
 

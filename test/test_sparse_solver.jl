@@ -76,7 +76,7 @@ function _test()
     o =  s.slvr.order
     @test o.nrows == 11
     @test o.ncols == 11
-    @show o.rperm
+    
     @test o.rperm == vec([11   1  10   2   9   3   8   4   7   5   6])
     @test o.rinvp == vec([2   4   6   8  10  11   9   7   5   3   1])
     @test o.cperm == vec([11   1  10   2   9   3   8   4   7   5   6])
@@ -122,6 +122,47 @@ function _test()
     @test s.slvr.xlindx == [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
     @test s.slvr.lindx == [1, 2, 2, 3, 3, 4, 4, 5, 5, 11, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11]
       
+    return true
+end
+
+_test()
+end # module
+
+
+module msprs005
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij, inbi, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij(p, i + 1, i, -1.0)
+        inaij(p, i, i, 4.0)
+        inaij(p, i, i + 1, -1.0)
+        inbi(p, i, 1.0)
+    end
+    inaij(p, n, n, 4.0)
+    inbi(p, n, 1.0)
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(11)
+    # @show outsparse(p)
+    s = SparseSolver(p)
+    findorder(s)
+    symbolicfactor(s)
+    inmatrix(s, p)
+    
+   @test s.slvr.unz  == vec([-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
+   @test s.slvr.lnz  == vec([4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0, -1.0,  4.0])
+   @test s.slvr.xunz == vec([1           2           3           4        5           6           7           8           9          10          10            10])                       
+     @test s.slvr.xlnz == vec([1           3           5           7           9          11          13          15          17          19          21          23])
     return true
 end
 
