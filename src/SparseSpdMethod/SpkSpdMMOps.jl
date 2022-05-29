@@ -6,6 +6,11 @@ the LU factorization.
 """
 module SpkSpdMMops
 
+using LinearAlgebra
+using LinearAlgebra.LAPACK: getrf!
+
+
+
 """
     assmb(tlen::IT, nj::IT, temp::Matrix{FT}, relcol::Vector{IT}, relind::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
 
@@ -58,7 +63,7 @@ directly into factor storage.
                  from the last index in the list.
 
 """
-function ldindx(jlen::IT, lindx::Vector{IT}, indmap::Vector{IT}) where {IT}
+function ldindx(jlen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}) where {IT}
     indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
     return true
 end
@@ -179,6 +184,181 @@ function luswap(m::IT, n::IT, av::Vector{FT}, lda::IT, ipvt::Vector{IT}) where {
         p[ptr] = 0
     end
     a
+end
+
+#      DGEMM  performs one of the matrix-matrix operations
+
+#         C := alpha*op( A )*op( B ) + beta*C,
+
+#      where  op( X ) is one of
+
+#         op( X ) = X   or   op( X ) = X**T,
+
+#      alpha and beta are scalars, and A, B and C are matrices, with op( A )
+#      an m by k matrix,  op( B )  a  k by n matrix and  C an m by n matrix.
+
+# Parameters
+#     [in]    TRANSA  
+
+#               TRANSA is CHARACTER*1
+#                On entry, TRANSA specifies the form of op( A ) to be used in
+#                the matrix multiplication as follows:
+
+#                   TRANSA = 'N' or 'n',  op( A ) = A.
+
+#                   TRANSA = 'T' or 't',  op( A ) = A**T.
+
+#                   TRANSA = 'C' or 'c',  op( A ) = A**T.
+
+#     [in]    TRANSB  
+
+#               TRANSB is CHARACTER*1
+#                On entry, TRANSB specifies the form of op( B ) to be used in
+#                the matrix multiplication as follows:
+
+#                   TRANSB = 'N' or 'n',  op( B ) = B.
+
+#                   TRANSB = 'T' or 't',  op( B ) = B**T.
+
+#                   TRANSB = 'C' or 'c',  op( B ) = B**T.
+
+#     [in]    M   
+
+#               M is INTEGER
+#                On entry,  M  specifies  the number  of rows  of the  matrix
+#                op( A )  and of the  matrix  C.  M  must  be at least  zero.
+
+#     [in]    N   
+
+#               N is INTEGER
+#                On entry,  N  specifies the number  of columns of the matrix
+#                op( B ) and the number of columns of the matrix C. N must be
+#                at least zero.
+
+#     [in]    K   
+
+#               K is INTEGER
+#                On entry,  K  specifies  the number of columns of the matrix
+#                op( A ) and the number of rows of the matrix op( B ). K must
+#                be at least  zero.
+
+#     [in]    ALPHA   
+
+#               ALPHA is DOUBLE PRECISION.
+#                On entry, ALPHA specifies the scalar alpha.
+
+#     [in]    A   
+
+#               A is DOUBLE PRECISION array, dimension ( LDA, ka ), where ka is
+#                k  when  TRANSA = 'N' or 'n',  and is  m  otherwise.
+#                Before entry with  TRANSA = 'N' or 'n',  the leading  m by k
+#                part of the array  A  must contain the matrix  A,  otherwise
+#                the leading  k by m  part of the array  A  must contain  the
+#                matrix A.
+
+#     [in]    LDA 
+
+#               LDA is INTEGER
+#                On entry, LDA specifies the first dimension of A as declared
+#                in the calling (sub) program. When  TRANSA = 'N' or 'n' then
+#                LDA must be at least  max( 1, m ), otherwise  LDA must be at
+#                least  max( 1, k ).
+
+#     [in]    B   
+
+#               B is DOUBLE PRECISION array, dimension ( LDB, kb ), where kb is
+#                n  when  TRANSB = 'N' or 'n',  and is  k  otherwise.
+#                Before entry with  TRANSB = 'N' or 'n',  the leading  k by n
+#                part of the array  B  must contain the matrix  B,  otherwise
+#                the leading  n by k  part of the array  B  must contain  the
+#                matrix B.
+
+#     [in]    LDB 
+
+#               LDB is INTEGER
+#                On entry, LDB specifies the first dimension of B as declared
+#                in the calling (sub) program. When  TRANSB = 'N' or 'n' then
+#                LDB must be at least  max( 1, k ), otherwise  LDB must be at
+#                least  max( 1, n ).
+
+#     [in]    BETA    
+
+#               BETA is DOUBLE PRECISION.
+#                On entry,  BETA  specifies the scalar  beta.  When  BETA  is
+#                supplied as zero then C need not be set on input.
+
+#     [in,out]    C   
+
+#               C is DOUBLE PRECISION array, dimension ( LDC, N )
+#                Before entry, the leading  m by n  part of the array  C must
+#                contain the matrix  C,  except when  beta  is zero, in which
+#                case C need not be set on entry.
+#                On exit, the array  C  is overwritten by the  m by n  matrix
+#                ( alpha*op( A )*op( B ) + beta*C ).
+
+#     [in]    LDC 
+
+#               LDC is INTEGER
+#                On entry, LDC specifies the first dimension of C as declared
+#                in  the  calling  (sub)  program.   LDC  must  be  at  least
+#                max( 1, m ).
+
+# dgemm("n", "t", jlen, nj, nk, -one(FT), lnz[klpnt], ksuplen, unz[kupnt], ksuplen - nk, one, lnz[jlpnt], jlen)
+function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+    alpha::FT,
+    A::AbstractVecOrMat{FT}, lda::IT,
+    B::AbstractVecOrMat{FT}, ldb::IT,
+    beta::FT,
+    C::AbstractVecOrMat{FT}, ldc::IT) where {IT, FT}
+    ccall((LinearAlgebra.BLAS.@blasfunc(:dgemm_), LinearAlgebra.BLAS.libblastrampoline), Cvoid,
+        (Ref{UInt8}, Ref{UInt8}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt},
+            Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt},
+            Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT},
+            Ref{LinearAlgebra.BLAS.BlasInt}, Clong, Clong),
+        transA, transB, m, n, k, alpha, A, lda,
+        B, ldb, beta, C, ldc, 1, 1)
+    C
+end
+
+# SUBROUTINE DGETRF( M, N, A, LDA, IPIV, INFO )
+# *     .. Scalar Arguments ..
+#       INTEGER            INFO, LDA, M, N
+# *     .. Array Arguments ..
+#       INTEGER            IPIV( * )
+#       DOUBLE PRECISION   A( LDA, * )
+function dgetrf!(m::IT, n::IT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+    A = rand(7, 7)
+    @show A, ipiv, info = getrf!(A)
+    info = Ref{LinearAlgebra.BLAS.BlasInt}()
+    ccall((LinearAlgebra.LAPACK.@blasfunc(:dgetrf_), LinearAlgebra.LAPACK.libblastrampoline), Cvoid,
+        (Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT},
+            Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}),
+        m, n, A, lda, ipiv, info)
+    chkargsok(info[])
+    return info[] #Error code is stored in LU factorization type
+end
+
+#       SUBROUTINE DTRSM(SIDE,UPLO,TRANSA,DIAG,M,N,ALPHA,A,LDA,B,LDB)
+# *     .. Scalar Arguments ..
+#       DOUBLE PRECISION ALPHA
+#       INTEGER LDA,LDB,M,N
+#       CHARACTER DIAG,SIDE,TRANSA,UPLO
+# *     .. Array Arguments ..
+#       DOUBLE PRECISION A(LDA,*),B(LDB,*)
+# dtrsm("r", "u", "n", "n", jlen - nj, nj, one(FT), lnz[jlpnt], jlen, lnz[jlpnt + nj], jlen)
+function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT, A::AbstractMatrix{FT}, lda::IT, B::AbstractMatrix{FT}, ldb::IT) where {IT, FT}
+    if k != (side == 'L' ? m : n)
+        throw(DimensionMismatch("size of A is ($k,$k), size of B is ($m,$n), side is $side, and transa='$transa'"))
+    end
+    ccall((LinearAlgebra.BLAS.@blasfunc(:dtrsm_), LinearAlgebra.BLAS.libblastrampoline), Cvoid,
+        (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
+            Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT},
+            Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt},
+            Clong, Clong, Clong, Clong),
+        side, uplo, transa, diag,
+        m, n, alpha, A, lda, B, ldb,
+        1, 1, 1, 1)
+    B
 end
 
 end 

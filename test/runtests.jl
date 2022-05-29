@@ -20,6 +20,6 @@ end
     include("test_etree.jl")
 end
 
-@time @testset "Sparse solver" begin
-    include("test_sparse_solver.jl")
+@time @testset "Sparse method" begin
+    include("test_sparse_method.jl")
 end
