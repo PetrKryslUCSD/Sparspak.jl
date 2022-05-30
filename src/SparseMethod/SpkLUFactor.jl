@@ -80,6 +80,8 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
     @assert length(xlnz) == (n + 1)
     @assert length(xunz) == (n + 1)
     @assert length(ipvt) == n
+
+    ONE = FT(1.0)
     
     link = fill(zero(IT), nsuper)
     lngth = fill(zero(IT), nsuper)
@@ -187,10 +189,10 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                dense cmod(jsup, ksup).
 #                jsup and ksup have identical structure.
 
-                dgemm!('n', 't', jlen, nj, nk, -one(FT), view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, one, view(lnz, jlpnt:length(lnz)), jlen)
+                dgemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, jlpnt:length(lnz)), jlen)
 
                 if  (jlen > nj)
-                    dgemm!('n', 't', jlen - nj, nj, nk, -one(FT), view(unz:(kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, one(FT), view(unz, jupnt:length(unz)), jlen - nj)
+                    dgemm!('n', 't', jlen - nj, nj, nk, -ONE, view(unz:(kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, jupnt:length(unz)), jlen - nj)
                 end
 
                 nups = nj
@@ -220,9 +222,9 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                   updating target supernode by a trivial
 #                   supernode (with one column).
 # 
-                    mmpyi(klen, nups, lindx[kxpnt], lindx[kxpnt], lnz[klpnt], unz[kupnt], xlnz, lnz, map)
+                    mmpyi(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(unz, kupnt:length(unz)), xlnz, lnz, map)
 
-                    mmpyi(klen - nups, nups, lindx(kxpnt + nups), lindx[kxpnt], unz[kupnt + nups], lnz[klpnt], xunz, unz, map)
+                    mmpyi(klen - nups, nups, view(lindx, (kxpnt + nups):length(lindx)), view(lindx, kxpnt:length(lindx)), view(unz, (kupnt + nups):length(unz)), view(lnz, klpnt:length(lnz)), xunz, unz, map)
 
                  else
 # 
@@ -245,11 +247,11 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
 
                         ilpnt = xlnz[kfirst] + [kfirst - fj]
-                        dgemm!('n', 't', klen, nups, nk, -one(FT), view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, one(FT), view(lnz, ilpnt:length(lnz)), jlen)
+                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, ilpnt:length(lnz)), jlen)
 
                         iupnt = xunz[kfirst]
                         if  (klen > nups)
-                            dgemm!('n', 't', klen - nups, nups, nk, - one, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, one, view(unz, iupnt:length(unz)), jlen - nj)
+                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, iupnt:length(unz)), jlen - nj)
                         end
                     else
 # 
@@ -268,7 +270,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
                         igathr(klen, lindx(kxpnt), map, relind)
 
-                        dgemm!('n', 't', klen, nups, nk, -one(FT), view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), temp, klen)
+                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), temp, klen)
 
 # 
 #                      incorporate the cmod(jsup, ksup) block
@@ -278,7 +280,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 
                         if  (klen > nups)
 
-                            dgemm!('n', 't', klen - nups, nups, nk, -one(FT), view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), temp, klen - nups)
+                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), temp, klen - nups)
 
 # -
 #                         incorporate the cmod(jsup, ksup) block
@@ -322,7 +324,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 
 #          update columns.
 
-        dtrsm!('r', 'u', 'n', 'n', jlen - nj, nj, one(FT), view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
+        dtrsm!('r', 'u', 'n', 'n', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
 
 #          apply permutation to rows.
 
@@ -331,7 +333,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 
 #             update rows.
 
-            dtrsm!('r', 'l', 't', 'u', jlen - nj, nj, one, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
+            dtrsm!('r', 'l', 't', 'u', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
         end
 
 #          insert jsup into linked list of first supernode

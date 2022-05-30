@@ -118,17 +118,28 @@ end
        z       -   on output, z = z + xy.
 
 """
-function mmpyi(m::IT, q::IT, zindxr::Vector{IT}, zindxc::Vector{IT}, x::Vector{FT}, y::Vector{FT}, iz::Vector{IT}, z::Vector{FT}, relind::Vector{IT}, diag = one(eltype(x))) where {IT, FT}
-    @assert length(x) == m
-    @assert length(y) == q
+function mmpyi(m::IT, q::IT, 
+    zindxr::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
+    zindxc::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
+    x::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
+    y::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
+    iz::Vector{IT},
+    z::Vector{FT},
+    relind::Vector{IT}, diag = one(eltype(x))) where {IT, FT}
+    @assert length(x) >= m
+    @assert length(y) >= q
     for k in 1:q
         t = y[k]*diag;  zlast = iz[zindxc[k]+1] - 1
-        z[zlast - relind[zindxr]] .-= t .* x
+        for j in 1:m
+            zi = relind[zindxr[j]]
+            z[zlast - zi] -= t * x[j]
+        end
     end 
     return true
 end
 
 function vswap(m, va, vb)
+    @show m, va, vb
     for j in 1:m
         t = vb[j]
         vb[j] = va[j]
@@ -155,41 +166,55 @@ blocks of L.
                    a[i, k] = a[ipvt[i], k] (i hope)
 
 """
-function luswap(m::IT, n::IT, av::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
-    # swap columns i and j of a, in-place
-    function swapcols!(_m::AbstractMatrix, i, j)
-        i == j && return
-        cols = axes(_m,2)
-        @boundscheck i in cols || throw(BoundsError(_m, (:,i)))
-        @boundscheck j in cols || throw(BoundsError(_m, (:,j)))
-        for k in axes(_m,1)
-            @inbounds _m[k,i],_m[k,j] = _m[k,j],_m[k,i]
-        end
+# function luswap(m::IT, n::IT, av::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+#     # swap columns i and j of a, in-place
+#     function swapcols!(_m::AbstractMatrix, i, j)
+#         i == j && return
+#         cols = axes(_m,2)
+#         @boundscheck i in cols || throw(BoundsError(_m, (:,i)))
+#         @boundscheck j in cols || throw(BoundsError(_m, (:,j)))
+#         for k in axes(_m,1)
+#             @inbounds _m[k,i],_m[k,j] = _m[k,j],_m[k,i]
+#         end
+#     end
+#     @assert length(ipvt) >= n
+#     @assert length(av) >= m*n
+#     @show av, m, n
+#     a = reshape(view(av, 1:(m*n)), m, n)
+#     @show p = deepcopy(ipvt) 
+#     count = 0
+#     start = 0
+#     while count < length(p)
+#         ptr = start = findnext(!iszero, p, start+1)::Int
+#         next = p[start]
+#         count += 1
+#         while next != start
+#             swapcols!(a, ptr, next)
+#             p[ptr] = 0
+#             ptr = next
+#             next = p[next]
+#             count += 1
+#         end
+#         p[ptr] = 0
+#     end
+#     a
+# end
+# luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
+function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+    @show m, n, length(a), lda, ipvt
+    for k in 1:n
+        i = ipvt[k]
+        ks = (k - 1)*lda + 1
+        is = (i - 1)*lda + 1
+        vswap(m, view(a, ks:ks+m-1), view(a, is:is+m-1))
     end
-    @assert length(ipvt) >= n
-    @assert length(av) >= m*n
-    @show av, m, n
-    a = reshape(view(av, 1:(m*n)), m, n)
-    @show p = deepcopy(ipvt) 
-    count = 0
-    start = 0
-    while count < length(p)
-        ptr = start = findnext(!iszero, p, start+1)::Int
-        next = p[start]
-        count += 1
-        while next != start
-            swapcols!(a, ptr, next)
-            p[ptr] = 0
-            ptr = next
-            next = p[next]
-            count += 1
-        end
-        p[ptr] = 0
-    end
-    a
 end
 
-const __BLAS_LIB = dlopen(LinearAlgebra.BLAS.libblastrampoline)
+const __BLAS_LIB = Ref{Ptr{Nothing}}()
+
+function __init__()
+    __BLAS_LIB[] = dlopen(LinearAlgebra.BLAS.libblastrampoline)
+end
 
 # dgemm("n", "t", jlen, nj, nk, -one(FT), lnz[klpnt], ksuplen, unz[kupnt], ksuplen - nk, one, lnz[jlpnt], jlen)
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
@@ -198,7 +223,7 @@ function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     B::AbstractVecOrMat{FT}, ldb::IT,
     beta::FT,
     C::AbstractVecOrMat{FT}, ldc::IT) where {IT, FT}
-    __DGEMM_PTR = dlsym(__BLAS_LIB, LinearAlgebra.BLAS.@blasfunc(dgemm_))
+    __DGEMM_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgemm_))
     ccall(__DGEMM_PTR, Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt},
             Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt},
@@ -217,7 +242,7 @@ end
 #       DOUBLE PRECISION   A( LDA, * )
 function dgetrf!(m::IT, n::IT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
     info = Ref{LinearAlgebra.BLAS.BlasInt}()
-    __DGETRF_PTR = dlsym(__BLAS_LIB, LinearAlgebra.BLAS.@blasfunc(dgetrf_))
+    __DGETRF_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgetrf_))
     ccall(__DGETRF_PTR, Cvoid,
         (Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT},
             Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}),
@@ -235,7 +260,7 @@ end
 #       DOUBLE PRECISION A(LDA,*),B(LDB,*)
 # dtrsm("r", "u", "n", "n", jlen - nj, nj, one(FT), lnz[jlpnt], jlen, lnz[jlpnt + nj], jlen)
 function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, B::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldb::IT) where {IT, FT}
-    __DTRSM_PTR = dlsym(__BLAS_LIB, LinearAlgebra.BLAS.@blasfunc(dtrsm_))
+    __DTRSM_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dtrsm_))
     ccall(__DTRSM_PTR, Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
             Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT},
