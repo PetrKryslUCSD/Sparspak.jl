@@ -314,9 +314,8 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
 #          apply partial lu to the diagonal block.
 # 
-        @show 315, ipvt
+        
         iflag = dgetrf!(nj, nj, view(lnz, jlpnt:length(lnz)), jlen, view(ipvt, fj:length(ipvt)))
-        @show 317, ipvt
 
         if  (iflag != 0)
             iflag = - 1

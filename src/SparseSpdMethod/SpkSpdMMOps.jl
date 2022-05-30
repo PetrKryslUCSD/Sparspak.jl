@@ -139,7 +139,6 @@ function mmpyi(m::IT, q::IT,
 end
 
 function vswap(m, va, vb)
-    @show m, va, vb
     for j in 1:m
         t = vb[j]
         vb[j] = va[j]
@@ -201,7 +200,6 @@ blocks of L.
 # end
 # luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
 function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
-    @show m, n, length(a), lda, ipvt
     for k in 1:n
         i = ipvt[k]
         ks = (k - 1)*lda + 1
@@ -242,12 +240,11 @@ end
 #       DOUBLE PRECISION   A( LDA, * )
 function dgetrf!(m::IT, n::IT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
     info = Ref{LinearAlgebra.BLAS.BlasInt}()
-    __DGETRF_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgetrf_))
+    __DGETRF_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgetrf_)) # FIX ME
     ccall(__DGETRF_PTR, Cvoid,
         (Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT},
             Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}),
         m, n, A, lda, ipiv, info)
-    @show info[]
     return info[] #Error code is stored in LU factorization type
 end
 
