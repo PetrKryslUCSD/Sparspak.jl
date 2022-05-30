@@ -96,7 +96,7 @@ function _test()
           4   5   6   7   8   0]
     b = a[:]
     m, n = size(a); lda = m; ipvt = [2, 6, 4, 3, 5, 1]
-    luswap(m, n, b, lda, ipvt)
+    luswap(m, n, view(b, 1:length(b)), lda, view(ipvt, 1:length(ipvt)))
     @test a[:, ipvt] == reshape(b, m, n)
     return true
 end
