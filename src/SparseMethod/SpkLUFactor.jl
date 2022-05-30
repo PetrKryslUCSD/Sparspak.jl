@@ -107,7 +107,6 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
     for jj in 1:nsuper
         jsup = jj
 
-# 
 #          fj     ...  first row / column of jsup.
 #          lj     ...  last row / column of jsup.
 #          nj     ...  number of rows / columns in jsup.
@@ -118,7 +117,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                      in column fj.
 #          jupnt  ...  pointer to location of first nonzero
 #                      in row fj.
-# -
+
         fj    = xsuper[jsup]
         lj    = xsuper[jsup + 1] - 1
         nj    = lj - fj + 1
@@ -134,30 +133,24 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
         ldindx(jlen, view(lindx, jxpnt:length(lindx)), map)
 
-# --
 #          for every supernode ksup in row(jsup) ...
-# -
+
         while (true)
-# -
+
 #             wait for something to appear in the list, or
 #             stop if there can"t be anything more
-# -
 
-# -
 #             take out the first item in the list.  MUST BE DONE
 #             atomically#
 
             ksup = link[jsup]
             if (ksup != 0)
-# ---------------------------
 #                   remove the head of the list.
-# 
                 link[jsup] = link[ksup]
                 link[ksup] = 0
             end
 
             if (ksup == 0) break; end
-# --
 #             get info about the cmod(jsup, ksup) update.
 #
 #             fk     ...  first row / column of ksup.
@@ -170,7 +163,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                         active portion of column fk.
 #             kupnt  ...  pointer to location of first nonzero in
 #                         active portion of row fk.
-# - 
+
             fk  = xsuper[ksup]
             lk  = xsuper[ksup + 1] - 1
             nk = lk - fk + 1
@@ -180,7 +173,6 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
             klpnt = xlnz[fk + 1] - klen
             kupnt = xunz[fk + 1] - klen
 
-# 
 #             perform cmod(jsup, ksup), with special cases
 #             handled differently.
 #
@@ -189,13 +181,12 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                  perform cmod on the rows.
 #
 #             nups  ...  number of rows / columns updated.
-# 
+
             if  (klen == jlen)
 
-# 
 #                dense cmod(jsup, ksup).
 #                jsup and ksup have identical structure.
-# 
+
                 dgemm!('n', 't', jlen, nj, nk, -one(FT), view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, one, view(lnz, jlpnt:length(lnz)), jlen)
 
                 if  (jlen > nj)
@@ -268,7 +259,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
                         store = klen * nups
                         if  (store > tmpsiz)
-                        iflag = - 2
+                            iflag = - 2
                         end
 
 # 
@@ -321,32 +312,31 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
 #          apply partial lu to the diagonal block.
 # 
+        @show 315, ipvt
         iflag = dgetrf!(nj, nj, view(lnz, jlpnt:length(lnz)), jlen, view(ipvt, fj:length(ipvt)))
+        @show 317, ipvt
 
         if  (iflag != 0)
             iflag = - 1
         end
-# --------------
+
 #          update columns.
-# --------------
+
         dtrsm!('r', 'u', 'n', 'n', jlen - nj, nj, one(FT), view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
 
-# -------------------------
 #          apply permutation to rows.
-# -------------------------
-        if  (jlen > nj)
-            luswap(jlen - nj, nj, unz[jupnt], jlen - nj, ipvt[fj])
 
-# --------------
+        if  (jlen > nj)
+            luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
+
 #             update rows.
-# --------------
+
             dtrsm!('r', 'l', 't', 'u', jlen - nj, nj, one, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
         end
 
-# 
 #          insert jsup into linked list of first supernode
 #          it will update.
-# 
+
         if  (jlen > nj)
             nxt = lindx[jxpnt + nj]
             nxtsup = snode[nxt]
