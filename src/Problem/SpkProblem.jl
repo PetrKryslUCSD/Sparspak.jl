@@ -203,6 +203,10 @@ end
 
 function insparse(p::Problem{IT,FT}, spm) where {IT,FT}
     I, J, V = findnz(spm)
+    return insparse(p, I, J, V)
+end
+
+function insparse(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT,FT}
     for i in eachindex(I)
         if !inaij(p, I[i], J[i], V[i])
             return false 
