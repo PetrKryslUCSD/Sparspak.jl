@@ -94,7 +94,7 @@ using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
 using ..SpkETree: ETree, getetree, getpostorder
 using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
-using ..SpkLUFactor: lufactor
+using ..SpkLUFactor: lufactor, lulsolve, luusolve
 using ..SpkProblem: Problem
 using ..SpkUtilities: extend
 using ..SpkMmd: mmd
@@ -419,6 +419,33 @@ function factor(s::SparseBase{IT, FT}) where {IT, FT}
         @error "$(@__FILE__): An empty problem. No matrix."
         return false
     end
+    return true
+end
+
+"""
+This routine calls the lower - level routine LUSolve which
+solves L U x = rhs, given L, U and rhs. The solution is placed in
+the array rhs. Note that the factorization is of a permuted form of
+the problem, and it is assumed that the user provides the rhs in
+the original order. Thus, the permutation "hidden" in the solver
+ object is applied as appropriate.
+"""
+function triangularsolve(s::SparseBase{IT, FT}, solution::Vector{FT}) where {IT, FT}
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem. No solution."
+        return false
+    end
+
+    rhs = fill(zero(FT), s.n)
+    rhs .= solution[s.order.rperm]
+
+    lulsolve(s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.ipiv, rhs)
+    @show "after lulsolve", rhs
+
+    luusolve(s.n, s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, rhs)
+
+    @show solution .= rhs[s.order.rinvp[1:s.n]]
+
     return true
 end
 

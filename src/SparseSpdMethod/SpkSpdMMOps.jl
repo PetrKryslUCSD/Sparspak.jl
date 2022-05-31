@@ -7,7 +7,7 @@ the LU factorization.
 module SpkSpdMMops
 
 using LinearAlgebra
-using LinearAlgebra.LAPACK: getrf!
+using LinearAlgebra.BLAS: @blasfunc, libblastrampoline, BlasInt
 using Libdl
 
 # import LinearAlgebra, OpenBLAS64_jll
@@ -208,11 +208,11 @@ function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}
     end
 end
 
-const __BLAS_LIB = Ref{Ptr{Nothing}}()
+# const __BLAS_LIB = Ref{Ptr{Nothing}}()
 
-function __init__()
-    __BLAS_LIB[] = dlopen(LinearAlgebra.BLAS.libblastrampoline)
-end
+# function __init__()
+#     __BLAS_LIB[] = dlopen(LinearAlgebra.BLAS.libblastrampoline)
+# end
 
 # dgemm("n", "t", jlen, nj, nk, -one(FT), lnz[klpnt], ksuplen, unz[kupnt], ksuplen - nk, one, lnz[jlpnt], jlen)
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
@@ -221,12 +221,11 @@ function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     B::AbstractVecOrMat{FT}, ldb::IT,
     beta::FT,
     C::AbstractVecOrMat{FT}, ldc::IT) where {IT, FT}
-    __DGEMM_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgemm_))
-    ccall(__DGEMM_PTR, Cvoid,
-        (Ref{UInt8}, Ref{UInt8}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt},
-            Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt},
-            Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT},
-            Ref{LinearAlgebra.BLAS.BlasInt}, Clong, Clong),
+    ccall((@blasfunc(dgemm_), libblastrampoline), Cvoid,
+        (Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
+            Ref{BlasInt}, Ref{FT}, Ptr{FT}, Ref{BlasInt},
+            Ptr{FT}, Ref{BlasInt}, Ref{FT}, Ptr{FT},
+            Ref{BlasInt}, Clong, Clong),
         transA, transB, m, n, k, alpha, A, lda,
         B, ldb, beta, C, ldc, 1, 1)
     C
@@ -239,11 +238,10 @@ end
 #       INTEGER            IPIV( * )
 #       DOUBLE PRECISION   A( LDA, * )
 function dgetrf!(m::IT, n::IT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
-    info = Ref{LinearAlgebra.BLAS.BlasInt}()
-    __DGETRF_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dgetrf_)) # FIX ME
-    ccall(__DGETRF_PTR, Cvoid,
-        (Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT},
-            Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}, Ptr{LinearAlgebra.BLAS.BlasInt}),
+    info = Ref{BlasInt}()
+    ccall((@blasfunc(dgetrf_), libblastrampoline), Cvoid,
+        (Ref{BlasInt}, Ref{BlasInt}, Ptr{FT},
+            Ref{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt}),
         m, n, A, lda, ipiv, info)
     return info[] #Error code is stored in LU factorization type
 end
@@ -257,16 +255,51 @@ end
 #       DOUBLE PRECISION A(LDA,*),B(LDB,*)
 # dtrsm("r", "u", "n", "n", jlen - nj, nj, one(FT), lnz[jlpnt], jlen, lnz[jlpnt + nj], jlen)
 function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, B::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldb::IT) where {IT, FT}
-    __DTRSM_PTR = dlsym(__BLAS_LIB[], LinearAlgebra.BLAS.@blasfunc(dtrsm_))
-    ccall(__DTRSM_PTR, Cvoid,
+    ccall((@blasfunc(dtrsm_), libblastrampoline), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
-            Ref{LinearAlgebra.BLAS.BlasInt}, Ref{LinearAlgebra.BLAS.BlasInt}, Ref{FT}, Ptr{FT},
-            Ref{LinearAlgebra.BLAS.BlasInt}, Ptr{FT}, Ref{LinearAlgebra.BLAS.BlasInt},
+            Ref{BlasInt}, Ref{BlasInt}, Ref{FT}, Ptr{FT},
+            Ref{BlasInt}, Ptr{FT}, Ref{BlasInt},
             Clong, Clong, Clong, Clong),
         side, uplo, transa, diag,
         m, n, alpha, A, lda, B, ldb,
         1, 1, 1, 1)
     B
+end
+
+# SUBROUTINE DLASWP( N, A, LDA, K1, K2, IPIV, INCX )
+#  *
+#  *       .. Scalar Arguments ..
+#  *       INTEGER            INCX, K1, K2, LDA, N
+#  *       ..
+#  *       .. Array Arguments ..
+#  *       INTEGER            IPIV( * )
+#  *       DOUBLE PRECISION   A( LDA, * )
+function dlaswp!(a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, k1::IT, k2::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+    # dlaswp(1, rhs(fj), nj, 1, nj, ipiv(fj), 1)
+    ccall((@blasfunc(dlaswp_), libblastrampoline), Cvoid,
+        (Ref{BlasInt}, Ptr{FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
+        1, a, lda, k1, k2, ipiv, 1)
+    a
+end
+
+#SUBROUTINE DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+#*     .. Scalar Arguments ..
+#      DOUBLE PRECISION ALPHA,BETA
+#      INTEGER INCX,INCY,LDA,M,N
+#      CHARACTER TRANS
+#*     .. Array Arguments ..
+#      DOUBLE PRECISION A(LDA,*),X(*),Y(*)
+function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::FT,
+    A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
+    X::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true},
+    beta::FT, Y::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+    ccall((@blasfunc(dgemv_), libblastrampoline), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{FT},
+            Ptr{FT}, Ref{BlasInt}, Ptr{FT}, Ref{BlasInt},
+            Ref{FT}, Ptr{FT}, Ref{BlasInt}, Clong),
+        trans, m, n, alpha, A, lda, X, 1, beta, Y, 1, 
+        1)
+    Y
 end
 
 end 

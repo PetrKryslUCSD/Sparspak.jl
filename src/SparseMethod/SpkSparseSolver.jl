@@ -10,10 +10,10 @@ module SpkSparseSolver
 
 using ..SpkProblem: Problem
 using ..SpkSparseBase: SparseBase
-import ..SpkSparseBase: findorder, symbolicfactor, inmatrix, factor
+import ..SpkSparseBase: findorder, symbolicfactor, inmatrix, factor, triangularsolve
 
-mutable struct SparseSolver{IT}
-    slvr::SparseBase
+mutable struct SparseSolver{IT, FT}
+    slvr::SparseBase{IT, FT}
     n::IT
     ma::IT
     na::IT
@@ -131,6 +131,33 @@ function factor(s::SparseSolver{IT}) where {IT}
     else
         return false
     end
+end
+
+function triangularsolve(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
+    if ( ! s.factordone)
+        @error "$(@__FILE__): Sequence error. Factorization not done yet."
+        return false
+    end
+
+    temp = p.rhs[1:p.nrows]
+    @assert length(temp) == s.n
+
+    triangularsolve(s, temp)
+
+    p.x .= temp
+
+    s.refinedone = false
+    return true
+end
+
+function triangularsolve(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {IT, FT}
+    if ( ! s.factordone)
+        @error "$(@__FILE__): Sequence error. Factorization not done yet."
+        return false
+    end
+    triangularsolve(s.slvr, solution)
+    s.refinedone = false
+    return true
 end
 
 """

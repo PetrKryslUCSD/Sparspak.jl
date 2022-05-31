@@ -204,8 +204,8 @@ function _test()
     s_xunz = vec([ 1           2           3           4           5           6           7           8           9          10          10          10 ])
     @test s.slvr.xlnz == s_xlnz
     @test s.slvr.xunz == s_xunz
-    s_lnz  = [  4.0000000000000000, -0.25000000000000000, 3.7500000000000000, -0.26666666666666666, 3.7333333333333334, -0.26785714285714285, 3.7321428571428572 
-, -0.26794258373205743, 3.7320574162679425, -0.26794871794871794, 4.0000000000000000, -0.25000000000000000, 3.7500000000000000, -0.26666666666666666, 3.7333333333333334, -0.26785714285714285, 3.7321428571428572, -0.26794258373205743, 3.7320574162679425, -0.26794871794871794, -1.0000000000000000, 3.4641025641025642     ]
+    s_lnz  = [  4.0, -0.25000000000000000, 3.7500000000000000, -0.26666666666666666, 3.7333333333333334, -0.26785714285714285, 3.7321428571428572 
+, -0.26794258373205743, 3.7320574162679425, -0.26794871794871794, 4.0, -0.25000000000000000, 3.7500000000000000, -0.26666666666666666, 3.7333333333333334, -0.26785714285714285, 3.7321428571428572, -0.26794258373205743, 3.7320574162679425, -0.26794871794871794, -1.0000000000000000, 3.4641025641025642     ]
     s_unz = [ -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
     @test norm(s.slvr.lnz - s_lnz) / norm(s_lnz) < 1e-6
     @test norm(s.slvr.unz - s_unz) / norm(s_unz) < 1e-6
@@ -216,3 +216,49 @@ end
 _test()
 end # module
 
+
+module msprs007
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij, inbi, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij(p, i + 1, i, -1.0)
+        inaij(p, i, i, 4.0)
+        inaij(p, i, i + 1, -1.0)
+        inbi(p, i, 2.0 * i)
+    end
+    inaij(p, n, n, 4.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(11)
+    # @show outsparse(p)
+    s = SparseSolver(p)
+    findorder(s)
+    symbolicfactor(s)
+    inmatrix(s, p)
+    factor(s)
+    # before  LULSolve 
+    # rhs = 34.0, 20.0, 18.0, 16.0, 14.0, 2.00, 4.00, 6.00, 8.00, 10.0, 12.0              
+    # after  LULSolve  
+    # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
+    solve(s, p)
+    A = outsparse(p)
+    @show x = A \ p.rhs
+    @show p.x    
+
+    return true
+end
+
+_test()
+end # module
