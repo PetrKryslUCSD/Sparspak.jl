@@ -56,9 +56,9 @@ module SpkProblem
 
 using SparseArrays
 using ..SpkUtilities: _BIGGY, extend
+using ..SpkGrid: Grid
 
 mutable struct Problem{IT, FT}
-    objectname::String
     info::String
     lenhead::IT
     lenlink::IT
@@ -82,7 +82,7 @@ end
 
 """
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, objectname="problem") where {IT, FT}
+function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0) where {IT, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
@@ -105,7 +105,7 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, objectname="prob
     rscales = FT[]
     cscales = FT[]
 
-    return Problem(objectname, info, lenhead, lenlink, lenrhs, lastused, head,
+    return Problem(info, lenhead, lenlink, lenrhs, lastused, head,
         link, rowsubs, nrows, ncols, nnz, dnz, nedges, dedges, values,
         rscales, cscales, x, rhs)
 end
@@ -232,6 +232,94 @@ function outsparse(p::Problem{IT,FT})  where {IT,FT}
         end
     end
     return sparse(I, J, V, nr, nc)
+end
+
+
+"""
+  This routine fills in a Problem object using a given Grid.
+Input Parameters:
+  g - the Grid to be used to fill a Problem matrix
+  stencil - an optional variable specifying the difference operator
+            to be applied to the grid.
+Output Parameter:
+   p - the Problem object to be filled
+"""
+function makegridproblem(g::Grid{IT}) where {IT}
+    M1 = -1.0; FOUR = 4.0
+    p = Problem(g.h, g.k)
+
+    for i in 1:g.h
+        for j in 1:g.k
+            inij(p, g.v[i, j], g.v[i, j], FOUR)
+            if (i > 1) inij(p, g.v[i, j], g.v[i - 1, j], M1); end
+            if (j > 1) inij(p, g.v[i, j], g.v[i, j - 1], M1); end
+        end
+    end 
+
+    for i in 1:g.h
+        for j in 1:g.k
+            inij(p, g.v[i, j], g.v[i, j], FOUR)
+            if (i>1 && j>1)   inij(p, g.v[i, j], g.v[i - 1, j - 1], M1); end
+            if (j<g.k && i>1) inij(p, g.v[i, j], g.v[i - 1, j + 1], M1); end
+        end
+    end
+end
+    
+"""
+  This routine constructs a Grid object given an H and K, and fills in a
+  Problem object using this Grid.
+Input Parameters:
+  h - the number of rows in the Grid
+  k - the number of columns in the Grid
+  stencil - an optional variable specifying the difference operator
+            to be applied to the grid.
+Output Parameter:
+   p - the Problem object to be filled
+"""
+function makegridproblem(h::IT, k::IT) where {IT}
+    g = Grid(h, k)
+    return makegridproblem(g)
+end
+
+"""
+  This routine constructs the RHS of a problem given an x for the
+  equation ``Ax = rhs"". The x must have the same number of elements
+  as the problem (represented by A above) has columns.
+  If x is not present,  a right hand side is contructed so that
+  (a, the) solution is 1, 2, 3, ...m.
+Input Parameter:
+  x - the vector in the equation ``Ax = rhs""
+  mType - matrix type (optional). If the matrix is symmetric and only
+            the lower or upper triangle is present, the user must let
+            the routine know this by setting mType to one of:
+                "L" or "l" - when only the lower triangle is present
+                "U" or "u" - when only the upper triangle is present
+                "T" or "t" - when either the lower or upper triangle is
+                             present.
+Updated Parameter:
+   p - the problem for which the RHS is being constructed.
+"""
+function makerhs(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
+    if (p.nnz == 0)
+        @error "$(@__FILE__): Matrix is NULL. The rhs cannot be computed."
+        return p
+    end
+
+    if (!isempty(x) )  
+        p.x .= x
+    else
+        p.x .= FT.(1:p.ncols)
+    end
+
+    p.rhs .= 0.0
+    res = deepcopy(p.rhs)
+
+    computeresidual(p, res, mtype)
+
+    p.rhs .= -res
+    p.x .= 0.0
+
+    return p
 end
 
 end # module 
