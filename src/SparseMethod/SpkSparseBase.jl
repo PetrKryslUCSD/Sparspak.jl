@@ -440,11 +440,10 @@ function triangularsolve(s::SparseBase{IT, FT}, solution::Vector{FT}) where {IT,
     rhs .= solution[s.order.rperm]
 
     lulsolve(s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.ipiv, rhs)
-    @show "after lulsolve", rhs
 
     luusolve(s.n, s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, rhs)
 
-    @show solution .= rhs[s.order.rinvp[1:s.n]]
+    solution .= rhs[s.order.rinvp]
 
     return true
 end

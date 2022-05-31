@@ -61,16 +61,17 @@ function maketridiagproblem(n)
         inaij(p, i + 1, i, -1.0)
         inaij(p, i, i, 4.0)
         inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 1.0)
+        inbi(p, i, 2.0 * i)
     end
     inaij(p, n, n, 4.0)
-    inbi(p, n, 1.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
     return p
 end
 
 function _test()
     p = maketridiagproblem(11)
-    # @show outsparse(p)
+    
     s = SparseSolver(p)
     findorder(s)
     o =  s.slvr.order
@@ -102,10 +103,11 @@ function maketridiagproblem(n)
         inaij(p, i + 1, i, -1.0)
         inaij(p, i, i, 4.0)
         inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 1.0)
+        inbi(p, i, 2.0 * i)
     end
     inaij(p, n, n, 4.0)
-    inbi(p, n, 1.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
     return p
 end
 
@@ -144,10 +146,11 @@ function maketridiagproblem(n)
         inaij(p, i + 1, i, -1.0)
         inaij(p, i, i, 4.0)
         inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 1.0)
+        inbi(p, i, 2.0 * i)
     end
     inaij(p, n, n, 4.0)
-    inbi(p, n, 1.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
     return p
 end
 
@@ -185,10 +188,11 @@ function maketridiagproblem(n)
         inaij(p, i + 1, i, -1.0)
         inaij(p, i, i, 4.0)
         inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 1.0)
+        inbi(p, i, 2.0 * i)
     end
     inaij(p, n, n, 4.0)
-    inbi(p, n, 1.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
     return p
 end
 
@@ -242,7 +246,7 @@ end
 
 function _test()
     p = maketridiagproblem(11)
-    # @show outsparse(p)
+    
     s = SparseSolver(p)
     findorder(s)
     symbolicfactor(s)
@@ -254,11 +258,59 @@ function _test()
     # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
     solve(s, p)
     A = outsparse(p)
-    @show x = A \ p.rhs
-    @show p.x    
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
 
     return true
 end
 
 _test()
 end # module
+
+
+module msprs008
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij, inbi, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij(p, i + 1, i, -1.0)
+        inaij(p, i, i, 4.0)
+        inaij(p, i, i + 1, -1.0)
+        inbi(p, i, 2.0 * i)
+    end
+    inaij(p, n, n, 4.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(11000)
+    
+    s = SparseSolver(p)
+    findorder(s)
+    symbolicfactor(s)
+    inmatrix(s, p)
+    factor(s)
+    # before  LULSolve 
+    # rhs = 34.0, 20.0, 18.0, 16.0, 14.0, 2.00, 4.00, 6.00, 8.00, 10.0, 12.0              
+    # after  LULSolve  
+    # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
+    solve(s, p)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+

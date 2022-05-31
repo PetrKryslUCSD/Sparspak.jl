@@ -55,7 +55,7 @@ or the number of columns in the matrix.
 module SpkProblem
 
 using SparseArrays
-using ..SpkUtilities: _BIGGY
+using ..SpkUtilities: _BIGGY, extend
 
 mutable struct Problem{IT, FT}
     objectname::String
@@ -120,7 +120,7 @@ function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
         p.lenlink = max(2 * p.lenlink, 3 * p.ncols)
         p.link = extend(p.link, p.lenlink)
         p.rowsubs = extend(p.rowsubs, p.lenlink)
-        p.values = extend(p.values, p.lenlink, _BIGGY)
+        p.values = extend(p.values, p.lenlink, _BIGGY())
     end
 
     p.nrows = max(rnum, p.nrows)

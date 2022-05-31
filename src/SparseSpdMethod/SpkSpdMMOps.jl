@@ -165,40 +165,6 @@ blocks of L.
                    a[i, k] = a[ipvt[i], k] (i hope)
 
 """
-# function luswap(m::IT, n::IT, av::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
-#     # swap columns i and j of a, in-place
-#     function swapcols!(_m::AbstractMatrix, i, j)
-#         i == j && return
-#         cols = axes(_m,2)
-#         @boundscheck i in cols || throw(BoundsError(_m, (:,i)))
-#         @boundscheck j in cols || throw(BoundsError(_m, (:,j)))
-#         for k in axes(_m,1)
-#             @inbounds _m[k,i],_m[k,j] = _m[k,j],_m[k,i]
-#         end
-#     end
-#     @assert length(ipvt) >= n
-#     @assert length(av) >= m*n
-#     @show av, m, n
-#     a = reshape(view(av, 1:(m*n)), m, n)
-#     @show p = deepcopy(ipvt) 
-#     count = 0
-#     start = 0
-#     while count < length(p)
-#         ptr = start = findnext(!iszero, p, start+1)::Int
-#         next = p[start]
-#         count += 1
-#         while next != start
-#             swapcols!(a, ptr, next)
-#             p[ptr] = 0
-#             ptr = next
-#             next = p[next]
-#             count += 1
-#         end
-#         p[ptr] = 0
-#     end
-#     a
-# end
-# luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
 function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
     for k in 1:n
         i = ipvt[k]
@@ -208,13 +174,6 @@ function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}
     end
 end
 
-# const __BLAS_LIB = Ref{Ptr{Nothing}}()
-
-# function __init__()
-#     __BLAS_LIB[] = dlopen(LinearAlgebra.BLAS.libblastrampoline)
-# end
-
-# dgemm("n", "t", jlen, nj, nk, -one(FT), lnz[klpnt], ksuplen, unz[kupnt], ksuplen - nk, one, lnz[jlpnt], jlen)
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     alpha::FT,
     A::AbstractVecOrMat{FT}, lda::IT,
