@@ -89,7 +89,7 @@ end
 #        relind - list relative indices.
 #
 # *
-function igathr(klen::IT, lindx::Vector{IT}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
+function igathr(klen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
     relind[1:klen] = indmap[lindx[1:klen]]
 end
 
