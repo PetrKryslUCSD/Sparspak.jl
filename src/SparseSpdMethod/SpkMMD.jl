@@ -590,9 +590,11 @@ function mmdnumber(neqns, perm, invp, mergeparent)
 #                   Trace the merged tree until one which has
 #                   not been merged is found, it root.
 # ------------------------------------------
+            root = 0
             while (parent > 0)
                 root = parent ; parent = mergeparent[parent]
             end
+            @assert root > 0
 # -----------------------------------------
 #                   Number node after those already numbered
 #                   in merged subtree rooted at root.
