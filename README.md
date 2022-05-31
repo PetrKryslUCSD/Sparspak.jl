@@ -6,6 +6,8 @@ subroutines from the book "Computer Solution of Large Sparse Positive Definite
 Systems" by Alan George and Joseph Liu. Originally written in Fortran 77, later
 rewritten in Fortran 90. Here is the software translated into Julia.
 
+## News
+
 
 
 ## Reference
@@ -18,4 +20,4 @@ LC: QA188.G46.
 
 ## Additional documents
 
-Some designed documents are in the folder `docs`.
+Some design documents are in the folder `docs`.
