@@ -268,7 +268,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                      gather indices of ksup relative
 #                      to jsup.
 # 
-                        igathr(klen, lindx(kxpnt), map, relind)
+                        igathr(klen, view(lindx, kxpnt:length(lindx)), map, relind)
 
                         dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), temp, klen)
 
