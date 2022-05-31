@@ -517,7 +517,7 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
 #                               If eliminated, include unmarked nodes
 #                               in this element into the degree count.
 # -
-                            j = xadj[neighbor] ; jstop = xadj(neighbor + 1)
+                            j = xadj[neighbor] ; jstop = xadj[neighbor + 1]
                             node = adjncy[j]
                             while (node != 0)
                                 if (node < 0)
