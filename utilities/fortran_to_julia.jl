@@ -50,6 +50,8 @@ function doit()
     r"(\s+)else\s*if" => s"\1elseif",
     # Replace IF followed by ( to if (
     r"(\s+)(elseif|if)\(" => s"\1\2 (",
+    # Add end after single line if with an = assignment
+    # r"if\s*\((.*?)\)(\s*.*\s*.*=\s*.*)(\n)" => s"if (\1) \2 end\3",
     # Remove THEN
     r"([)\s])then(\s+)" => s"\1\2",
     # Replace END XXXX with end
@@ -91,9 +93,6 @@ function doit()
     r"\s*\.lt\.\s*" => " < ",
     # Remove (expression) brackets after if
     # r"if \((.*)\)(\s*\n)" => s"if \1\2",
-    # Add end after single line if with an = assignment
-    # r"if\s*(.*?) = (.*?)(\n)" => s"if \1 = \2 end\3",
-    r"if\s*\((.*?)\)(\s*.*)(\n)" => s"if (\1) \2 end\3",
     # Format floats as "5.0" not "5."
     r"(\W\d+)\.(\D)" => s"\1.0\2",
     # Tab to 4 spaces
