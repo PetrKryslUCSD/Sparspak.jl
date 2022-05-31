@@ -1,6 +1,7 @@
 module Sparspak
 
 include("Utilities/SpkUtilities.jl")
+include("Grid/SpkGrid.jl")
 include("Problem/SpkProblem.jl")
 include("Ordering/SpkOrdering.jl")
 include("Graph/SpkGraph.jl")
