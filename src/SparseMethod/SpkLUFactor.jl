@@ -270,23 +270,23 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
                         igathr(klen, view(lindx, kxpnt:length(lindx)), map, relind)
 
-                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), temp, klen)
+                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), view(temp, 1:length(temp)), klen)
 
 # 
 #                      incorporate the cmod(jsup, ksup) block
 #                      update into the appropriate columns of l.
 # 
-                        assmb(klen, nups, temp, view(relind, 1:nups), view(relind, 1:nups), view(xlnz, fj:length(xlnz)), lnz, jlen)
+                        assmb(klen, nups, view(temp, 1:length(temp)), view(relind, 1:nups), view(relind, 1:nups), view(xlnz, fj:length(xlnz)), lnz, jlen)
 
                         if  (klen > nups)
 
-                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), temp, klen - nups)
+                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), view(temp, 1:length(temp)), klen - nups)
 
 # -
 #                         incorporate the cmod(jsup, ksup) block
 #                         update into the appropriate rows of u.
 # 
-                            assmb(klen - nups, nups, temp, view(relind, 1:nups), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
+                            assmb(klen - nups, nups, view(temp, 1:length(temp)), view(relind, 1:nups), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
                         end
                     end
                 end
