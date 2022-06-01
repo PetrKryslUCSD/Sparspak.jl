@@ -192,7 +192,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
                 dgemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, jlpnt:length(lnz)), jlen)
 
                 if  (jlen > nj)
-                    dgemm!('n', 't', jlen - nj, nj, nk, -ONE, view(unz:(kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, jupnt:length(unz)), jlen - nj)
+                    dgemm!('n', 't', jlen - nj, nj, nk, -ONE, view(unz, (kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, jupnt:length(unz)), jlen - nj)
                 end
 
                 nups = nj

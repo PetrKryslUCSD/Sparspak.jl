@@ -109,9 +109,9 @@ function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
         return false
     end
     s.factordone = false
-    inmatrix(s.slvr, p)
+    success = inmatrix(s.slvr, p)
     s.inmatrixdone = true
-    return true
+    return success
 end
 
 """
@@ -166,9 +166,9 @@ end
 
 """
 function solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
-    findorder(s)
+    findorder(s) || ErrorException("Finding Order.")
     symbolicfactor(s)
-    inmatrix(s, p)
+    inmatrix(s, p) || ErrorException("Matrix input.")
     factor(s)
     triangularsolve(s, p)
     return true

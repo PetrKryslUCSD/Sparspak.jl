@@ -82,20 +82,16 @@ end
 
 """
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0) where {IT, FT}
+function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
 
-    nrows = zero(IT)
-    ncols = zero(IT)
     lastused = zero(IT)
     nedges = zero(IT)
     dnz = zero(IT)
     dedges = zero(IT)
-    nnz = zero(IT)
-
-    info = ""
+    
     head = fill(zero(IT), lenhead)
     rhs = fill(zero(FT), lenrhs)
     x = fill(zero(FT), lenhead)
@@ -157,7 +153,7 @@ function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
         end
         lastptr = ptr
         ptr = p.link[ptr]
-    end                 # ^ * not there; add to column
+    end                 # not there; add to column
 
     p.lastused = p.lastused + 1
     p.nedges = p.nedges + 1
@@ -323,6 +319,25 @@ function makerhs(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
     p.rhs .= -res
     p.x .= 0.0
 
+    return p
+end
+
+# """
+#   InRHSProblem adds a vector of values, rhs, to the current right hand
+#   side of a problem object.
+# Input Parameter:
+#   rhs - the source right - hand side. It ^must^ be of length at least
+#         p.nRows and if it is greater than p.nRows, only the first
+#         p.nRows are used.
+# Updated Parameter:
+#    p - the problem in which rhs is to be inserted.
+# """
+"""
+"""
+function infullrhs(p::Problem{IT,FT}, rhs)  where {IT,FT}
+    for i in p.nrows:-1:1
+        inbi(p, i, FT(rhs[i]))
+    end
     return p
 end
 

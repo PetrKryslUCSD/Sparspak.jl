@@ -252,10 +252,6 @@ function _test()
     symbolicfactor(s)
     inmatrix(s, p)
     factor(s)
-    # before  LULSolve 
-    # rhs = 34.0, 20.0, 18.0, 16.0, 14.0, 2.00, 4.00, 6.00, 8.00, 10.0, 12.0              
-    # after  LULSolve  
-    # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
     solve(s, p)
     A = outsparse(p)
     x = A \ p.rhs
@@ -314,3 +310,143 @@ end
 _test()
 end # module
 
+
+module msprs009
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij, inbi, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij(p, i + 1, i, -1.0)
+        inaij(p, i, i, 4.0)
+        inaij(p, i, i + 1, -1.0)
+        inbi(p, i, 2.0 * i)
+    end
+    inaij(p, n, n, 4.0)
+    inbi(p, n, 3.0 * n + 1.0)
+
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(1101)
+    
+    s = SparseSolver(p)
+    solve(s, p)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+
+module msprs010
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+using Sparspak.SpkProblem: insparse, outsparse, infullrhs
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+function makerandomproblem(n)
+    
+    spm = sparse([1, 2, 10, 25, 27, 3, 18, 29, 4, 5, 27, 4, 5, 10, 6, 22, 7, 8, 
+    20, 9, 16, 19, 2, 5, 10, 16, 22, 26, 11, 21, 12, 28, 13, 31, 14, 15, 14, 15, 9, 10, 16, 22, 17, 21, 23, 24, 3, 18, 23, 25, 9, 19, 8, 20, 11, 17, 21, 31, 6, 10, 16, 22, 23, 17, 18, 22, 23, 17, 24, 26, 27, 2, 18, 25, 28, 10, 24, 26, 2, 4, 24, 27, 12, 25, 28, 29, 3, 28, 29, 30, 29, 30, 13, 21, 31], [1, 2, 
+    2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 8, 8, 9, 9, 9, 10, 10, 10, 10, 
+    10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 16, 17, 17, 17, 
+    17, 18, 18, 18, 18, 19, 19, 20, 20, 21, 21, 21, 21, 22, 22, 22, 22, 22, 23, 
+    23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 27, 28, 
+    28, 28, 28, 29, 29, 29, 29, 30, 30, 31, 31, 31], [20.0, 20.0, -0.47048158392539896, -0.40373736633011315, -0.29904858543128643, 20.0, -0.8929708555328307, -0.25537381390842373, 20.0, -0.517204141985797, -0.4252150843692021, -0.517204141985797, 20.0, -0.007891864303108176, 20.0, -0.11187965399280864, 20.0, 20.0, -0.8431376173205444, 20.0, -0.867243409546438, -0.4387621276975887, -0.47048158392539896, -0.007891864303108176, 20.0, -0.5439984352593679, -0.7864685314415719, -0.6207822487609463, 20.0, -0.6015829471856056, 20.0, -0.958084621680583, 20.0, -0.21766891770662522, 20.0, -0.5616538599777784, -0.5616538599777784, 20.0, -0.867243409546438, -0.5439984352593679, 20.0, -0.48381531848154047, 20.0, -0.9600900246453297, -0.6481282913652262, -0.4940551331266394, -0.8929708555328307, 20.0, -0.6974069191376576, -0.9476414447186581, -0.4387621276975887, 20.0, -0.8431376173205444, 20.0, -0.6015829471856056, 
+    -0.9600900246453297, 20.0, -0.9160515550545547, -0.11187965399280864, -0.7864685314415719, -0.48381531848154047, 20.0, -0.47566304294326156, -0.6481282913652262, -0.6974069191376576, -0.47566304294326156, 20.0, -0.4940551331266394, 20.0, -0.5220628570371777, -0.6929780200563616, -0.40373736633011315, -0.9476414447186581, 20.0, -0.013202153574752407, -0.6207822487609463, -0.5220628570371777, 20.0, -0.29904858543128643, -0.4252150843692021, -0.6929780200563616, 20.0, -0.958084621680583, -0.013202153574752407, 20.0, -0.14134601702703786, -0.25537381390842373, -0.14134601702703786, 20.0, -0.43870135287699785, -0.43870135287699785, 20.0, -0.21766891770662522, -0.9160515550545547, 
+    20.0], 31, 31)  
+    
+    p = Sparspak.SpkProblem.Problem(n, n, nnz(spm))
+    Sparspak.SpkProblem.insparse(p, spm);
+    Sparspak.SpkProblem.infullrhs(p, 1:n)
+    return p
+end
+
+function _test()
+    p = makerandomproblem(31)
+    
+    s = SparseSolver(p)
+    solve(s, p)
+    
+    A = outsparse(p)
+    
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+# module msprs011
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak
+# using Sparspak.SpkProblem: insparse, outsparse
+# using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+# function _test()
+#     n = 31
+#     p = Sparspak.SpkProblem.Problem(n, n)
+#     spm = sprand(n, n, 1/n)
+#     spm = -spm - spm' + 20 * LinearAlgebra.I
+#     @show spm - spm'
+#     Sparspak.SpkProblem.insparse(p, spm);
+#     A = outsparse(p)
+#     @show spm - A
+    
+
+#     return true
+# end
+
+# _test()
+# end # module
+
+
+# module msprs012
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak
+# using Sparspak.SpkProblem: insparse, outsparse
+# using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+
+# function makerandomproblem(n)
+#     p = Sparspak.SpkProblem.Problem(n, n)
+#     spm = sprand(n, n, 1/n)
+#     spm = -spm - spm' + 20 * LinearAlgebra.I
+#     @show spm - spm'
+#     Sparspak.SpkProblem.insparse(p, spm);
+#     return p
+# end
+
+# function _test()
+#     p = makerandomproblem(301)
+    
+#     s = SparseSolver(p)
+#     solve(s, p)
+#     A = outsparse(p)
+#     x = A \ p.rhs
+#     @test norm(p.x - x) / norm(x) < 1.0e-6
+
+#     return true
+# end
+
+# _test()
+# end # module

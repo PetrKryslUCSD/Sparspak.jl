@@ -176,10 +176,10 @@ end
 
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     alpha::FT,
-    A::AbstractVecOrMat{FT}, lda::IT,
-    B::AbstractVecOrMat{FT}, ldb::IT,
+    A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
+    B::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldb::IT,
     beta::FT,
-    C::AbstractVecOrMat{FT}, ldc::IT) where {IT, FT}
+    C::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldc::IT) where {IT, FT}
     ccall((@blasfunc(dgemm_), libblastrampoline), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
             Ref{BlasInt}, Ref{FT}, Ptr{FT}, Ref{BlasInt},

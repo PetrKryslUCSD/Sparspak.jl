@@ -326,7 +326,6 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
     s.unz .= zero(FT)
     s.ipiv .= zero(IT)
 
-
     for i in 1:p.ncols
         ptr = p.head[i]
         while (ptr > 0)  # scan column i ....
@@ -351,7 +350,7 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                 for nxtsub in fstsub:lstsub
                     irow = s.lindx[nxtsub]
                     if  (irow > inew)
-                        @error "$(@__FILE__): For matrix element $(inew), $(jnew)."
+                        @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
                         return false
                     end
 
@@ -359,7 +358,7 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
 # -
 #                       find a proper offset into lnz and increment by value
 # -
-                        s.lnz[s.xlnz[jnew] + nnzloc] = s.lnz[s.xlnz[jnew] + nnzloc] + value
+                        s.lnz[s.xlnz[jnew] + nnzloc] += value
                         break
                     end
                     nnzloc = nnzloc + 1
@@ -379,7 +378,7 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                 for nxtsub in fstsub:lstsub
                     irow = s.lindx[nxtsub]
                     if  (irow > jnew)
-                        @error "$(@__FILE__): For matrix element $(inew), $(jnew)."
+                        @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
                         return false
                     end
 
@@ -387,8 +386,8 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
 # -
 #                       find a proper offset into unz and increment by value
 # -
-                        s.unz[s.xunz[inew] + nnzloc] = s.unz[s.xunz[inew] + nnzloc] + value
-                        exit
+                        s.unz[s.xunz[inew] + nnzloc] += value
+                        break
                     end
 
                     nnzloc = nnzloc + 1
