@@ -101,7 +101,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 
     map = fill(zero(IT), n)
     relind = fill(zero(IT), n)
-    temp = fill(zero(IT), tmpsiz)
+    temp = fill(zero(FT), tmpsiz)
 
 # --------------------------
 #      for each supernode jsup ...
