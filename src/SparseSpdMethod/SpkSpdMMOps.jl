@@ -33,9 +33,8 @@ output parameters:
 lnz - contains columns modified by the update matrix.
 """
 function assmb(tlen::IT, nj::IT, temp::Vector{FT}, relcol::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, relind::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, xlnz::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
-    length(relind) == tlen || (@show length(relind), tlen, nj)
     for j in 1:nj
-        @show lbot = xlnz[jlen - relcol[j] + 1] - 1
+        lbot = xlnz[jlen - relcol[j] + 1] - 1
         for k in 1:tlen
             lnz[lbot - relind[k]] += temp[(j-1)*tlen + k]
         end
