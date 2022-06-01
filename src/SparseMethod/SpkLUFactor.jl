@@ -246,7 +246,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                                  column kfirst.
 # 
 
-                        ilpnt = xlnz[kfirst] + [kfirst - fj]
+                        ilpnt = xlnz[kfirst] + (kfirst - fj)
                         dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, ilpnt:length(lnz)), jlen)
 
                         iupnt = xunz[kfirst]
@@ -276,7 +276,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                      incorporate the cmod(jsup, ksup) block
 #                      update into the appropriate columns of l.
 # 
-                        assmb(klen, nups, view(temp, 1:length(temp)), view(relind, 1:nups), view(relind, 1:nups), view(xlnz, fj:length(xlnz)), lnz, jlen)
+                        assmb(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), view(xlnz, fj:length(xlnz)), lnz, jlen)
 
                         if  (klen > nups)
 
@@ -286,7 +286,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 #                         incorporate the cmod(jsup, ksup) block
 #                         update into the appropriate rows of u.
 # 
-                            assmb(klen - nups, nups, view(temp, 1:length(temp)), view(relind, 1:nups), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
+                            assmb(klen - nups, nups, temp, view(relind, 1:length(relind)), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
                         end
                     end
                 end
