@@ -307,7 +307,7 @@ Input parameters: problem and solver objects
 
 The "output" is the modified solver object.
 """
-function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
+function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
 # type (sparsebase)  ::  s
 # type (problem)  ::  p
 # type (ordering) ::  order
@@ -343,10 +343,6 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                 fstsub = s.xlindx[jsup]
                 lstsub = s.xlindx[jsup + 1] - 1
                 nnzloc = 0;
-
-# -  -  -
-#                 search for row subscript inew in jnew"s subscript list.
-# --  -
                 for nxtsub in fstsub:lstsub
                     irow = s.lindx[nxtsub]
                     if  (irow > inew)
@@ -373,7 +369,6 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem) where {IT, FT}
                 width = lstcol - fstcol + 1
                 lstsub = s.xlindx[jsup + 1] - 1
                 fstsub = s.xlindx[jsup] + width
-
                 nnzloc = 0;
                 for nxtsub in fstsub:lstsub
                     irow = s.lindx[nxtsub]
