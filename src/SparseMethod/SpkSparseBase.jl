@@ -180,7 +180,7 @@ function findorder(s::SparseBase{IT}, orderfunction::F) where {IT, F}
         return false
     end
     makestructuresymmetric(s.g)     # Make it symmetric
-    mmd(s.g, s.order)   # Default ordering function
+    orderfunction(s.g, s.order)   # Default ordering function
     return true
 end
 
