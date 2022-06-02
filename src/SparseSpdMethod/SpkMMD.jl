@@ -1,7 +1,8 @@
-"""  A collection of routines to find an MMD (multiple minimum degree)
-  ordering. There are no declarations here.
+"""  
+A collection of routines to find an MMD (multiple minimum degree) ordering.
+There are no declarations here.
 
-  Multiple minimum degree Ordering algorithm (MMD).
+Multiple minimum degree Ordering algorithm (MMD).
 Written by Erik Demaine, eddemaine@uwaterloo.ca
 Based on a Fortran 77 code written by Joseph Liu.
 For information on the minimum degree algorithm see the articles:
@@ -22,50 +23,53 @@ function mmd(g::Graph, order::Ordering)
     order.cperm .= order.rperm
 end
 
-"""     Purpose - This routine implements the minimum degree
-      algorithm.  It makes use of the implicit representation
-      of elimination graphs by quotient graphs, and the
-      notion of indistinguishable nodes.  It also implements
-      the modifications by multiple elimination and minimum
-      external degree.
-   Input parameters -
-      n - number of equations
-      (xadj, adj) - adjacency structure for the graph.
-      delta - tolerance value for multiple elimination.
-   Output parameters -
-      order - the minimum degree Ordering.
-   Subroutines called -
-      MMDElim, MMDNumber, MMDUpdate.
-   Working arrays -
-      degHead (deg) - points to first node with degree deg, or 0 if there
-                   are no such nodes.
-      degNext (node) - points to the next node in the degree list
-                   associated with node, or 0 if node was the last in the
-                   degree list.
-      degPrev (node) - points to the previous node in a degree list
-                   associated with node, or the negative of the degree of
-                   node (if node was the last in the degree list), or 0
-                   if the node is not in the degree lists.
-      superSIze - the size of the supernodes.
-      elimHead - points to the first node eliminated in the current pass
-                   Using elimNext, one can determine all nodes just
-                   eliminated.
-      elimNext (node) - points to the next node in a eliminated supernode
-                   or 0 if there are no more after node.
-      marker - marker vector.
-      mergeParent - the parent map for the merged forest.
-        needsUpdate (node) - > 0 iff node needs degree update.(0 otherwise)
+"""     
+    generalmmd(n, xadj, adj, perm, invp)
+
+This routine implements the minimum degree algorithm.  It makes use of the
+implicit representation of elimination graphs by quotient graphs, and the
+notion of indistinguishable nodes.  It also implements the modifications by
+multiple elimination and minimum external degree.
+
+Input parameters -
+- n - number of equations
+  (xadj, adj) - adjacency structure for the graph.
+  delta - tolerance value for multiple elimination. FIX ME: should delta be passed as argument?
+
+Output:
+  perm, invp - the minimum degree Ordering.
+
+Working arrays -
+  degHead (deg) - points to first node with degree deg, or 0 if there
+               are no such nodes.
+  degNext (node) - points to the next node in the degree list
+               associated with node, or 0 if node was the last in the
+               degree list.
+  degPrev (node) - points to the previous node in a degree list
+               associated with node, or the negative of the degree of
+               node (if node was the last in the degree list), or 0
+               if the node is not in the degree lists.
+  superSIze - the size of the supernodes.
+  elimHead - points to the first node eliminated in the current pass
+               Using elimNext, one can determine all nodes just
+               eliminated.
+  elimNext (node) - points to the next node in a eliminated supernode
+               or 0 if there are no more after node.
+  marker - marker vector.
+  mergeParent - the parent map for the merged forest.
+    needsUpdate (node) - > 0 iff node needs degree update.(0 otherwise)
 """
-function generalmmd(n, xadj, adj, perm, invp)
+function generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT}, invp::Vector{IT}) where {IT}
     delta = zero(eltype(xadj))
     maxint = typemax(eltype(xadj))
     #
     #       Copy adjacency structure so that we can modify it.
     #
-    IT = eltype(adj)
     adjncy = deepcopy(adj[1:(xadj[n+1]-1)])
+
     deghead1 = fill(zero(IT), n)
     deghead = OffsetArray(deghead1, 0:(n-1))
+
     marker = fill(zero(IT), n)
     mergeparent = fill(zero(IT), n)
     needsupdate = fill(zero(IT), n)
@@ -121,8 +125,8 @@ function generalmmd(n, xadj, adj, perm, invp)
             mindeg = mindeg + 1
         end
         #  
-        #           Use value of delta to set up mindegLimit, which governs
-        #           when a degree update is to be performed.
+        # Use value of delta to set up mindegLimit, which governs when a degree
+        # update is to be performed.
         #  
         mindeglimit = mindeg + delta
         if (delta < 0)
@@ -132,7 +136,7 @@ function generalmmd(n, xadj, adj, perm, invp)
 
         while true
             #  -
-            #               Find a node of minimum degree, say mdNode.
+            # Find a node of minimum degree, say mdNode.
             #  -
             mdnode = deghead[mindeg]
             while (mdnode <= 0)
@@ -143,7 +147,7 @@ function generalmmd(n, xadj, adj, perm, invp)
                 mdnode = deghead[mindeg]
             end
             #  -
-            #               Remove mdNode from the degree structure.
+            # Remove mdNode from the degree structure.
             #  -
             mdnextnode = degnext[mdnode]
             deghead[mindeg] = mdnextnode
@@ -155,8 +159,8 @@ function generalmmd(n, xadj, adj, perm, invp)
                 @goto main
             end
             #
-            #               Eliminate mdNode and perform quotient Graph
-            #               transformation.  Reset tag value if necessary.
+            # Eliminate mdNode and perform quotient Graph transformation.  Reset
+            # tag value if necessary.
             #
             tag = tag + 1
             if (tag >= maxint)
@@ -168,8 +172,7 @@ function generalmmd(n, xadj, adj, perm, invp)
             
             num = num + supersize[mdnode]
             #  -
-            #               Add mdNode to the list of nodes
-            #               eliminated in this pass.
+            # Add mdNode to the list of nodes eliminated in this pass.
             #  -
             elimnext[mdnode] = elimhead
             elimhead = mdnode
@@ -189,35 +192,33 @@ function generalmmd(n, xadj, adj, perm, invp)
     return true
 end
 
-# """    Purpose - This routine eliminates the node mdNode of
-#       minimum degree from the adjacency structure, which
-#       is stored in the quotient Graph format.  It also
-#       transforms the quotient Graph representation of the
-#       elimination Graph.
-#    Input parameters -
-#       mdNode - node of minimum degree.
-#       tag - tag value.
-#       invp - the inverse of an incomplete minimum degree Ordering.
-#                 (It is zero at positions where the Ordering is unknown.)
-#    Updated parameters -
-#       (xadj, adjncy) - updated adjacency structure (xadj is not updated).
-#       degHead (deg) - points to first node with degree deg, or 0 if there
-#                    are no such nodes.
-#       degNext (node) - points to the next node in the degree list
-#                    associated with node, or 0 if node was the last in the
-#                    degree list.
-#       degPrev (node) - points to the previous node in a degree list
-#                    associated with node, or the negative of the degree of
-#                    node (if node was the last in the degree list), or 0
-#                    if the node is not in the degree lists.
-#       superSIze - the size of the supernodes.
-#       elimNext (node) - points to the next node in a eliminated supernode
-#                    or 0 if there are no more after node.
-#       marker - marker vector.
-#       mergeParent - the parent map for the merged forest.
-#        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
-# """
-"""
+"""    Purpose - This routine eliminates the node mdNode of
+      minimum degree from the adjacency structure, which
+      is stored in the quotient Graph format.  It also
+      transforms the quotient Graph representation of the
+      elimination Graph.
+   Input parameters -
+      mdNode - node of minimum degree.
+      tag - tag value.
+      invp - the inverse of an incomplete minimum degree Ordering.
+                (It is zero at positions where the Ordering is unknown.)
+   Updated parameters -
+      (xadj, adjncy) - updated adjacency structure (xadj is not updated).
+      degHead (deg) - points to first node with degree deg, or 0 if there
+                   are no such nodes.
+      degNext (node) - points to the next node in the degree list
+                   associated with node, or 0 if node was the last in the
+                   degree list.
+      degPrev (node) - points to the previous node in a degree list
+                   associated with node, or the negative of the degree of
+                   node (if node was the last in the degree list), or 0
+                   if the node is not in the degree lists.
+      superSIze - the size of the supernodes.
+      elimNext (node) - points to the next node in a eliminated supernode
+                   or 0 if there are no more after node.
+      marker - marker vector.
+      mergeParent - the parent map for the merged forest.
+       needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
 """
 function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     maxint = typemax(eltype(xadj))
@@ -232,7 +233,7 @@ function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, eli
 # 
     elmnt = 0
     rloc = xadj[mdnode] ; rlmt = xadj[mdnode + 1] - 1
-    for i = xadj[mdnode]:(xadj[mdnode + 1] - 1)
+    for i in xadj[mdnode]:(xadj[mdnode + 1] - 1)
         neighbor = adjncy[i]
         if (neighbor == 0) break; end
         if (marker[neighbor] < tag)
@@ -335,36 +336,34 @@ function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, eli
     end
 end
 
-# """    Purpose - This routine updates the degrees of nodes
-#       after a multiple elimination step.
-#    Input parameters -
-#       elimHead - the beginning of the list of eliminated
-#                nodes (i.e., newly formed elements).
-#       neqns - number of equations.
-#       (xadj, adjncy) - adjacency structure.
-#       delta - tolerance value for multiple elimination.
-#       invp - the inverse of an incomplete minimum degree Ordering.
-#                (It is zero at positions where the Ordering is unknown.)
-#    Updated parameters -
-#       mindeg - new minimum degree after degree update.
-#       degHead (deg) - points to first node with degree deg, or 0 if there
-#                    are no such nodes.
-#       degNext (node) - points to the next node in the degree list
-#                    associated with node, or 0 if node was the last in the
-#                    degree list.
-#       degPrev (node) - points to the previous node in a degree list
-#                    associated with node, or the negative of the degree of
-#                    node (if node was the last in the degree list), or 0
-#                    if the node is not in the degree lists.
-#       superSIze - the size of the supernodes.
-#       elimNext (node) - points to the next node in a eliminated supernode
-#                    or 0 if there are no more after node.
-#       marker - marker vector for degree update.
-#       tag - tag value.
-#       mergeParent - the parent map for the merged forest.
-#        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
-# """
-"""
+"""    Purpose - This routine updates the degrees of nodes
+      after a multiple elimination step.
+   Input parameters -
+      elimHead - the beginning of the list of eliminated
+               nodes (i.e., newly formed elements).
+      neqns - number of equations.
+      (xadj, adjncy) - adjacency structure.
+      delta - tolerance value for multiple elimination.
+      invp - the inverse of an incomplete minimum degree Ordering.
+               (It is zero at positions where the Ordering is unknown.)
+   Updated parameters -
+      mindeg - new minimum degree after degree update.
+      degHead (deg) - points to first node with degree deg, or 0 if there
+                   are no such nodes.
+      degNext (node) - points to the next node in the degree list
+                   associated with node, or 0 if node was the last in the
+                   degree list.
+      degPrev (node) - points to the previous node in a degree list
+                   associated with node, or the negative of the degree of
+                   node (if node was the last in the degree list), or 0
+                   if the node is not in the degree lists.
+      superSIze - the size of the supernodes.
+      elimNext (node) - points to the next node in a eliminated supernode
+                   or 0 if there are no more after node.
+      marker - marker vector for degree update.
+      tag - tag value.
+      mergeParent - the parent map for the merged forest.
+       needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
 """
 function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     maxint = typemax(eltype(xadj))
@@ -374,13 +373,6 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
     deg = zero(eltype(xadj))
     enode = zero(eltype(xadj))
 
-    function updateexternaldegree()
-        deg = deg - supersize[enode] ; firstnode = deghead[deg]
-        deghead[deg] = enode ; degnext[enode] = firstnode
-        degprev[enode] = - deg ; needsupdate[enode] = 0
-        if (firstnode > 0) degprev[firstnode] = enode; end
-        if (deg < mindeg) mindeg = deg; end
-    end
 # -
 #       For each of the newly formed element, do the following.
 # -
@@ -488,7 +480,7 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
                         node = adjncy[i]
                     end
                 end
-                updateexternaldegree()
+                deg, mindeg = __updateexternaldegree(deg, mindeg, enode, supersize, deghead, degnext, degprev, needsupdate)
             end # if
             enode = elimnext[enode]
         end # while
@@ -535,7 +527,7 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
                         end
                     end
                 end
-                updateexternaldegree()
+                deg, mindeg = __updateexternaldegree(deg, mindeg, enode, supersize, deghead, degnext, degprev, needsupdate)
             end
 # -
 #               Get next enode in current element.
@@ -551,9 +543,15 @@ function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnex
 end
 
 
-#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
-#       ^  mmdNumber ..... multiple minimum degree numbering  ^
-#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
+function __updateexternaldegree(deg, mindeg, enode, supersize, deghead, degnext, degprev, needsupdate)
+    deg = deg - supersize[enode] ; firstnode = deghead[deg]
+    deghead[deg] = enode ; degnext[enode] = firstnode
+    degprev[enode] = - deg ; needsupdate[enode] = 0
+    if (firstnode > 0) degprev[firstnode] = enode; end
+    if (deg < mindeg) mindeg = deg; end
+    return deg, mindeg
+end
+
 #       Purpose - This routine performs the final step in
 #       producing the permutation and inverse permutation
 #       vectors in the multiple elimination version of the
@@ -570,7 +568,7 @@ end
 #       mergeParent - the parent map for the merged forest (compressed).
 #       Working arrays -
 #       mergeLastnum (r) - last number used for a merged tree rooted at r.
-#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ *
+#       
 function mmdnumber(neqns, perm, invp, mergeparent)
     
 # ----------------------------------------
