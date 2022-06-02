@@ -102,6 +102,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
     map = fill(zero(IT), n)
     relind = fill(zero(IT), n)
     temp = fill(zero(FT), tmpsiz)
+    vtemp = view(temp, 1:length(temp))
 
 # --------------------------
 #      for each supernode jsup ...
@@ -270,7 +271,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 # 
                         igathr(klen, view(lindx, kxpnt:length(lindx)), map, relind)
 
-                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), view(temp, 1:length(temp)), klen)
+                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), vtemp, klen)
 
 # 
 #                      incorporate the cmod(jsup, ksup) block
@@ -280,7 +281,7 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
 
                         if  (klen > nups)
 
-                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), view(temp, 1:length(temp)), klen - nups)
+                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), vtemp, klen - nups)
 
 # -
 #                         incorporate the cmod(jsup, ksup) block
