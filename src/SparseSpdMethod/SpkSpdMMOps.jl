@@ -33,9 +33,12 @@ output parameters:
 lnz - contains columns modified by the update matrix.
 """
 function assmb(tlen::IT, nj::IT, temp::Vector{FT}, relcol::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, relind::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, xlnz::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
+    # relindk = relind[1:tlen]
     for j in 1:nj
         lbot = xlnz[jlen - relcol[j] + 1] - 1
-        for k in 1:tlen
+        # lnz[lbot .- relindk] += temp[(j-1)*tlen + 1:j*tlen]
+        @inbounds for k in 1:tlen
+            # lnz[lbot - relindk[k]] += temp[(j-1)*tlen + k]
             lnz[lbot - relind[k]] += temp[(j-1)*tlen + k]
         end
     end
@@ -67,7 +70,14 @@ directly into factor storage.
 
 """
 function ldindx(jlen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}) where {IT}
-    indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
+    # indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
+
+    @assert length(lindx) >= jlen
+    kk = (jlen - 1)
+    @inbounds for j in 1:jlen
+        indmap[lindx[j]] = kk
+        kk -= 1
+    end
     return true
 end
 
@@ -91,7 +101,13 @@ end
 #
 # *
 function igathr(klen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
-    relind[1:klen] = indmap[lindx[1:klen]]
+    # relind[1:klen] = indmap[lindx[1:klen]]
+
+    @assert length(relind) >= klen
+    @assert length(lindx) >= klen
+    @inbounds for j in 1:klen
+        relind[j] = indmap[lindx[j]]
+    end
 end
 
 """
