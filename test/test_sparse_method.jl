@@ -461,6 +461,8 @@ end # module
 # using Sparspak
 # using Sparspak.SpkProblem: insparse, outsparse
 # using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+# using ProfileView
+# using InteractiveUtils
 
 # function _test()
 #     # K = DataDrop.retrieve_matrix("K63070.h5")
@@ -471,7 +473,11 @@ end # module
 #     p = Sparspak.SpkProblem.Problem(size(K)...)
 #     Sparspak.SpkProblem.insparse(p, I, J, V);
 #     s = Sparspak.SpkSparseSolver.SparseSolver(p);
-#     @time Sparspak.SpkSparseSolver.solve(s, p);
+#     Sparspak.SpkSparseSolver.findorder(s)
+#     Sparspak.SpkSparseSolver.symbolicfactor(s)
+#     Sparspak.SpkSparseSolver.inmatrix(s, p)
+#     Sparspak.SpkSparseSolver.factor(s)
+#     Sparspak.SpkSparseSolver.solve(s, p);
 
 #     return true
 # end

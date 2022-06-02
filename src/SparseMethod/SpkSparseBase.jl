@@ -307,7 +307,7 @@ Input parameters: problem and solver objects
 
 The "output" is the modified solver object.
 """
-function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
+function _inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
 # type (sparsebase)  ::  s
 # type (problem)  ::  p
 # type (ordering) ::  order
@@ -334,10 +334,8 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
             value = p.values[ptr];
 
             if (inew >= s.xsuper[s.snode[jnew]])
-# -
-#                 Lies in L.  get pointers and lengths needed to search
-#                 column jnew of L for location l(inew, jnew).
-# -
+#               Lies in L.  get pointers and lengths needed to search
+#               column jnew of L for location l(inew, jnew).
                 jsup = s.snode[jnew];
                 fstcol = s.xsuper[jsup]
                 fstsub = s.xlindx[jsup]
@@ -349,20 +347,16 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
                         @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
                         return false
                     end
-
                     if  (irow == inew)
-# -
 #                       find a proper offset into lnz and increment by value
-# -
-                        s.lnz[s.xlnz[jnew] + nnzloc] += value
+                        _p = s.xlnz[jnew] + nnzloc
+                        s.lnz[_p] += value
                         break
                     end
                     nnzloc = nnzloc + 1
                 end
             else
-# -  -  -  -  -  -  -  -  -
-#                 Lies in U
-# -  -  -  -  -  -  -  -  -
+#               Lies in U
                 jsup = s.snode[inew]
                 fstcol = s.xsuper[jsup]
                 lstcol = s.xsuper[jsup + 1] - 1
@@ -376,15 +370,12 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
                         @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
                         return false
                     end
-
                     if  (irow == jnew)
-# -
 #                       find a proper offset into unz and increment by value
-# -
-                        s.unz[s.xunz[inew] + nnzloc] += value
+                        _p = s.xunz[inew] + nnzloc
+                        s.unz[_p] += value
                         break
                     end
-
                     nnzloc = nnzloc + 1
                 end
             end
@@ -392,6 +383,78 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
         end
     end
     return true
+end
+
+function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
+    if (s.n == 0)
+        @error "$(@__FILE__): An empty problem. No matrix."
+        return false
+    end
+
+    s.lnz .= zero(FT)
+    s.unz .= zero(FT)
+    s.ipiv .= zero(IT)
+
+    function doit(ncols, link, head, rinvp, cinvp, rowsubs, snode, xsuper, xlindx, lindx, values, xlnz, lnz, xunz, unz)
+        for i in 1:ncols
+            ptr = head[i]
+            while (ptr > 0)  # scan column i ....
+                inew = rinvp[rowsubs[ptr]];
+                jnew = cinvp[i]
+                value = values[ptr];
+
+                if (inew >= xsuper[snode[jnew]])
+#               Lies in L.  get pointers and lengths needed to search
+#               column jnew of L for location l(inew, jnew).
+                    jsup = snode[jnew];
+                    fstcol = xsuper[jsup]
+                    fstsub = xlindx[jsup]
+                    lstsub = xlindx[jsup + 1] - 1
+                    nnzloc = 0;
+                    for nxtsub in fstsub:lstsub
+                        irow = lindx[nxtsub]
+                        if  (irow > inew)
+                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            return false
+                        end
+                        if  (irow == inew)
+#                       find a proper offset into lnz and increment by value
+                            _p = xlnz[jnew] + nnzloc
+                            lnz[_p] += value
+                            break
+                        end
+                        nnzloc = nnzloc + 1
+                    end
+                else
+#               Lies in U
+                    jsup = snode[inew]
+                    fstcol = xsuper[jsup]
+                    lstcol = xsuper[jsup + 1] - 1
+                    width = lstcol - fstcol + 1
+                    lstsub = xlindx[jsup + 1] - 1
+                    fstsub = xlindx[jsup] + width
+                    nnzloc = 0;
+                    for nxtsub in fstsub:lstsub
+                        irow = lindx[nxtsub]
+                        if  (irow > jnew)
+                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            return false
+                        end
+                        if  (irow == jnew)
+#                       find a proper offset into unz and increment by value
+                            _p = xunz[inew] + nnzloc
+                            unz[_p] += value
+                            break
+                        end
+                        nnzloc = nnzloc + 1
+                    end
+                end
+                ptr = link[ptr]
+            end
+        end
+        return true
+    end
+    return doit(p.ncols, p.link, p.head, s.order.rinvp, s.order.cinvp, p.rowsubs, s.snode, s.xsuper, s.xlindx, s.lindx, p.values, s.xlnz, s.lnz, s.xunz, s.unz)
 end
 
 function factor(s::SparseBase{IT, FT}) where {IT, FT}
