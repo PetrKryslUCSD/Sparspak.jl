@@ -52,7 +52,7 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1.7'
-      - run: julia -e "using Pkg; Pkg.activate(\"docs\"); Pkg.instantiate(); pkg\"add https://github.com/PetrKryslUCSD/Sparspak.jl.git\"; include(\"docs/make.jl\")"
+      - run: julia -e "using Pkg; Pkg.activate(\"docs\"); Pkg.instantiate(); include(\"docs/make.jl\")"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
