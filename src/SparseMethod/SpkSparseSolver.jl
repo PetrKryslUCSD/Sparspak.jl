@@ -201,19 +201,22 @@ end
 """
     solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 
-Execute all the steps of the solution process:
+Execute all the steps of the solution process.
 
-1. Reordering of the matrix A 
+Given asymmetric matrix `A`, the steps are:
 
-2. Symbolic factorization of the(reordered) matrix A and the creation of the
-data structures for the factorization and forward and backward substitution 
+1. Reordering of the matrix `A`. 
 
-3. Putting numerical values of
-A into the data structures 
+2. Symbolic factorization of the(reordered) matrix `A` and the creation of the
+data structures for the factorization and forward and backward substitution. 
 
-4. Numerical factorization of A 
+3. Putting numerical values of `A` into the data structures. 
 
-5. Forward and backward substitution (triangular solution) 
+4. Numerical factorization of `A`. 
+
+5. Forward and backward substitution (triangular solution).
+
+The solution can be retrieved as `p.x`.
 """
 function solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
     findorder(s) || ErrorException("Finding Order.")

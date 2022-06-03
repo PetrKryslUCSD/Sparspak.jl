@@ -13,4 +13,14 @@ include("SparseMethod/SpkLUFactor.jl")
 include("SparseMethod/SpkSparseBase.jl")
 include("SparseMethod/SpkSparseSolver.jl")
 
+using .SpkProblem
+"""
+    const Problem = SpkProblem
+
+The module that defines the Sparspak problem.
+"""
+const Problem = SpkProblem
+using .SpkSparseSolver
+const SparseSolver = SpkSparseSolver
+
 end # module
