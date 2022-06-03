@@ -14,7 +14,39 @@ rewritten in Fortran 90. Here is the software translated into Julia.
 
 ## News
 
+- 06/03/2022: The sparse LU solver has been now rewritten and tested.
 
+## Simple usage
+
+Here is a function to make up a random-coefficient (but diagonally dominant) sparse matrix and a right hand side vector.
+```
+function makerandomproblem(n)
+    spm = sprand(n, n, 1/n)
+    spm = -spm - spm' + 20 * LinearAlgebra.I
+    
+    p = Sparspak.SpkProblem.Problem(n, n)
+    Sparspak.SpkProblem.insparse(p, spm);
+    Sparspak.SpkProblem.infullrhs(p, 1:n);
+    return p
+end
+```
+The sparse linear algebraic equation problem can be solved as:
+```
+function _test()
+    p = makerandomproblem(301)
+    
+    s = SparseSolver(p)
+    solve(s, p)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+```
+For more details see the file `test/test_sparse_method.jl`, module `msprs012`.
 
 ## Reference
 
@@ -26,4 +58,6 @@ LC: QA188.G46.
 
 ## Additional documents
 
-Some design documents are in the folder `docs`.
+Some design documents are in the folder `docs`: 
+[SIAM paper](docs/Object_Oriented_interface_to_Sparspak.pdf), and the [User guide](docs/guide.pdf). These documents are only for
+the Fortran version of the package.

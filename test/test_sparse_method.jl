@@ -403,10 +403,10 @@ using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatri
 
 function _test()
     n = 31
-    p = Sparspak.SpkProblem.Problem(n, n)
     spm = sprand(n, n, 1/n)
     spm = -spm - spm' + 20 * LinearAlgebra.I
     
+    p = Sparspak.SpkProblem.Problem(n, n)
     Sparspak.SpkProblem.insparse(p, spm);
     A = outsparse(p)
     @test A - spm == sparse(Int64[], Int64[], Float64[], 31, 31) 
@@ -428,10 +428,10 @@ using Sparspak.SpkProblem: insparse, outsparse
 using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
 
 function makerandomproblem(n)
-    p = Sparspak.SpkProblem.Problem(n, n)
     spm = sprand(n, n, 1/n)
     spm = -spm - spm' + 20 * LinearAlgebra.I
     
+    p = Sparspak.SpkProblem.Problem(n, n)
     Sparspak.SpkProblem.insparse(p, spm);
     Sparspak.SpkProblem.infullrhs(p, 1:n);
     return p
@@ -465,19 +465,21 @@ end # module
 # using InteractiveUtils
 
 # function _test()
-#     # K = DataDrop.retrieve_matrix("K63070.h5")
-#     K = DataDrop.retrieve_matrix("K28782.h5")
+#     K = DataDrop.retrieve_matrix("K63070.h5")
+#     # K = DataDrop.retrieve_matrix("K28782.h5")
 #     @show size(K)
 #     I, J, V = findnz(K)     
 
 #     p = Sparspak.SpkProblem.Problem(size(K)...)
 #     Sparspak.SpkProblem.insparse(p, I, J, V);
 #     s = Sparspak.SpkSparseSolver.SparseSolver(p);
-#     Sparspak.SpkSparseSolver.findorder(s)
+#     @time Sparspak.SpkSparseSolver.findorder(s)
 #     Sparspak.SpkSparseSolver.symbolicfactor(s)
 #     Sparspak.SpkSparseSolver.inmatrix(s, p)
-#     Sparspak.SpkSparseSolver.factor(s)
-#     Sparspak.SpkSparseSolver.solve(s, p);
+#     @time Sparspak.SpkSparseSolver.factor(s)
+#     # @time Sparspak.SpkSparseSolver.factor(s)
+#     # @profview Sparspak.SpkSparseSolver.factor(s)
+#     @time Sparspak.SpkSparseSolver.solve(s, p);
 
 #     return true
 # end
@@ -485,3 +487,56 @@ end # module
 # _test()
 # end # module
 
+
+# module msprs014
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak
+# using Sparspak.SpkProblem: insparse, outsparse
+# using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+# using Printf
+
+# function makerandomproblem(n)
+#     p = Sparspak.SpkProblem.Problem(n, n)
+#     spm = sprand(n, n, 1/n)
+#     spm = -spm - spm' + 20 * LinearAlgebra.I
+    
+#     Sparspak.SpkProblem.insparse(p, spm);
+#     Sparspak.SpkProblem.infullrhs(p, 1:n);
+
+#     matrix = "matrix$(n).txt"
+#     I, J, V = findnz(spm)     
+#     @show 
+
+#     f = open(matrix, "w")
+#     @printf(f, "%d %d\n", size(spm, 1), size(spm, 2))
+#     @printf(f, "%d\n", length(I))
+#     for i in eachindex(I)
+#         @printf(f, "%d\n", I[i])
+#     end
+#     for i in eachindex(J)
+#         @printf(f, "%d\n", J[i])
+#     end
+#     for i in eachindex(V)
+#         @printf(f, "%f\n", V[i])
+#     end
+#     close(f)
+
+#     return p
+# end
+
+# function _test()
+#     p = makerandomproblem(11)
+    
+#     s = SparseSolver(p)
+#     solve(s, p)
+#     A = outsparse(p)
+#     x = A \ p.rhs
+#     @test norm(p.x - x) / norm(x) < 1.0e-6
+
+#     return true
+# end
+
+# _test()
+# end # module
