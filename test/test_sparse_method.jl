@@ -570,3 +570,31 @@ end
 
 _test()
 end # module
+
+module msprs016
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.Problem: Problem, insparse, outsparse, infullrhs
+using Sparspak.SparseSolver: SparseSolver, solve
+
+function _test()
+    n = 1357
+    A = sprand(n, n, 1/n)
+    A = -A - A' + 20 * LinearAlgebra.I
+    
+    p = Problem(n, n)
+    insparse(p, A);
+    infullrhs(p, 1:n);
+    
+    s = SparseSolver(p)
+    solve(s, p)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
