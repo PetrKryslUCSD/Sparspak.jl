@@ -20,7 +20,13 @@ using .SpkProblem
 The module that defines the Sparspak problem.
 """
 const Problem = SpkProblem
+
 using .SpkSparseSolver
+"""
+    const SparseSolver = SpkSparseSolver
+
+The module that defines a sparse-matrix LU solver.
+"""
 const SparseSolver = SpkSparseSolver
 
 end # module
