@@ -18,22 +18,22 @@ rewritten in Fortran 90. Here is the software translated into Julia.
 
 ## Simple usage
 
-Here is a function to make up a random-coefficient (but diagonally dominant) sparse matrix and a right hand side vector.
+This code makes up a random-coefficient (but diagonally dominant) sparse matrix
+and a simple right hand side vector. The sparse linear algebraic equation
+problem is then solved with the LU factorization. The solution is tested
+against the solution with the built-in solver.
 ```
-function makerandomproblem(n)
-    spm = sprand(n, n, 1/n)
-    spm = -spm - spm' + 20 * LinearAlgebra.I
-    
-    p = Sparspak.SpkProblem.Problem(n, n)
-    Sparspak.SpkProblem.insparse(p, spm);
-    Sparspak.SpkProblem.infullrhs(p, 1:n);
-    return p
-end
-```
-The sparse linear algebraic equation problem can be solved as:
-```
+using Sparspak.Problem: Problem, insparse, outsparse, infullrhs
+using Sparspak.SparseSolver: SparseSolver, solve
+
 function _test()
-    p = makerandomproblem(301)
+    n = 1357
+    A = sprand(n, n, 1/n)
+    A = -A - A' + 20 * LinearAlgebra.I
+    
+    p = Problem(n, n)
+    insparse(p, A);
+    infullrhs(p, 1:n);
     
     s = SparseSolver(p)
     solve(s, p)
@@ -46,7 +46,7 @@ end
 
 _test()
 ```
-For more details see the file `test/test_sparse_method.jl`, module `msprs012`.
+For more details see the file `test/test_sparse_method.jl`, module `msprs016`.
 
 ## Reference
 
