@@ -7,35 +7,33 @@ module SpkSymfct
 
 using OffsetArrays
 
-"""
-    This subroutine determines the column counts in
-    the Cholesky factor.  It uses an algorithm due to Joseph Liu
-    found in SIMAX 11, 1990, pages 144 - 145.0
+#     This subroutine determines the column counts in
+#     the Cholesky factor.  It uses an algorithm due to Joseph Liu
+#     found in SIMAX 11, 1990, pages 144 - 145.0
 
-Input parameters:
-    (i) n - number of equations.
-    (i) xadj - array of length n + 1, containing pointers
-                        to the adjacency structure.
-    (i) adj - array of length xadj(n + 1) - 1, containing
-                        the adjacency structure.
-    (i) perm - array of length n, containing the
-                        postordering.
-    (i) invp - array of length n, containing the
-                        inverse of the postordering.
-    (i) parent - array of length n, containing the
-                        elimination tree of the postordered matrix.
+# Input parameters:
+#     (i) n - number of equations.
+#     (i) xadj - array of length n + 1, containing pointers
+#                         to the adjacency structure.
+#     (i) adj - array of length xadj(n + 1) - 1, containing
+#                         the adjacency structure.
+#     (i) perm - array of length n, containing the
+#                         postordering.
+#     (i) invp - array of length n, containing the
+#                         inverse of the postordering.
+#     (i) parent - array of length n, containing the
+#                         elimination tree of the postordered matrix.
 
-Output parameters:
-    (i) colcnt - array of length n, containing the number
-                        of nonzeros in each column of the factor,
-                        including the diagonal entry.
-    (i) nlnz - number of nonzeros in the factor, including
-                        the diagonal entries.
+# Output parameters:
+#     (i) colcnt - array of length n, containing the number
+#                         of nonzeros in each column of the factor,
+#                         including the diagonal entry.
+#     (i) nlnz - number of nonzeros in the factor, including
+#                         the diagonal entries.
 
-Work parameters:
-    (i) marker - array of length n used to mark the
-                         vertices visited in each row subtree.
-"""
+# Work parameters:
+#     (i) marker - array of length n used to mark the
+#                          vertices visited in each row subtree.
 function findcolumncounts(n, xadj, adj, perm, invp, parent, colcnt, nlnz)
 #
     marker = fill(zero(eltype(xadj)), n)
@@ -61,52 +59,49 @@ function findcolumncounts(n, xadj, adj, perm, invp, parent, colcnt, nlnz)
 end
 
 
-"""
-    This routine performs supernodal symbolic
-    factorization on a reordered linear system.
-    This is essentially a Fortran 90 translation of a code written
-    by Esmond Ng and Barry Peyton.
+#     This routine performs supernodal symbolic
+#     factorization on a reordered linear system.
+#     This is essentially a Fortran 90 translation of a code written
+#     by Esmond Ng and Barry Peyton.
 
-Input parameters:
-    (i) n - number of equations
-    (i) xadj - array of length n + 1 containing pointers
-                        to the adjacency structure.
-    (i) adj - array of length xadj(n + 1) - 1 containing
-                        the adjacency structure.
-    (i) perm - array of length n containing the
-                        postordering.
-    (i) invp - array of length n containing the
-                        inverse of the postordering.
-    (i) colcnt - array of length n, containing the number
-                        of nonzeros (non - empty rows) in each
-                        column of the factor,
-                        including the diagonal entry.
-    (i) nsuper - number of supernodes.
-    (i) xsuper - array of length nsuper + 1, containing the
-                        first column of each supernode.
-    (i) snode - array of length n for recording
-                        supernode membership.
-    (i) nofsub - number of subscripts to be stored in
-                        lindx.
+# Input parameters:
+#     (i) n - number of equations
+#     (i) xadj - array of length n + 1 containing pointers
+#                         to the adjacency structure.
+#     (i) adj - array of length xadj(n + 1) - 1 containing
+#                         the adjacency structure.
+#     (i) perm - array of length n containing the
+#                         postordering.
+#     (i) invp - array of length n containing the
+#                         inverse of the postordering.
+#     (i) colcnt - array of length n, containing the number
+#                         of nonzeros (non - empty rows) in each
+#                         column of the factor,
+#                         including the diagonal entry.
+#     (i) nsuper - number of supernodes.
+#     (i) xsuper - array of length nsuper + 1, containing the
+#                         first column of each supernode.
+#     (i) snode - array of length n for recording
+#                         supernode membership.
+#     (i) nofsub - number of subscripts to be stored in
+#                         lindx.
 
-Output parameters:
-    (i) xlindx - array of length n + 1, containing pointers
-                        into the subscript vector.
-    (i) lindx - array of length maxsub, containing the
-                        compressed subscripts.
-    (i) xlnz - column pointers for l.
+# Output parameters:
+#     (i) xlindx - array of length n + 1, containing pointers
+#                         into the subscript vector.
+#     (i) lindx - array of length maxsub, containing the
+#                         compressed subscripts.
+#     (i) xlnz - column pointers for l.
 
-Working parameters:
-    (i) mrglnk - array of length nsuper, containing the
-                        children of each supernode as a linked list.
-    (i) rchlnk - array of length n + 1, containing the
-                        current linked list of merged indices (the
-                        "reach" set).
-    (i) marker - array of length n used to mark indices
-                        as they are introduced into each supernode"s
-                        index set.
-
-"""
+# Working parameters:
+#     (i) mrglnk - array of length nsuper, containing the
+#                         children of each supernode as a linked list.
+#     (i) rchlnk - array of length n + 1, containing the
+#                         current linked list of merged indices (the
+#                         "reach" set).
+#     (i) marker - array of length n used to mark indices
+#                         as they are introduced into each supernode"s
+#                         index set.
 function symbolicfact(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode, nofsub, xlindx, lindx)
         # integer :: n, nsuper, nofsub
         # integer :: xadj(*), adj(*), perm(*), invp(*), xsuper(*)
@@ -249,10 +244,7 @@ function symbolicfact(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode, n
     end
     return true
 end
-"""
-"""
-function findnumberofsupermods(nsuper, xsuper, snode, xlindx, lindx, total, nmod)
-# """
+
 #     This routine computes the total number of supernode modifications
 #     that will be performed, as well as the elements of the array
 #     nmod. The array nmod is of length nsuper; nmod(i) contains the
@@ -276,10 +268,10 @@ function findnumberofsupermods(nsuper, xsuper, snode, xlindx, lindx, total, nmod
 #                         modifications made to each supernode.
 #
 #
-# """
 #         integer lindx(*), xlindx(*), snode(*), xsuper(*), nmod(*)
 #         integer j, jsup, jnode, nsuper, prvsup, supsiz, total
-# #
+# 
+function findnumberofsupermods(nsuper, xsuper, snode, xlindx, lindx, total, nmod)
     nmod .= 0;   total = 0
 
     for jsup in 1:nsuper
@@ -295,10 +287,8 @@ function findnumberofsupermods(nsuper, xsuper, snode, xlindx, lindx, total, nmod
         end
     end
 end
-"""
-"""
-function findschedule(nsuper, xsuper, snode, xlindx, lindx, schedule)
-# """ this routine determines a bottom - up ordering for the
+
+# this routine determines a bottom - up ordering for the
 #          vertices of the supernodal elimination tree, and puts that
 #          ordering in the array schedule. For information on
 #          elimination trees and their representation, see the
@@ -321,14 +311,11 @@ function findschedule(nsuper, xsuper, snode, xlindx, lindx, schedule)
 # Output parameters:
 #     (i) schedule - array containing the order in which the
 #                         supernodes are to be computed.
-#
-#
-# """
         # integer nsuper, lindx(*), xlindx(*), snode(*), xsuper(*), schedule(*)
         # integer parent(nsuper), count(nsuper)
         # integer k, par, current, col
-#
 
+function findschedule(nsuper, xsuper, snode, xlindx, lindx, schedule)
     count = fill(zero(IT), nsuper)
     parent = fill(zero(IT), nsuper)
 
@@ -354,10 +341,8 @@ function findschedule(nsuper, xsuper, snode, xlindx, lindx, schedule)
     end
 
 end
-"""
-"""
-function findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
-# """ this routine determines the parent vector representation of
+
+# this routine determines the parent vector representation of
 #          the supernodal elimination tree, and puts the result
 #          in the array parent. For information on
 #          elimination trees and their representation, see the
@@ -380,10 +365,11 @@ function findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
 #                         of each supernode
 #
 #
-# """
-        # integer lindx(*), xlindx(*), snode(*), xsuper(*), parent(*)
-        # integer j, jsup, nsuper
 #
+# integer lindx(*), xlindx(*), snode(*), xsuper(*), parent(*)
+# integer j, jsup, nsuper
+#
+function findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
     parent[nsuper] = 0
 
     for jsup = 1: (nsuper - 1)
@@ -393,7 +379,7 @@ function findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
 
 end
 
-# """
+
 #     This routine uses the elimination tree and the factor column
 #     counts to compute the supernode partition; it assumes a
 #     postordering of the elimination tree.
@@ -426,9 +412,6 @@ end
 #     (i) xsuper - beginning of each supernode
 #     (i) snode - array of length n for recording
 #                           supernode membership.
-# """
-"""
-"""
 function findsupernodes(n, parent, colcnt, nofsub, nsuper, xsuper, snode, maxsize)
         # integer :: n, nofsub, nsuper, kcol, jsup, k, maxsize, marker(n)
         # integer :: parent(*), colcnt(*), xsuper(*), snode(*)
