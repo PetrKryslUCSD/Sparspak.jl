@@ -16,12 +16,18 @@ Private = true
 Order = [:function]
 ```
 
-## Sparse LU SPD Method
-
-Functions for Symmetric Positive Definite (SPD) matrices.
+## Multiple minimum degree (MMD) ordering.
 
 ```@autodocs
-Modules = [Sparspak.SpkSparseSolver]
+Modules = [Sparspak.SpkMmd]
+Private = true
+Order = [:function]
+```
+
+## Symbolic Factorization
+
+```@autodocs
+Modules = [Sparspak.SpkSymfct]
 Private = true
 Order = [:function]
 ```
