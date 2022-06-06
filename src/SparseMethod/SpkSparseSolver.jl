@@ -207,8 +207,7 @@ Given asymmetric matrix `A`, the steps are:
 
 1. Reordering of the matrix `A`. 
 
-2. Symbolic factorization of the(reordered) matrix `A` and the creation of the
-data structures for the factorization and forward and backward substitution. 
+2. Symbolic factorization of the(reordered) matrix `A`. 
 
 3. Putting numerical values of `A` into the data structures. 
 
