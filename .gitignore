@@ -32,4 +32,7 @@ Manifest.toml
 *.zip
 sparspak_sources/*
 *.mem
+*.sublime-workspace
+*.sublime-project
+
 
