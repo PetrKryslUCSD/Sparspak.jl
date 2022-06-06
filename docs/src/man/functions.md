@@ -1,7 +1,15 @@
 # Functions
 
+## Problem
+
 ```@autodocs
-Modules = [Sparspak]
+Modules = [Sparspak.SpkProblem]
+Private = true
+Order = [:function]
+```
+
+```@autodocs
+Modules = [Sparspak.SpkSparseSolver]
 Private = true
 Order = [:function]
 ```
