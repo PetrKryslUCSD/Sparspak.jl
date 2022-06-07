@@ -1,10 +1,9 @@
 """
 This a the outer layer of software that contains a "solver"
-#
-The main role of this layer is to ensure that subroutines
-are called in the proper order, and to collect timing
-statistics for the major steps in solving systems of
-equations.
+
+The main role of this layer is to ensure that subroutines are called in the
+proper order, and to collect timing statistics for the major steps in solving
+systems of equations.
 
 Hence, the process of solving such sparse linear systems consists of a number of
 steps: 
@@ -27,6 +26,11 @@ using ..SpkProblem: Problem
 using ..SpkSparseBase: SparseBase
 import ..SpkSparseBase: findorder, symbolicfactor, inmatrix, factor, triangularsolve
 
+"""
+    SparseSolver{IT, FT}
+
+Type of LU general sparse solver.
+"""
 mutable struct SparseSolver{IT, FT}
     slvr::SparseBase{IT, FT}
     n::IT
@@ -88,7 +92,7 @@ function findorder(s::SparseSolver{IT}) where {IT, F}
 end
 
 """
-findorderperm(s::SparseSolver{IT}, perm) where {IT}
+    findorderperm(s::SparseSolver{IT}, perm) where {IT}
 
 Find reordering of the coefficient matrix using a given permutation.
 """
@@ -124,10 +128,8 @@ end
 """
     inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 
-
 Put numerical values of the matrix stored in the problem into the data
 structures of the solver.
-
 """
 function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
     if ( ! s.symbolicdone)
@@ -143,7 +145,6 @@ end
     factor(s::SparseSolver{IT}) where {IT}
 
 Numerical factorization of the coefficient matrix.
-
 """
 function factor(s::SparseSolver{IT}) where {IT}
     if ( ! s.inmatrixdone)
@@ -203,7 +204,7 @@ end
 
 Execute all the steps of the solution process.
 
-Given asymmetric matrix `A`, the steps are:
+Given a symmetric matrix `A`, the steps are:
 
 1. Reordering of the matrix `A`. 
 

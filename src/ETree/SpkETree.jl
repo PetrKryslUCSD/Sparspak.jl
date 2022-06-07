@@ -1,9 +1,9 @@
-#
-# """ This module contains a collection of subroutines for finding and
-# manipulating elimination trees, finding (weighted) postorderings of
-#  them, and related functions.
-# """
-#
+""" 
+This module contains a collection of subroutines for finding and manipulating
+elimination trees, finding (weighted) postorderings of them, and related
+functions.
+"""
+
 module SpkETree
 
 using ..SpkOrdering: Ordering
@@ -15,6 +15,9 @@ mutable struct ETree{IT}
 end
 
 """
+    ETree(nv::IT) where {IT}
+
+Construct elimination tree.
 """
 function ETree(nv::IT) where {IT}
     parent = fill(zero(IT), nv)
@@ -37,22 +40,20 @@ function getetree(g::Graph, order::Ordering, t::ETree)
     findetree(g.nv, g.xadj, g.adj, order.rperm, order.rinvp, t.parent)
 end
 
-# """
-#   To determine the elimination tree from a given ordering and the
-#   adjacency structure. The parent vector is returned.
-#
-# Input Parameters:
-#   n - number of equations.
-#   (xadj, adj) - the adjacency structure.
-#   (rPerm, rInvp) - permutation and inverse permutation vectors
-#
-# Output Parameters:
-#   parent - the parent vector of the elimination tree.
-#
-# Working Storage:
-#    ancestor - the ancestor vector.
-# """
 """
+  To determine the elimination tree from a given ordering and the
+  adjacency structure. The parent vector is returned.
+
+Input Parameters:
+  n - number of equations.
+  (xadj, adj) - the adjacency structure.
+  (rPerm, rInvp) - permutation and inverse permutation vectors
+
+Output Parameters:
+  parent - the parent vector of the elimination tree.
+
+Working Storage:
+   ancestor - the ancestor vector.
 """
 function findetree(n, xadj, adj, rperm, rinvp, parent)
 #
@@ -82,21 +83,20 @@ function findetree(n, xadj, adj, rperm, rinvp, parent)
     end
 end
 
-# """
-#   GetPostorder finds a postordering of elimination tree t. The resulting
-#   ordering is returned in the object ``order"". The vector argument
-#   ``weight"" is optional. If it is present,  the postordering will
-#   be one where the child vertices are ordered in increasing order of
-#   their weights.
-#   The elimination tree is reordered according to the postordering.
-#
-# Input Parameters:
-#   t - the e - tree for which the postordering is found.
-#   weight - an optional weighting on the tree
-#
-# Updated Parameters:
-#   order - the required ordering
 """
+  GetPostorder finds a postordering of elimination tree t. The resulting
+  ordering is returned in the object ``order"". The vector argument
+  ``weight"" is optional. If it is present,  the postordering will
+  be one where the child vertices are ordered in increasing order of
+  their weights.
+  The elimination tree is reordered according to the postordering.
+
+Input Parameters:
+  t - the e - tree for which the postordering is found.
+  weight - an optional weighting on the tree
+
+Updated Parameters:
+  order - the required ordering
 """
 function getpostorder(t::ETree{IT}, order::Ordering, weight) where {IT}
     firstson = fill(zero(IT), t.nv)
@@ -133,22 +133,20 @@ function getpostorder(t::ETree{IT}, order::Ordering) where {IT}
     order.cperm = order.rperm; order.cinvp = order.rinvp
 end
 
-# """
-#   To determine the binary tree representation of the elimination
-#   tree given by the parent vector.  The returned representation
-#   will be given by the first - son and brother vectors.  The root
-#   of the binary tree is always n.
-#
-# Input Parameters:
-#   n - number of equations.
-#   parent - the parent vector of the elimination tree.
-#             It is assumed that parent(i) > i except for the roots.
-#
-# Output Parameters:
-#   fson - the first son vector.
-#    brother - the brother vector.
-# """
 """
+  To determine the binary tree representation of the elimination
+  tree given by the parent vector.  The returned representation
+  will be given by the first - son and brother vectors.  The root
+  of the binary tree is always n.
+
+Input Parameters:
+  n - number of equations.
+  parent - the parent vector of the elimination tree.
+            It is assumed that parent(i) > i except for the roots.
+
+Output Parameters:
+  fson - the first son vector.
+   brother - the brother vector.
 """
 function binarytree(n, parent, fson, brother)
     fson .= zero(eltype(parent)); brother .= zero(eltype(parent)); lroot = n
@@ -173,26 +171,24 @@ function binarytree(n, parent, fson, brother)
     brother[lroot] = 0
 end
 
-# """
-#   Based on the binary representation (first - son, brother) of the
-#   elimination tree, a postordering is determined. The corresponding
-#   parent vector is also modified to reflect the reordering.
-#
-# Input Parameters:
-#   root - root of the elimination tree (usually n).
-#   fson - the first son vector.
-#   brother - the brother vector.
-#
-# Updated Parameters:
-#   parent - the parent vector.
-#
-# Output Parameters:
-#   rInvpos - inverse permutation for the postordering.
-#
-# Working Parameters:
-#    stack - the stack for postorder traversal of the tree.
-# """
 """
+  Based on the binary representation (first - son, brother) of the
+  elimination tree, a postordering is determined. The corresponding
+  parent vector is also modified to reflect the reordering.
+
+Input Parameters:
+  root - root of the elimination tree (usually n).
+  fson - the first son vector.
+  brother - the brother vector.
+
+Updated Parameters:
+  parent - the parent vector.
+
+Output Parameters:
+  rInvpos - inverse permutation for the postordering.
+
+Working Parameters:
+   stack - the stack for postorder traversal of the tree.
 """
 function postordertree(root, fson, brother, rinvpos, parent, stack)
     num = 0; top = 0; vertex = root
@@ -226,30 +222,26 @@ function postordertree(root, fson, brother, rinvpos, parent, stack)
     parent .= brother
 end
 
-#
-#  WeightedBinaryTree ........ representation of etree     ^^^^^
-#
-# """
-#   To determine a binary tree representation of the elimination
-#   tree, for which every "last child" has the maximum possible
-#   column nonzero count in the factor.  The returned representation
-#   will be given by the first - son and brother vectors.  The root of
-#   the binary tree is always n.
-#
-# Input Parameters:
-#   n - number of equations.
-#   parent - the parent vector of the elimination tree.
-#             It is assumed that parent(i) > i except for the roots.
-#   weight - a weighting on the tree.
-#
-# Output Parameters:
-#   fson - the first son vector.
-#   brother - the brother vector.
-#
-# Working Storage:
-#    lson - last son vector.
-# """
+
 """
+  To determine a binary tree representation of the elimination
+  tree, for which every "last child" has the maximum possible
+  column nonzero count in the factor.  The returned representation
+  will be given by the first - son and brother vectors.  The root of
+  the binary tree is always n.
+
+Input Parameters:
+  n - number of equations.
+  parent - the parent vector of the elimination tree.
+            It is assumed that parent(i) > i except for the roots.
+  weight - a weighting on the tree.
+
+Output Parameters:
+  fson - the first son vector.
+  brother - the brother vector.
+
+Working Storage:
+   lson - last son vector.
 """
 function weightedbinarytree(n, parent, weight, fson, brother)
 #
