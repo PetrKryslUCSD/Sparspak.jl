@@ -338,7 +338,7 @@ Input Parameter:
 Updated Parameter:
    p - the problem for which the RHS is being constructed.
 """
-function makerhs(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
+function makerhs(p::Problem, x::Vector{FT}, mtype = "T") where {FT}
     if (p.nnz == 0)
         @error "$(@__FILE__): Matrix is NULL. The rhs cannot be computed."
         return p
@@ -353,12 +353,84 @@ function makerhs(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
     p.rhs .= 0.0
     res = deepcopy(p.rhs)
 
-    computeresidual(p, res, mtype)
+    computeresidual(p, res, p.x, mtype)
 
     p.rhs .= -res
     p.x .= 0.0
 
     return p
+end
+
+
+"""
+    computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mtype = "T") where {FT}
+
+Compute the residual of a problem.
+
+Given a vector `x`, this routine calculates the difference between the RHS of
+the given Problem and `A*x` and places this in `res`.
+
+Input Parameter:
+  p - the Problem used to calculate res, using xIn
+  xIn - the input ``x"" vector used to compute the residual
+  mType - matrix type (optional). If the matrix is symmetric and only
+            the lower or upper triangle is present, the user must let
+            the routine know this by setting mType to one of:
+                "L" or "l" - when only the lower triangle is present
+                "U" or "u" - when only the upper triangle is present
+                "T" or "t" - when either the lower or upper triangle is
+                             present.
+Output Parameter:
+   res - the calculated residual
+"""
+function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mtype = "T") where {FT}
+        # type (problem) :: p
+        # real (double), dimension(:), intent(out) :: res
+        # real (double) :: x(p.ncols)
+
+#       real (doubledouble) :: t, temp, r(p.nrows), u#       
+        # real (double) :: t, temp, r(p.nrows), u
+
+        # real (double), dimension(:), optional :: xin
+        # integer :: rnum, cnum, ptr, flag
+        # character (len = *), optional :: mtype
+        # character (len = *), parameter :: fname = "computeresidualproblem:"
+
+    flag = 0
+    if (lowercase(mtype) == "t" || lowercase(mtype) == "l" || lowercase(mtype) == "u")
+        flag = 1
+    else
+        @error "$(@__FILE__): Invalid value for mtype, $mtype."
+        return false
+    end
+
+    x = deepcopy(res)
+    if (isempty(xin))
+        @. x = xin
+    else
+        @. x = p.x
+    end
+
+    r = deepcopy(p.rhs)
+    @. r = p.rhs
+
+    for cnum in 1:p.ncols
+        ptr = p.head[cnum]; t = x[cnum]
+        while (ptr > 0)
+            rnum = p.rowsubs[ptr];  temp = p.values[ptr]
+            if (temp != _BIGGY())
+                r[rnum] -= t * temp
+                if (rnum != cnum && flag == 1)
+                    u = x[rnum]
+                    r[cnum] -= u * temp
+                end
+            end
+            ptr = p.link[ptr]
+        end
+    end
+
+    @. res = r
+    return true
 end
 
 """
