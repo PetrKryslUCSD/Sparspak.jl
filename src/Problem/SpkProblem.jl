@@ -37,12 +37,7 @@ The size of the arrays is extended as required, and their lengths
 for not generally correspond to the number of nonzeros in the matrix:
 or the number of columns in the matrix.
     
-    lenHead is the current length of the arrays head and x.
-    lenRhs  is the current length of the array rhs.
-    lenLink is the current length of the arrays link, rowSubs, values.
-    
-    lastUsed is the last position in values and link that is occupied.
-    
+
     The user can improve efficiency by providing an estimate of the
     number of nonzeros in the matrix -  - this is done via the optional
     keyword parameter "NNZ" in the subroutine Construct.
@@ -65,9 +60,13 @@ Type of a sparse-matrix coupled linear algebraic equations problem.
 """
 mutable struct Problem{IT, FT}
     info::String
+    # `lenhead` is the current length of the arrays `head` and `x`.
     lenhead::IT
+    # `lenlink` is the current length of the arrays `link`, `rowsubs`, `values`.
     lenlink::IT
+    # `lenrhs`  is the current length of the array `rhs`.
     lenrhs::IT
+    # `lastused` is the last position in `values` and `link` that is occupied.
     lastused::IT
     head::Vector{IT}
     link::Vector{IT}
