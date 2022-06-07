@@ -69,7 +69,8 @@ CurrentModule = Sparspak.SpkProblem
 ```
 
 ```@docs
-Problem
+Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, 
+    FT}
 inaij!
 inbi!
 insparse!
