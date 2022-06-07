@@ -34,5 +34,6 @@ sparspak_sources/*
 *.mem
 *.sublime-workspace
 *.sublime-project
+*.h5
 
 
