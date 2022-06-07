@@ -1,4 +1,4 @@
-# SparseBase class:
+# _SparseBase class:
 # This class contains the variables for the data structure for the
 # SparseSolver.
 # #
@@ -96,7 +96,7 @@ using ..SpkProblem: Problem
 using ..SpkUtilities: __extend
 using ..SpkMmd: mmd
 
-mutable struct SparseBase{IT, FT}
+mutable struct _SparseBase{IT, FT}
     order::Ordering
     t::ETree
     g::Graph
@@ -124,13 +124,12 @@ mutable struct SparseBase{IT, FT}
     unz::Vector{FT}
 end
 
-"""
-This routine initializes the solver object s by retrieving some
-information from the problem object p. The solver object contains
-an elimination tree and an ordering object; these are also
- initialized in this routine.
-"""
-function SparseBase(p::Problem{IT,FT}) where {IT,FT}
+
+# This routine initializes the solver object s by retrieving some
+# information from the problem object p. The solver object contains
+# an elimination tree and an ordering object; these are also
+#  initialized in this routine.
+function _SparseBase(p::Problem{IT,FT}) where {IT,FT}
     maxblocksize = 30   # This can be set by the user
 
     tempsizeneed = zero(IT)
@@ -165,13 +164,13 @@ function SparseBase(p::Problem{IT,FT}) where {IT,FT}
     lnz = FT[]
     unz = FT[]
 
-    return SparseBase(order, t, g, errflag, n, nnz, nnzl, nsub, nsuper, maxblocksize,
+    return _SparseBase(order, t, g, errflag, n, nnz, nnzl, nsub, nsuper, maxblocksize,
         tempsizeneed, factorops, solveops, realstore, integerstore,
         colcnt, snode, xsuper, xlindx, lindx, xlnz, xunz, ipiv,
         lnz, unz)
 end
 
-function findorder(s::SparseBase{IT}, orderfunction::F) where {IT, F}
+function _findorder!(s::_SparseBase{IT}, orderfunction::F) where {IT, F}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem, no ordering found."
         return false
@@ -181,11 +180,11 @@ function findorder(s::SparseBase{IT}, orderfunction::F) where {IT, F}
     return true
 end
 
-function findorder(s::SparseBase{IT}) where {IT}
-    return findorder(s, mmd)
+function _findorder!(s::_SparseBase{IT}) where {IT}
+    return _findorder!(s, mmd)
 end
 
-function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
+function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
 # """
 #     This subroutine computes the storage requirements and sets up
 #     data structures for the symbolic and numerical factorization.
@@ -287,24 +286,23 @@ function findnonzeroindexs(n, colcnt, nsuper, xsuper, xlnz, xunz, maxtemp)
 
 end
 
-"""
-    This subroutine retrieves a matrix from a problem object p and
-    inserts its elements into the data structure for the Cholesky
-    factor L. The data structure involves the arrays xlindx, lindx,
-    xlnz, lnz, xunz and unz as described in the comments at the
-    beginning of this module.
-    The components of the problem object are decribed in the
-    comments at the beginning of the SpkProblem module.
-    Note that the Cholesky factor L corresponds to the matrix
-    problem after it has had its rows and columns permuted.
-    Thus, a reordering is applied to its elements before they are
-    inserted into the data structure.
-#
-Input parameters: problem and solver objects
 
-The "output" is the modified solver object.
-"""
-function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
+#     This subroutine retrieves a matrix from a problem object p and
+#     inserts its elements into the data structure for the Cholesky
+#     factor L. The data structure involves the arrays xlindx, lindx,
+#     xlnz, lnz, xunz and unz as described in the comments at the
+#     beginning of this module.
+#     The components of the problem object are decribed in the
+#     comments at the beginning of the SpkProblem module.
+#     Note that the Cholesky factor L corresponds to the matrix
+#     problem after it has had its rows and columns permuted.
+#     Thus, a reordering is applied to its elements before they are
+#     inserted into the data structure.
+# 
+# Input parameters: problem and solver objects
+# The "output" is the modified solver object.
+
+function _inmatrix!(s::_SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem. No matrix."
         return false
@@ -376,14 +374,11 @@ function inmatrix(s::SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
     return doit(p.ncols, p.link, p.head, s.order.rinvp, s.order.cinvp, p.rowsubs, s.snode, s.xsuper, s.xlindx, s.lindx, p.values, s.xlnz, s.lnz, s.xunz, s.unz)
 end
 
-function factor(s::SparseBase{IT, FT}) where {IT, FT}
-# """
 # This routine calls the lower - level routine LUFactor which
 # computes and L U factorization of the matrix stored in the
 # solver object s. The components of the solver object are described
 #  in the comments at the beginning of this module.
-# """
-
+function _factor!(s::_SparseBase{IT, FT}) where {IT, FT}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem. No matrix."
         return false
@@ -398,15 +393,14 @@ function factor(s::SparseBase{IT, FT}) where {IT, FT}
     return true
 end
 
-"""
-This routine calls the lower - level routine LUSolve which
-solves L U x = rhs, given L, U and rhs. The solution is placed in
-the array rhs. Note that the factorization is of a permuted form of
-the problem, and it is assumed that the user provides the rhs in
-the original order. Thus, the permutation "hidden" in the solver
- object is applied as appropriate.
-"""
-function triangularsolve(s::SparseBase{IT, FT}, solution::Vector{FT}) where {IT, FT}
+
+# This routine calls the lower - level routine LUSolve which
+# solves L U x = rhs, given L, U and rhs. The solution is placed in
+# the array rhs. Note that the factorization is of a permuted form of
+# the problem, and it is assumed that the user provides the rhs in
+# the original order. Thus, the permutation "hidden" in the solver
+#  object is applied as appropriate.
+function _triangularsolve!(s::_SparseBase{IT, FT}, solution::Vector{FT}) where {IT, FT}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem. No solution."
         return false
