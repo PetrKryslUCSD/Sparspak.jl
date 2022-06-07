@@ -68,16 +68,33 @@ Grid
 CurrentModule = Sparspak.SpkProblem
 ```
 
-```@autodocs
+```@docs
 Problem
-inaij
-inbi
-insparse
-infullrhs
+inaij!
+inbi!
+insparse!
+infullrhs!
 outsparse
 computeresidual
 makerhs
 makegridproblem
+```
+
+## Sparse LU Solver
+
+```@meta
+CurrentModule = Sparspak.SpkSparseSolver
+```
+
+```@docs
+SparseSolver
+findorder!
+findorderperm!
+symbolicfactor!
+inmatrix!
+factor!
+triangularsolve!
+solve!
 ```
 
 ## Graphs
