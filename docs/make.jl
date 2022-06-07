@@ -9,13 +9,13 @@ using Documenter, Sparspak
 makedocs(
 	modules = [Sparspak],
 	doctest = false, clean = true,
-	format = Documenter.HTML(prettyurls = false),
+	format = Documenter.HTML(prettyurls = true),
 	authors = "Petr Krysl",
 	sitename = "Sparspak.jl",
 	pages = Any[
 	"Home" => "index.md",
 	"Guide" => "guide/guide.md",
-	"Types and Functions" => Any[
+	"Reference" => Any[
 		"man/types.md",
 		"man/functions.md"]
 		]
