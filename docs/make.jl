@@ -14,10 +14,10 @@ makedocs(
 	sitename = "Sparspak.jl",
 	pages = Any[
 	"Home" => "index.md",
-	"Pages" => Any[
-        "guide/guide.md",
-		"man/reference.md",
-        ]
+	"Guide" => "guide/guide.md",
+	"Reference" => Any[
+		"man/reference.md"]
+		]
 	)
 
 deploydocs(
