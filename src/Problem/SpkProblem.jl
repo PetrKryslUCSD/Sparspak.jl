@@ -1,10 +1,10 @@
 """
 This is the `Problem` class -- a major module of Sparspak90.
 
-The variable `nRows`
+The variable `nrows`
 - number of rows in the matrix
 - number of elements in a row permutation
-The variable `nCols`
+The variable `ncols`
 - number of columns in the matrix
 - number of elements in a column permutation
 Other variables:
@@ -16,10 +16,10 @@ Or, a user can input (i, j), indicating that position
 Hence the distinction between "nonzeros" and
 "nonzero values" below.
 
-nNZ - number of nonzero * values * in the matrix.
-dNZ - number of nonzero * values * on the diagonal of the matrix.
-nEdges - number of nonzeros in the matrix.
-dEdges - number of nonzeros on the diagonal of the matrix.
+nnz - number of nonzero * values * in the matrix.
+dnz - number of nonzero * values * on the diagonal of the matrix.
+nedges - number of nonzeros in the matrix.
+dedges - number of nonzeros on the diagonal of the matrix.
 
 The elements of the matrix are stored by columns using three ``parallel""
 arrays:(link, rowSubs, values). The first element of column i stored is
@@ -58,6 +58,11 @@ using SparseArrays
 using ..SpkUtilities: _BIGGY, extend
 using ..SpkGrid: Grid
 
+"""
+    Problem{IT, FT}
+
+Type of a sparse-matrix coupled linear algebraic equations problem.
+"""
 mutable struct Problem{IT, FT}
     info::String
     lenhead::IT
@@ -67,7 +72,13 @@ mutable struct Problem{IT, FT}
     head::Vector{IT}
     link::Vector{IT}
     rowsubs::Vector{IT}
+    # The variable `nrows`
+    # - number of rows in the matrix
+    # - number of elements in a row permutation
     nrows::IT
+    # The variable `ncols`
+    # - number of columns in the matrix
+    # - number of elements in a column permutation
     ncols::IT
     nnz::IT
     dnz::IT
@@ -82,6 +93,8 @@ end
 
 """
     Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, FT}
+
+Construct a problem.
 """
 function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, 
     FT}
@@ -111,7 +124,9 @@ end
 """
     inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
-Input matrix coefficient.
+Input a matrix coefficient. 
+
+The value is *added* to the existing contents.
 """
 function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
     if (rnum < 1 || cnum < 1)
@@ -192,7 +207,7 @@ end
 """
     inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
 
-Input an entry of the right hand side vector.
+Input an entry of the right-hand side vector.
 """
 function inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
     if (rnum < 1)
@@ -213,6 +228,8 @@ end
     insparse(p::Problem{IT,FT}, spm) where {IT,FT}
 
 Input sparse matrix.
+
+Build a problem from a sparse matrix.
 """
 function insparse(p::Problem{IT,FT}, spm) where {IT,FT}
     I, J, V = findnz(spm)
@@ -222,6 +239,8 @@ end
 """
     insparse(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where 
     {IT,FT}
+
+Build a problem from a sparse matrix in the COO format.
 """
 function insparse(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT,FT}
     for i in eachindex(I)
@@ -264,15 +283,13 @@ end
 """
     makegridproblem(g::Grid{IT}) where {IT}
 
-This routine fills in a Problem object using a given Grid.
+This routine fills in a problem object using a given grid.
 
-Input Parameters:
-  g - the Grid to be used to fill a Problem matrix
-  stencil - an optional variable specifying the difference operator
-            to be applied to the grid.
+Input:
+- `g` - the `Grid` to be used to fill a `Problem` matrix
 
-Output Parameter:
-   p - the Problem object to be filled
+Output:
+- `p` - the Problem object to be filled
 """
 function makegridproblem(g::Grid{IT}) where {IT}
     M1 = -1.0; FOUR = 4.0
@@ -301,16 +318,14 @@ end
 """
     makegridproblem(h::IT, k::IT) where {IT}
 
-This routine constructs a Grid object given an H and K, and fills in a
-Problem object using this Grid.
+Construct a problem object based on a grid.
 
-Input Parameters:
-  h - the number of rows in the Grid
-  k - the number of columns in the Grid
-  stencil - an optional variable specifying the difference operator
-            to be applied to the grid.
-Output Parameter:
-   p - the Problem object to be filled
+Input:
+- `h` - the number of rows in the Grid
+- `k` - the number of columns in the Grid
+
+Output:
+- `p` - the Problem object to be filled
 """
 function makegridproblem(h::IT, k::IT) where {IT}
     g = Grid(h, k)
@@ -370,17 +385,18 @@ Compute the residual of a problem.
 Given a vector `x`, this routine calculates the difference between the RHS of
 the given Problem and `A*x` and places this in `res`.
 
-Input Parameter:
-  p - the Problem used to calculate res, using xIn
-  xIn - the input ``x"" vector used to compute the residual
-  mType - matrix type (optional). If the matrix is symmetric and only
+Input:
+- `p` - the `Problem` used to calculate `res`, using `xin`
+- `xin` - the input "solution" vector used to compute the residual
+- `mtype` - matrix type (optional). If the matrix is symmetric and only
             the lower or upper triangle is present, the user must let
             the routine know this by setting mType to one of:
                 "L" or "l" - when only the lower triangle is present
                 "U" or "u" - when only the upper triangle is present
                 "T" or "t" - when either the lower or upper triangle is
                              present.
-Output Parameter:
+
+Output:
    res - the calculated residual
 """
 function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mtype = "T") where {FT}
@@ -439,13 +455,13 @@ end
 InRHSProblem adds a vector of values, rhs, to the current right hand
 side of a problem object.
 
-Input Parameter:
-  rhs - the source right - hand side. It ^must^ be of length at least
-        p.nRows and if it is greater than p.nRows, only the first
-        p.nRows are used.
+Input:
+- `rhs` - the source right-hand side. It *must* be of length at least
+        `p.nrows` and if it is greater than `p.nrows`, only the first
+        `p.nrows` are used.
 
-Updated Parameter:
-   p - the problem in which rhs is to be inserted.
+Updated:
+- `p` - the problem in which rhs is to be inserted.
 """
 function infullrhs(p::Problem{IT,FT}, rhs)  where {IT,FT}
     for i in p.nrows:-1:1
