@@ -629,3 +629,28 @@ end
 
 _test()
 end # module
+
+module msprs018
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+using Sparspak.SpkProblem: insparse, outsparse, makegridproblem, makerhs
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Printf
+
+function _test()
+    p = makegridproblem(5, 3)
+    makerhs(p, Float64[]);
+    
+    s = SparseSolver(p)
+    A = outsparse(p)
+    solve(s, p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
