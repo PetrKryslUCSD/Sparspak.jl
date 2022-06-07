@@ -2,6 +2,8 @@
 # Pkg.activate()
 # Pkg.instantiate()
 
+using Pkg
+pkg"add https://github.com/PetrKryslUCSD/Sparspak.jl.git#main"
 
 using Documenter, Sparspak
 
