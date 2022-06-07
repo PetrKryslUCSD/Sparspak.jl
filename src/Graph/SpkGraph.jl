@@ -1,28 +1,28 @@
-""" Graph class:
+# Graph class:
 
-nV - the number of vertices in the graph.
-(xadj, adj) - array pair storing the adjacency lists of the vertices.
+# nV - the number of vertices in the graph.
+# (xadj, adj) - array pair storing the adjacency lists of the vertices.
 
-The adjacency lists of the graph are stored in consecutive locations
-in the array adj. The adjacency list for the i - th vertex in the graph
-is stored in positions adj(k), k = xadj(i), .... xadj(i + 1) - 1.
-#
-When the graph is symmetric, if vertex i is in vertex j"s adjacency
- vertex j is in vertex i"s list. Using the representation above
-each edge in the graph is stored twice.
+# The adjacency lists of the graph are stored in consecutive locations
+# in the array adj. The adjacency list for the i - th vertex in the graph
+# is stored in positions adj(k), k = xadj(i), .... xadj(i + 1) - 1.
+# #
+# When the graph is symmetric, if vertex i is in vertex j"s adjacency
+#  vertex j is in vertex i"s list. Using the representation above
+# each edge in the graph is stored twice.
 
-There are no self - loops (No "diagonal elements") by default. If
-diagonal elements are required, just type "diagonal" or "diag"
-as an input parameter to the Construct subroutine.
-#
-For convenience in accessing the lists, xadj is of length nV + 1, with
-xadj(nV + 1) = nEdges + 1.0 Thus, accessing vertex nV"s list is the
-same as for any other of the vertices.
+# There are no self - loops (No "diagonal elements") by default. If
+# diagonal elements are required, just type "diagonal" or "diag"
+# as an input parameter to the Construct subroutine.
+# #
+# For convenience in accessing the lists, xadj is of length nV + 1, with
+# xadj(nV + 1) = nEdges + 1.0 Thus, accessing vertex nV"s list is the
+# same as for any other of the vertices.
 
-Graphs are created from Problem objects, which have a certain number
-of rows (nRows) and columns (nCols). These numbers are captured
-and stored in Graph objects as nRows and nCols as well.
-"""
+# Graphs are created from Problem objects, which have a certain number
+# of rows (nRows) and columns (nCols). These numbers are captured
+# and stored in Graph objects as nRows and nCols as well.
+
 module SpkGraph
 
 using ..SpkUtilities: __extend

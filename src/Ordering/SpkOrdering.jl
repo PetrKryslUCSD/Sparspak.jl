@@ -1,33 +1,32 @@
-""" 
-Ordering class:
+# Ordering class:
 
-nRows is the number of rows in the matrix
-nCols is the number of columns in the matrix
+# nRows is the number of rows in the matrix
+# nCols is the number of columns in the matrix
 
-Ordering objects contain two permutations and their inverses:
+# Ordering objects contain two permutations and their inverses:
 
-rPerm is a row permutation: rPerm(i) = k means that the new position of
-    row k is in position i in the new permutation.
-rInvp is a row permutation satisfying rInvp(rPerm(i)) = i. Thus, rInvp(k)
-    provides the position in the new ordering of the original row k.
+# rPerm is a row permutation: rPerm(i) = k means that the new position of
+#     row k is in position i in the new permutation.
+# rInvp is a row permutation satisfying rInvp(rPerm(i)) = i. Thus, rInvp(k)
+#     provides the position in the new ordering of the original row k.
 
-cPerm and cInvp are analogous to rPerm and rInvp, except they apply
-    to column permutations of the matrix.
+# cPerm and cInvp are analogous to rPerm and rInvp, except they apply
+#     to column permutations of the matrix.
 
-When the matrix is symmetrically permuted, rPerm = cPerm and rInvp = cInvp.
+# When the matrix is symmetrically permuted, rPerm = cPerm and rInvp = cInvp.
 
-xRowBlk  is an array that is sometimes used to contain a partitioning
-    of the rows of the matrix, or both the rows and columns when the
-    matrix is symmetric.
+# xRowBlk  is an array that is sometimes used to contain a partitioning
+#     of the rows of the matrix, or both the rows and columns when the
+#     matrix is symmetric.
 
-nRowBlks is the number of blocks in the partitioning; the rows of the
-    i - th partition are xRowBlk(i), xRowBlk(i) + 1 ... xRowBlk(i + 1) - 1.0
-    For convenience, xRowBlk has nRowBlks + 1 elements, with
-    xRowBlk(nRowBlks + 1) = nRows + 1.0
+# nRowBlks is the number of blocks in the partitioning; the rows of the
+#     i - th partition are xRowBlk(i), xRowBlk(i) + 1 ... xRowBlk(i + 1) - 1.0
+#     For convenience, xRowBlk has nRowBlks + 1 elements, with
+#     xRowBlk(nRowBlks + 1) = nRows + 1.0
 
-    When the matrix is not symmetric, and a partitioning of the columns
-     is required as well, the pair (nColBlks, xColBlk) is used.
-"""
+#     When the matrix is not symmetric, and a partitioning of the columns
+#      is required as well, the pair (nColBlks, xColBlk) is used.
+
 module SpkOrdering
 
 """

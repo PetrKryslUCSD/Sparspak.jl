@@ -1,16 +1,15 @@
-"""  
-A collection of routines to find an MMD (multiple minimum degree) ordering.
-There are no declarations here.
+# A collection of routines to find an MMD (multiple minimum degree) ordering.
+# There are no declarations here.
 
-Multiple minimum degree Ordering algorithm (MMD).
-Written by Erik Demaine, eddemaine@uwaterloo.ca
-Based on a Fortran 77 code written by Joseph Liu.
-For information on the minimum degree algorithm see the articles:
-The evolution of the minimum degree algorithm by Alan George and
-Joseph Liu, SIAM Rev. 31 pp. 1 - 19, 1989.0
-Modification of the minimum degree algorithm by multiple
-elimination, ACM Trans. Math. Soft. 2 pp.141 - 152, 1985
-"""
+# Multiple minimum degree Ordering algorithm (MMD).
+# Written by Erik Demaine, eddemaine@uwaterloo.ca
+# Based on a Fortran 77 code written by Joseph Liu.
+# For information on the minimum degree algorithm see the articles:
+# The evolution of the minimum degree algorithm by Alan George and
+# Joseph Liu, SIAM Rev. 31 pp. 1 - 19, 1989.0
+# Modification of the minimum degree algorithm by multiple
+# elimination, ACM Trans. Math. Soft. 2 pp.141 - 152, 1985
+
 module SpkMmd
 
 using OffsetArrays

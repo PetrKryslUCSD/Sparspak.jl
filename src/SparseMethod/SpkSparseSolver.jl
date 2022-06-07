@@ -1,25 +1,7 @@
-"""
-This a the outer layer of software that contains a "solver"
+# This a the outer layer of software that contains a "solver"
+# The main role of this layer is to ensure that subroutines are called in the
+# proper order.
 
-The main role of this layer is to ensure that subroutines are called in the
-proper order, and to collect timing statistics for the major steps in solving
-systems of equations.
-
-Hence, the process of solving such sparse linear systems consists of a number of
-steps: 
-
-1. Reordering of the matrix A 
-
-2. Symbolic factorization of the(reordered) matrix A and the creation of the
-data structures for the factorization and forward and backward substitution 
-
-3. Putting numerical values of
-A into the data structures 
-
-4. Numerical factorization of A 
-
-5. Forward and backward substitution (triangular solution) 
-"""
 module SpkSparseSolver
 
 using ..SpkProblem: Problem
@@ -108,9 +90,10 @@ end
 """
     symbolicfactor(s::SparseSolver{IT})
 
-Symbolic factorization of the(reordered) matrix A and the creation of the
-data structures for the factorization and forward and backward substitution. 
+Symbolic factorization of the(reordered) matrix A.
 
+Create the data structures for the factorization and forward and backward
+substitution. 
 """
 function symbolicfactor(s::SparseSolver{IT}) where {IT}
     if (s.symbolicdone) 

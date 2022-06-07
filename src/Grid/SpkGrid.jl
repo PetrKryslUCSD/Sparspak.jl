@@ -1,10 +1,7 @@
-""" 
-
-Grid objects contain a representation of an h by k rectangular grid.
-h - the number of rows ("height")
-k is the number of columns ("kolumns").
- v is an h by k integer array
-"""
+# Grid objects contain a representation of an h by k rectangular grid.
+# h - the number of rows ("height")
+# k is the number of columns ("kolumns").
+#  v is an h by k integer array
 
 module  SpkGrid
 
@@ -15,6 +12,9 @@ mutable struct Grid{IT}
 end
 
 """
+    Grid(h::IT, k::IT) where {IT}
+
+Construct a grid with a given number of spacings.
 """
 function Grid(h::IT, k::IT) where {IT}
     n = h * k; 
