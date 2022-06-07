@@ -2,28 +2,22 @@
 
 ## Problem
 
-```@autodocs
-Modules = [Sparspak.SpkProblem]
-Private = true
-Order = [:type]
+```@meta
+CurrentModule = Sparspak.SpkProblem
 ```
 
-## Sparse LU Method
-
-```@autodocs
-Modules = [Sparspak.SpkSparseSolver]
-Private = true
-Order = [:type]
+```@docs
+SpkProblem
 ```
 
-## Sparse LU SPD Method
+## Sparse LU Solver
 
-Functions for Symmetric Positive Definite (SPD) matrices.
+```@meta
+CurrentModule = Sparspak.SpkSparseSolver
+```
 
-```@autodocs
-Modules = [Sparspak.SpkSparseSolver]
-Private = true
-Order = [:type]
+```@docs
+SpkSparseSolver
 ```
 
 ## Elimination Trees
@@ -62,18 +56,20 @@ Order = [:type]
 
 ## Problem
 
-```@autodocs
-Modules = [Sparspak.SpkProblem]
-Private = true
-Order = [:function]
+```@meta
+CurrentModule = Sparspak.SpkProblem
 ```
 
-## Sparse LU Method
-
 ```@autodocs
-Modules = [Sparspak.SpkSparseSolver]
-Private = true
-Order = [:function]
+Problem
+inaij
+inbi
+insparse
+infullrhs
+outsparse
+computeresidual
+makegridproblem
+makerhs
 ```
 
 ## Graphs
