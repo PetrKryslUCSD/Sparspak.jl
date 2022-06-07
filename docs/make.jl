@@ -1,23 +1,21 @@
 # using Pkg;
 # Pkg.activate()
 # Pkg.instantiate()
-import Pkg; Pkg.add("Documenter")
-# import Pkg; Pkg.add("Sparspak")
+
 
 using Documenter, Sparspak
 
 makedocs(
 	modules = [Sparspak],
 	doctest = false, clean = true,
-	format = Documenter.HTML(prettyurls = true),
+	format = Documenter.HTML(prettyurls = false),
 	authors = "Petr Krysl",
 	sitename = "Sparspak.jl",
 	pages = Any[
 	"Home" => "index.md",
 	"Guide" => "guide/guide.md",
-	"Reference" => Any[
-		"man/reference.md"]
-		]
+	"Reference" => "man/reference.md",
+        ]
 	)
 
 deploydocs(
