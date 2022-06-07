@@ -7,7 +7,7 @@ CurrentModule = Sparspak.SpkProblem
 ```
 
 ```@docs
-SpkProblem
+Problem
 ```
 
 ## Sparse LU Solver
@@ -17,39 +17,47 @@ CurrentModule = Sparspak.SpkSparseSolver
 ```
 
 ```@docs
-SpkSparseSolver
+SparseSolver
 ```
 
 ## Elimination Trees
 
-```@autodocs
-Modules = [Sparspak.SpkETree]
-Private = true
-Order = [:type]
+```@meta
+CurrentModule = Sparspak.SpkETree
+```
+
+```@docs
+ETree
 ```
 
 ## Graphs
 
-```@autodocs
-Modules = [Sparspak.SpkGraph]
-Private = true
-Order = [:type]
+```@meta
+CurrentModule = Sparspak.SpkGraph
+```
+
+```@docs
+Graph
 ```
 
 ## Ordering
 
-```@autodocs
-Modules = [Sparspak.SpkOrdering]
-Private = true
-Order = [:type]
+```@meta
+CurrentModule = Sparspak.SpkOrdering
+```
+
+```@docs
+Ordering
 ```
 
 ## Grid
 
-```@autodocs
-Modules = [Sparspak.SpkGrid]
-Private = true
-Order = [:type]
+```@meta
+CurrentModule = Sparspak.SpkGrid
+```
+
+```@docs
+Grid
 ```
 
 # Functions
@@ -68,8 +76,8 @@ insparse
 infullrhs
 outsparse
 computeresidual
-makegridproblem
 makerhs
+makegridproblem
 ```
 
 ## Graphs
