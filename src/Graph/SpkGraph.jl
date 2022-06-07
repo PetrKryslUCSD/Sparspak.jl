@@ -288,7 +288,7 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
     #       By convention, graphs are maintained in this state for
     #       efficiency reasons.
     # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-    sortgraph(g)
+    sortgraph!(g)
     return true
 end
  

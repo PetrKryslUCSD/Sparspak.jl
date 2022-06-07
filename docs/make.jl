@@ -10,7 +10,7 @@ using Documenter, Sparspak
 makedocs(
 	modules = [Sparspak],
 	doctest = false, clean = true,
-	format = Documenter.HTML(prettyurls = false),
+	format = Documenter.HTML(prettyurls = false, assets = ["assets/custom.css"], ),
 	authors = "Petr Krysl",
 	sitename = "Sparspak.jl",
 	pages = Any[
