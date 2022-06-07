@@ -124,13 +124,13 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where
 end
 
 """
-    inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
+    inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
 Input a matrix coefficient. 
 
 The value is *added* to the existing contents.
 """
-function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
+function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
     if (rnum < 1 || cnum < 1)
         @warn "$(@__FILE__): invalid matrix subscripts $(rnum), $(cnum): input ignored"
         return false
@@ -207,11 +207,11 @@ function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 end 
 
 """
-    inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
+    inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
 
 Input an entry of the right-hand side vector.
 """
-function inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
+function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
     if (rnum < 1)
         @error "$(@__FILE__): Invalid rhs subscript $(rnum)."
         return false
@@ -233,9 +233,9 @@ Input sparse matrix.
 
 Build a problem from a sparse matrix.
 """
-function insparse(p::Problem{IT,FT}, spm) where {IT,FT}
+function insparse!(p::Problem{IT,FT}, spm) where {IT,FT}
     I, J, V = findnz(spm)
-    return insparse(p, I, J, V)
+    return insparse!(p, I, J, V)
 end
 
 """
@@ -244,9 +244,9 @@ end
 
 Build a problem from a sparse matrix in the COO format.
 """
-function insparse(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT,FT}
+function insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT,FT}
     for i in eachindex(I)
-        if !inaij(p, I[i], J[i], V[i])
+        if ! inaij!(p, I[i], J[i], V[i])
             return false 
         end
     end
@@ -300,17 +300,17 @@ function makegridproblem(g::Grid{IT}) where {IT}
 
     for i in 1:g.h
         for j in 1:g.k
-            inaij(p, g.v[i, j], g.v[i, j], FOUR)
-            if (i > 1) inaij(p, g.v[i, j], g.v[i - 1, j], M1); end
-            if (j > 1) inaij(p, g.v[i, j], g.v[i, j - 1], M1); end
+            inaij!(p, g.v[i, j], g.v[i, j], FOUR)
+            if (i > 1) inaij!(p, g.v[i, j], g.v[i - 1, j], M1); end
+            if (j > 1) inaij!(p, g.v[i, j], g.v[i, j - 1], M1); end
         end
     end 
 
     for i in 1:g.h
         for j in 1:g.k
-            inaij(p, g.v[i, j], g.v[i, j], FOUR)
-            if (i>1 && j>1)   inaij(p, g.v[i, j], g.v[i - 1, j - 1], M1); end
-            if (j<g.k && i>1) inaij(p, g.v[i, j], g.v[i - 1, j + 1], M1); end
+            inaij!(p, g.v[i, j], g.v[i, j], FOUR)
+            if (i>1 && j>1)   inaij!(p, g.v[i, j], g.v[i - 1, j - 1], M1); end
+            if (j<g.k && i>1) inaij!(p, g.v[i, j], g.v[i - 1, j + 1], M1); end
         end
     end
 
@@ -355,7 +355,7 @@ Input Parameter:
 Updated Parameter:
    p - the problem for which the RHS is being constructed.
 """
-function makerhs(p::Problem, x::Vector{FT}, mtype = "T") where {FT}
+function makerhs!(p::Problem, x::Vector{FT}, mtype = "T") where {FT}
     if (p.nnz == 0)
         @error "$(@__FILE__): Matrix is NULL. The rhs cannot be computed."
         return p
@@ -452,7 +452,7 @@ function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mt
 end
 
 """
-    infullrhs(p::Problem{IT,FT}, rhs)  where {IT,FT}
+    infullrhs!(p::Problem{IT,FT}, rhs)  where {IT,FT}
 
 InRHSProblem adds a vector of values, rhs, to the current right hand
 side of a problem object.
@@ -465,9 +465,9 @@ Input:
 Updated:
 - `p` - the problem in which rhs is to be inserted.
 """
-function infullrhs(p::Problem{IT,FT}, rhs)  where {IT,FT}
+function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT,FT}
     for i in p.nrows:-1:1
-        inbi(p, i, FT(rhs[i]))
+        inbi!(p, i, FT(rhs[i]))
     end
     return p
 end

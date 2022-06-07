@@ -11,7 +11,7 @@ function _test()
     p = SpkProblem.Problem(M, N)
     spm = sprand(M, N, 0.2)
     spm = spm + spm'
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     A = SpkProblem.outsparse(p)
     @test spm - A == sparse(Int64[], Int64[], Float64[], M, N)
     return true

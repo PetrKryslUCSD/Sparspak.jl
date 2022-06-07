@@ -15,7 +15,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     s = SpkSparseBase._SparseBase(p)
     return true
 end
@@ -38,7 +38,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     s = SpkSparseSolver.SparseSolver(p)
     return true
 end
@@ -52,19 +52,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -73,7 +73,7 @@ function _test()
     p = maketridiagproblem(11)
     
     s = SparseSolver(p)
-    findorder(s)
+    findorder!(s)
     o =  s.slvr.order
     @test o.nrows == 11
     @test o.ncols == 11
@@ -94,19 +94,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -115,8 +115,8 @@ function _test()
     p = maketridiagproblem(11)
     # @show outsparse(p)
     s = SparseSolver(p)
-    findorder(s)
-    symbolicfactor(s)
+    findorder!(s)
+    symbolicfactor!(s)
 
     @test s.slvr.xlnz == [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23]    
     @test s.slvr.xunz == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10] 
@@ -137,19 +137,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -158,9 +158,9 @@ function _test()
     p = maketridiagproblem(11)
     # @show outsparse(p)
     s = SparseSolver(p)
-    findorder(s)
-    symbolicfactor(s)
-    inmatrix(s, p)
+    findorder!(s)
+    symbolicfactor!(s)
+    inmatrix!(s, p)
     
    @test s.slvr.unz  == vec([-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
    @test s.slvr.lnz  == vec([4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0, -1.0,  4.0])
@@ -179,19 +179,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -200,10 +200,10 @@ function _test()
     p = maketridiagproblem(11)
     # @show outsparse(p)
     s = SparseSolver(p)
-    findorder(s)
-    symbolicfactor(s)
-    inmatrix(s, p)
-    factor(s)
+    findorder!(s)
+    symbolicfactor!(s)
+    inmatrix!(s, p)
+    factor!(s)
     s_xlnz = vec([ 1           3           5           7           9          11          13          15          17          19          21          23])                                 
     s_xunz = vec([ 1           2           3           4           5           6           7           8           9          10          10          10 ])
     @test s.slvr.xlnz == s_xlnz
@@ -227,19 +227,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -248,11 +248,11 @@ function _test()
     p = maketridiagproblem(11)
     
     s = SparseSolver(p)
-    findorder(s)
-    symbolicfactor(s)
-    inmatrix(s, p)
-    factor(s)
-    solve(s, p)
+    findorder!(s)
+    symbolicfactor!(s)
+    inmatrix!(s, p)
+    factor!(s)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -270,19 +270,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -291,15 +291,15 @@ function _test()
     p = maketridiagproblem(11000)
     
     s = SparseSolver(p)
-    findorder(s)
-    symbolicfactor(s)
-    inmatrix(s, p)
-    factor(s)
+    findorder!(s)
+    symbolicfactor!(s)
+    inmatrix!(s, p)
+    factor!(s)
     # before  LULSolve 
     # rhs = 34.0, 20.0, 18.0, 16.0, 14.0, 2.00, 4.00, 6.00, 8.00, 10.0, 12.0              
     # after  LULSolve  
     # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -317,19 +317,19 @@ using LinearAlgebra
 using SparseArrays
 using Sparspak.SpkOrdering
 using Sparspak.SpkProblem
-using Sparspak.SpkProblem: inaij, inbi, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver,  solve!
 
 function maketridiagproblem(n)
     p = SpkProblem.Problem(n, n)
     for i in 1:(n-1)
-        inaij(p, i + 1, i, -1.0)
-        inaij(p, i, i, 4.0)
-        inaij(p, i, i + 1, -1.0)
-        inbi(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
     end
-    inaij(p, n, n, 4.0)
-    inbi(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
 
     return p
 end
@@ -338,7 +338,7 @@ function _test()
     p = maketridiagproblem(1101)
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -355,8 +355,8 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.SpkProblem: insparse, outsparse, infullrhs
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: insparse!, outsparse, infullrhs!
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
 
 function makerandomproblem(n)
     
@@ -371,8 +371,8 @@ function makerandomproblem(n)
     20.0], 31, 31)  
     
     p = Sparspak.SpkProblem.Problem(n, n, nnz(spm))
-    Sparspak.SpkProblem.insparse(p, spm);
-    Sparspak.SpkProblem.infullrhs(p, 1:n)
+    Sparspak.SpkProblem.insparse!(p, spm);
+    Sparspak.SpkProblem.infullrhs!(p, 1:n)
     return p
 end
 
@@ -380,7 +380,7 @@ function _test()
     p = makerandomproblem(31)
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     
     A = outsparse(p)
     
@@ -398,8 +398,8 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.SpkProblem: insparse, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: insparse!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver
 
 function _test()
     n = 31
@@ -407,7 +407,7 @@ function _test()
     spm = -spm - spm' + 20 * LinearAlgebra.I
     
     p = Sparspak.SpkProblem.Problem(n, n)
-    Sparspak.SpkProblem.insparse(p, spm);
+    Sparspak.SpkProblem.insparse!(p, spm);
     A = outsparse(p)
     @test A - spm == sparse(Int64[], Int64[], Float64[], 31, 31) 
     
@@ -424,16 +424,16 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.SpkProblem: insparse, outsparse
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: insparse!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
 
 function makerandomproblem(n)
     spm = sprand(n, n, 1/n)
     spm = -spm - spm' + 20 * LinearAlgebra.I
     
     p = Sparspak.SpkProblem.Problem(n, n)
-    Sparspak.SpkProblem.insparse(p, spm);
-    Sparspak.SpkProblem.infullrhs(p, 1:n);
+    Sparspak.SpkProblem.insparse!(p, spm);
+    Sparspak.SpkProblem.infullrhs!(p, 1:n);
     return p
 end
 
@@ -441,7 +441,7 @@ function _test()
     p = makerandomproblem(301)
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -553,8 +553,8 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.Problem: Problem, insparse, outsparse, infullrhs
-using Sparspak.SparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
+using Sparspak.SparseSolver: SparseSolver, solve!
 
 function _test()
     n = 357
@@ -562,11 +562,11 @@ function _test()
     A = -A - A' + 20 * LinearAlgebra.I
     
     p = Problem(n, n)
-    insparse(p, A);
-    infullrhs(p, 1:n);
+    insparse!(p, A);
+    infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -581,8 +581,8 @@ module msprs016
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.Problem: Problem, insparse, outsparse, infullrhs
-using Sparspak.SparseSolver: SparseSolver, solve
+using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
+using Sparspak.SparseSolver: SparseSolver, solve!
 
 function _test()
     n = 1357
@@ -590,11 +590,11 @@ function _test()
     A = -A - A' + 20 * LinearAlgebra.I
     
     p = Problem(n, n)
-    insparse(p, A);
-    infullrhs(p, 1:n);
+    insparse!(p, A);
+    infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -610,17 +610,17 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.SpkProblem: insparse, outsparse, makegridproblem, infullrhs
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: outsparse, makegridproblem, infullrhs!
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
 using Printf
 
 function _test()
     p = makegridproblem(5, 3)
-    infullrhs(p, 1:p.nrows);
+    infullrhs!(p, 1:p.nrows);
     
     s = SparseSolver(p)
     A = outsparse(p)
-    solve(s, p)
+    solve!(s, p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -635,17 +635,17 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
-using Sparspak.SpkProblem: insparse, outsparse, makegridproblem, makerhs
-using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Sparspak.SpkProblem: outsparse, makegridproblem, makerhs!
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
 using Printf
 
 function _test()
     p = makegridproblem(5, 3)
-    makerhs(p, Float64[]);
+    makerhs!(p, Float64[]);
     
     s = SparseSolver(p)
     A = outsparse(p)
-    solve(s, p)
+    solve!(s, p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 

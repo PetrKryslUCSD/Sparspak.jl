@@ -15,7 +15,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     graph = SpkGraph.Graph(p)
     @test graph.xadj == [1, 3, 6, 8, 9, 11, 13]
     @test graph.adj == [2, 6, 1, 3, 4, 2, 5, 2, 3, 6, 1, 5]
@@ -40,7 +40,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     graph = SpkGraph.Graph(p)
     @test SpkGraph.isstructuresymmetric(graph)
     return true
@@ -64,7 +64,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     graph = SpkGraph.Graph(p)
     @test !SpkGraph.isstructuresymmetric(graph)
     return true
@@ -89,7 +89,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     graph = SpkGraph.Graph(p)
     SpkGraph.makestructuresymmetric(graph)
     @test SpkGraph.isstructuresymmetric(graph)

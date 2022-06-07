@@ -15,7 +15,7 @@ function _test()
     V = [1.0 for _ in I]
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse(p, spm)
+    SpkProblem.insparse!(p, spm)
     t = SpkETree.ETree(M)
     @test t.parent == [0, 0, 0, 0, 0, 0] 
     return true

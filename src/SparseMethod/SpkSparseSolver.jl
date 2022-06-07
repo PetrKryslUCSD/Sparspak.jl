@@ -45,12 +45,12 @@ function SparseSolver(p::Problem)
 end
 
 """
-    findorder(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
+    findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
 
 Find reordering of the coefficient matrix.
 
 """
-function findorder(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
+function findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
     if (s.orderdone)
         return true 
     end
@@ -60,11 +60,11 @@ function findorder(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
 end
 
 """
-    findorder(s::SparseSolver{IT}) where {IT, F}
+    findorder!(s::SparseSolver{IT}) where {IT, F}
 
 Find reordering of the coefficient matrix using the default method.
 """
-function findorder(s::SparseSolver{IT}) where {IT, F}
+function findorder!(s::SparseSolver{IT}) where {IT, F}
     if (s.orderdone)
         return true
     end
@@ -74,11 +74,11 @@ function findorder(s::SparseSolver{IT}) where {IT, F}
 end
 
 """
-    findorderperm(s::SparseSolver{IT}, perm) where {IT}
+    findorderperm!(s::SparseSolver{IT}, perm) where {IT}
 
 Find reordering of the coefficient matrix using a given permutation.
 """
-function findorderperm(s::SparseSolver{IT}, perm) where {IT}
+function findorderperm!(s::SparseSolver{IT}, perm) where {IT}
     if (s.orderdone) 
         return true 
     end
@@ -88,14 +88,14 @@ function findorderperm(s::SparseSolver{IT}, perm) where {IT}
 end
 
 """
-    symbolicfactor(s::SparseSolver{IT})
+    symbolicfactor!(s::SparseSolver{IT})
 
 Symbolic factorization of the(reordered) matrix A.
 
 Create the data structures for the factorization and forward and backward
 substitution. 
 """
-function symbolicfactor(s::SparseSolver{IT}) where {IT}
+function symbolicfactor!(s::SparseSolver{IT}) where {IT}
     if (s.symbolicdone) 
         return true
     end
@@ -109,12 +109,12 @@ function symbolicfactor(s::SparseSolver{IT}) where {IT}
 end
 
 """
-    inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    inmatrix!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 
 Put numerical values of the matrix stored in the problem into the data
 structures of the solver.
 """
-function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+function inmatrix!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
     if ( ! s.symbolicdone)
         @error "$(@__FILE__): Sequence error. Symbolic factor not done yet."
         return false
@@ -125,11 +125,11 @@ function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 end
 
 """
-    factor(s::SparseSolver{IT}) where {IT}
+    factor!(s::SparseSolver{IT}) where {IT}
 
 Numerical factorization of the coefficient matrix.
 """
-function factor(s::SparseSolver{IT}) where {IT}
+function factor!(s::SparseSolver{IT}) where {IT}
     if ( ! s.inmatrixdone)
         @error "$(@__FILE__): Sequence error. Matrix input not done yet."
         return false
@@ -144,11 +144,11 @@ function factor(s::SparseSolver{IT}) where {IT}
 end
 
 """
-    triangularsolve(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
+    triangularsolve!(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
 
 Forward and backward substitution (triangular solution).
 """
-function triangularsolve(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
+function triangularsolve!(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
     if ( ! s.factordone)
         @error "$(@__FILE__): Sequence error. Factorization not done yet."
         return false
@@ -157,7 +157,7 @@ function triangularsolve(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
     temp = p.rhs[1:p.nrows]
     @assert length(temp) == s.n
 
-    triangularsolve(s, temp)
+    triangularsolve!(s, temp)
 
     p.x .= temp
 
@@ -166,13 +166,13 @@ function triangularsolve(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
 end
 
 """
-    triangularsolve(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {IT, FT}
+    triangularsolve!(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {IT, FT}
 
 Forward and backward substitution (triangular solution).
 
 Variant where the right-hand side vector is passed in.
 """
-function triangularsolve(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {IT, FT}
+function triangularsolve!(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {IT, FT}
     if ( ! s.factordone)
         @error "$(@__FILE__): Sequence error. Factorization not done yet."
         return false
@@ -183,7 +183,7 @@ function triangularsolve(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {I
 end
 
 """
-    solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
 
 Execute all the steps of the solution process.
 
@@ -197,12 +197,12 @@ Given a symmetric matrix `A`, the steps are:
 
 The solution can be retrieved as `p.x`.
 """
-function solve(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
-    findorder(s) || ErrorException("Finding Order.")
-    symbolicfactor(s) || ErrorException("Symbolic Factorization.")
-    inmatrix(s, p) || ErrorException("Matrix input.")
-    factor(s) || ErrorException("Numerical Factorization.")
-    triangularsolve(s, p) || ErrorException("Triangular Solve.")
+function solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    findorder!(s) || ErrorException("Finding Order.")
+    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
+    inmatrix!(s, p) || ErrorException("Matrix input.")
+    factor!(s) || ErrorException("Numerical Factorization.")
+    triangularsolve!(s, p) || ErrorException("Triangular Solve.")
     return true
 end
 
