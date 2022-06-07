@@ -78,9 +78,13 @@ mutable struct Problem{IT, FT}
     # - number of columns in the matrix
     # - number of elements in a column permutation
     ncols::IT
+    # nnz - number of nonzero * values * in the matrix.
     nnz::IT
+    # dnz - number of nonzero * values * on the diagonal of the matrix.
     dnz::IT
+    # nedges - number of nonzeros in the matrix.
     nedges::IT
+    # dedges - number of nonzeros on the diagonal of the matrix.
     dedges::IT
     values::Vector{FT}
     rscales::Vector{FT}
