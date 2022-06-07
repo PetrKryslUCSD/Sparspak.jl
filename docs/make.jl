@@ -16,7 +16,7 @@ makedocs(
 	"Home" => "index.md",
 	"Pages" => Any[
         "guide/guide.md",
-		"man/reference.md"
+		"man/reference.md",
         ]
 	)
 
