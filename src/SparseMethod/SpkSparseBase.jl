@@ -89,7 +89,7 @@ module SpkSparseBase
 
 using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
-using ..SpkETree: ETree, getetree, getpostorder
+using ..SpkETree: ETree, getetree!, getpostorder!
 using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
 using ..SpkLUFactor: _lufactor!, _lulsolve!, _luusolve!
 using ..SpkProblem: Problem
@@ -207,14 +207,14 @@ function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
 # -  -  -  -  -  -  -  -  -
 #       Compute elimination tree
 # -  -
-    getetree(s.g, s.order, s.t)
-    getpostorder(s.t, s.order)
+    getetree!(s.g, s.order, s.t)
+    getpostorder!(s.t, s.order)
 
 # -
 #       Compute row and column factor nonzero counts.
 # -
     findcolumncounts(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
-    getpostorder(s.t, s.order, s.colcnt)
+    getpostorder!(s.t, s.order, s.colcnt)
 
 #-  -    -
 #       Find supernodes. Split them so none are larger than maxBlockSize
