@@ -5,8 +5,8 @@
 module SpkSparseSolver
 
 using ..SpkProblem: Problem
-using ..SpkSparseBase: SparseBase
-import ..SpkSparseBase: findorder, symbolicfactor, inmatrix, factor, triangularsolve
+using ..SpkSparseBase: _SparseBase
+import ..SpkSparseBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _triangularsolve!
 
 """
     SparseSolver{IT, FT}
@@ -14,7 +14,7 @@ import ..SpkSparseBase: findorder, symbolicfactor, inmatrix, factor, triangulars
 Type of LU general sparse solver.
 """
 mutable struct SparseSolver{IT, FT}
-    slvr::SparseBase{IT, FT}
+    slvr::_SparseBase{IT, FT}
     n::IT
     ma::IT
     na::IT
@@ -34,7 +34,7 @@ function SparseSolver(p::Problem)
     mc = 0
     nc = 0
     n = ma
-    slvr = SparseBase(p)
+    slvr = _SparseBase(p)
     orderdone = false
     symbolicdone = false
     inmatrixdone = false
@@ -66,9 +66,9 @@ Find reordering of the coefficient matrix using the default method.
 """
 function findorder(s::SparseSolver{IT}) where {IT, F}
     if (s.orderdone)
-        return true 
+        return true
     end
-    findorder(s.slvr)
+    _findorder!(s.slvr)
     s.orderdone = true
     return true
 end
@@ -82,7 +82,7 @@ function findorderperm(s::SparseSolver{IT}, perm) where {IT}
     if (s.orderdone) 
         return true 
     end
-    findorder(s.slvr, perm)
+    _findorder!(s.slvr, perm)
     s.orderdone = true
     return true
 end
@@ -103,7 +103,7 @@ function symbolicfactor(s::SparseSolver{IT}) where {IT}
         @error "$(@__FILE__): Sequence error. Ordering not done yet."
         return false
     end
-    symbolicfactor(s.slvr)
+    _symbolicfactor!(s.slvr)
     s.symbolicdone = true
     return true
 end
@@ -119,7 +119,7 @@ function inmatrix(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
         @error "$(@__FILE__): Sequence error. Symbolic factor not done yet."
         return false
     end
-    success = inmatrix(s.slvr, p)
+    success = _inmatrix!(s.slvr, p)
     s.inmatrixdone = true
     return success
 end
@@ -134,7 +134,7 @@ function factor(s::SparseSolver{IT}) where {IT}
         @error "$(@__FILE__): Sequence error. Matrix input not done yet."
         return false
     end
-    factor(s.slvr)
+    _factor!(s.slvr)
     if (s.slvr.errflag == 0) 
         s.factordone = true
         return true
@@ -177,7 +177,7 @@ function triangularsolve(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {I
         @error "$(@__FILE__): Sequence error. Factorization not done yet."
         return false
     end
-    triangularsolve(s.slvr, solution)
+    _triangularsolve!(s.slvr, solution)
     s.refinedone = false
     return true
 end

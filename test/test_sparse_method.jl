@@ -16,7 +16,7 @@ function _test()
     spm = sparse(I, J, V, M, N)
     p = SpkProblem.Problem(M, N)
     SpkProblem.insparse(p, spm)
-    s = SpkSparseBase.SparseBase(p)
+    s = SpkSparseBase._SparseBase(p)
     return true
 end
 
