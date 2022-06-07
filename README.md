@@ -23,8 +23,10 @@ and a simple right hand side vector. The sparse linear algebraic equation
 problem is then solved with the LU factorization. The solution is tested
 against the solution with the built-in solver.
 ```
-using Sparspak.Problem: Problem, insparse, outsparse, infullrhs
-using Sparspak.SparseSolver: SparseSolver, solve
+using LinearAlgebra
+using SparseArrays
+using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
+using Sparspak.SparseSolver: SparseSolver, solve!
 
 function _test()
     n = 1357
@@ -32,14 +34,14 @@ function _test()
     A = -A - A' + 20 * LinearAlgebra.I
     
     p = Problem(n, n)
-    insparse(p, A);
-    infullrhs(p, 1:n);
+    insparse!(p, A);
+    infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve(s, p)
+    solve!(s, p)
     A = outsparse(p)
     x = A \ p.rhs
-    @test norm(p.x - x) / norm(x) < 1.0e-6
+    @show norm(p.x - x) / norm(x) < 1.0e-6
 
     return true
 end
