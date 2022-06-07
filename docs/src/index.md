@@ -1,9 +1,9 @@
-# FinEtools (Finite Element tools) Documentation
+# Sparspak Documentation
 
 
 ## Conceptual guide
 
-The construction of the toolkit is described: the composition of modules, the basic data structures, the methodology of computing quantities required in the finite element methodology, and more.
+The construction of the toolkit is described: the composition of modules, the basic data structures, the basic operations, and more.
 
 ```@contents
 Pages = [
