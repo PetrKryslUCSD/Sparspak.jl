@@ -459,10 +459,10 @@ end # module
 # using SparseArrays
 # using DataDrop
 # using Sparspak
-# using Sparspak.SpkProblem: insparse, outsparse
-# using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
-# using ProfileView
-# using InteractiveUtils
+# using Sparspak.Problem: Problem, insparse, outsparse
+# using Sparspak.SparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+# # using ProfileView
+# # using InteractiveUtils
 
 # function _test()
 #     K = DataDrop.retrieve_matrix("K63070.h5")
@@ -470,16 +470,22 @@ end # module
 #     @show size(K)
 #     I, J, V = findnz(K)     
 
-#     p = Sparspak.SpkProblem.Problem(size(K)...)
-#     Sparspak.SpkProblem.insparse(p, I, J, V);
+#     p = Problem(size(K)...)
+#     insparse(p, I, J, V);
 #     s = Sparspak.SpkSparseSolver.SparseSolver(p);
-#     @time Sparspak.SpkSparseSolver.findorder(s)
-#     Sparspak.SpkSparseSolver.symbolicfactor(s)
-#     Sparspak.SpkSparseSolver.inmatrix(s, p)
-#     @time Sparspak.SpkSparseSolver.factor(s)
-#     # @time Sparspak.SpkSparseSolver.factor(s)
-#     # @profview Sparspak.SpkSparseSolver.factor(s)
-#     @time Sparspak.SpkSparseSolver.solve(s, p);
+#     @time findorder(s)
+#     symbolicfactor(s)
+#     inmatrix(s, p)
+#     @time factor(s)
+#     # @time factor(s)
+#     # @profview factor(s)
+#     @time solve(s, p);
+
+#     @info "$(@__FILE__): Now lu"
+#     @time lu(K)
+
+#     @info "$(@__FILE__): Now cholesky"
+#     @time cholesky(K)
 
 #     return true
 # end
@@ -590,6 +596,31 @@ function _test()
     s = SparseSolver(p)
     solve(s, p)
     A = outsparse(p)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+module msprs017
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+using Sparspak.SpkProblem: insparse, outsparse, makegridproblem, infullrhs
+using Sparspak.SpkSparseSolver: SparseSolver, findorder, symbolicfactor, inmatrix, factor, solve
+using Printf
+
+function _test()
+    p = makegridproblem(5, 3)
+    infullrhs(p, 1:p.nrows);
+    
+    s = SparseSolver(p)
+    A = outsparse(p)
+    solve(s, p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
