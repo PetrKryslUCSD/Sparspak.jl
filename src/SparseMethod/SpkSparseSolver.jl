@@ -13,7 +13,7 @@ import ..SpkSparseBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _tr
 
 Type of LU general sparse solver.
 """
-mutable struct SparseSolver{IT, FT}
+mutable struct SparseSolver{IT, FT} where {IT, FT}
     slvr::_SparseBase{IT, FT}
     n::IT
     ma::IT

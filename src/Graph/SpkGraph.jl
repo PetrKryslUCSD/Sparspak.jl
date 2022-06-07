@@ -1,4 +1,4 @@
-# Graph class:
+# # Graph class:
 
 # nV - the number of vertices in the graph.
 # (xadj, adj) - array pair storing the adjacency lists of the vertices.
@@ -28,40 +28,59 @@ module SpkGraph
 using ..SpkUtilities: __extend
 using ..SpkProblem: Problem
 
+"""
+    Graph{IT}
+
+- `nv` - the number of vertices in the graph.
+- `(xadj, adj)` - array pair storing the adjacency lists of the vertices.
+
+The adjacency lists of the graph are stored in consecutive locations
+in the array adj. The adjacency list for the `i` - th vertex in the graph
+is stored in positions `adj[k]`, `k = xadj[i], .... xadj[i + 1] - 1`.
+
+When the graph is symmetric, if vertex `i` is in vertex `j`'"'s adjacency
+vertex `j` is in vertex `i`'s list. Using the representation above
+each edge in the graph is stored twice.
+
+There are no self - loops (no "diagonal elements") by default. If
+diagonal elements are required, just input "diagonal" or "diag".
+
+For convenience in accessing the lists, `xadj` is of length `nv + 1`, with
+`xadj[nV + 1] = nEdges + 1`. Thus, accessing vertex `nV`'s list is the
+same as for any other of the vertices.
+
+Graphs are created from Problem objects, which have a certain number
+of rows (`nrows`) and columns (`ncols`). These numbers are captured
+and stored in Graph objects as `nrows` and `ncols` as well.
+"""
 mutable struct Graph{IT}
+    # nv - the number of vertices in the graph.
     nv::IT
     nedges::IT
     nrows::IT
     ncols::IT
+    # (xadj, adj) - array pair storing the adjacency lists of the vertices.
     xadj::Vector{IT}
     adj::Vector{IT}
 end
 
 """
-  This routine constructs a graph from a problem object.
-#
-  It does not check that the problem object contains a structurally
-  symmetric matrix, since sometimes only the lower or upper triangle of
-  a symmetric matrix may be stored. There are routines in this module to
-  make a given graph object structurally symmetric.
-#
+    Graph(p::Problem{IT}, diagonal=false) where {IT}
+
+Construct a graph from a problem object.
+
+It does not check that the problem object contains a structurally
+symmetric matrix, since sometimes only the lower or upper triangle of
+a symmetric matrix may be stored. There are routines in this module to
+make a given graph object structurally symmetric.
+
 Input:
-  g - the graph object, declared by the calling routine
-  p - the problem object, used to create the graph
-  diagonal - indicates that the diagonal elements are included. If
+- `p` - the problem object, used to create the graph
+- `diagonal` - indicates that the diagonal elements are included. If
     diagonal is not given, the adjacency structure does not include
     the diagonal elements.
-  objectName - (optional) name to be assigned to g.
-Updated Parameter:
-   g - created graph object.
 """
 function Graph(p::Problem{IT}, diagonal=false) where {IT}
-        # type (graph) ::  g
-        # type (problem):: p
-        # character (len = *), optional :: diagonal, objectname
-        # character (len = *), parameter :: fname = "constructgraph:"
-        # integer :: i, j, k, ptr
-    
     nv = p.ncols
     nrows = p.nrows
     ncols = p.ncols
@@ -92,6 +111,11 @@ function Graph(p::Problem{IT}, diagonal=false) where {IT}
     return Graph(nv, nedges, nrows, ncols, xadj, adj)
 end
 
+"""
+    makestructuresymmetric(g::Graph{IT}) where {IT}
+
+Make the graph structure symmetric.
+"""
 function makestructuresymmetric(g::Graph{IT}) where {IT}
     if (isstructuresymmetric(g))
         return true
@@ -269,13 +293,14 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
 end
  
 """
-  SortGraph - sort the adjacency lists of the graph
-Important assumption:
-  This works only for graphs that are symmetric.
- Output: updated graph
+    sortgraph!(g::Graph{IT}) where {IT}
 
+Sort the adjacency lists of the graph.
+
+Important assumption:
+This works only for graphs that are symmetric.
 """
-function sortgraph(g::Graph{IT}) where {IT}
+function sortgraph!(g::Graph{IT}) where {IT}
     xadj = deepcopy(g.xadj)
     adj = fill(zero(IT), g.nedges)   
     for i in 1: g.nv
@@ -289,12 +314,15 @@ function sortgraph(g::Graph{IT}) where {IT}
 end
 
 """
-IsStructureSymmetricGraph determines if a graph is structurally symmetric
-Important assumption:
-  It is assumed that the adjacency lists are in increasing order.
- Output: either true or false
-"""
+    isstructuresymmetric(g::Graph{IT}) where {IT}
 
+Determines if a graph is structurally symmetric.
+
+Important assumption:
+It is assumed that the adjacency lists are in increasing order.
+ 
+Output: either true or false
+"""
 function isstructuresymmetric(g::Graph{IT}) where {IT}
     first = deepcopy(g.xadj[1:g.nv])
     for i in 1: g.nv
