@@ -2,7 +2,7 @@
 # Pkg.activate()
 # Pkg.instantiate()
 import Pkg; Pkg.add("Documenter")
-import Pkg; Pkg.add("Sparspak")
+# import Pkg; Pkg.add("Sparspak")
 
 using Documenter, Sparspak
 

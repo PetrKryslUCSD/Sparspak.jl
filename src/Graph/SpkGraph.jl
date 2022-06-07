@@ -25,7 +25,7 @@ and stored in Graph objects as nRows and nCols as well.
 """
 module SpkGraph
 
-using ..SpkUtilities: extend
+using ..SpkUtilities: __extend
 using ..SpkProblem: Problem
 
 mutable struct Graph{IT}
@@ -178,8 +178,8 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
     #       Compute xadj for h, and reset first for second pass through
     #       the original graph g.
     # 
-    h.xadj = extend(h.xadj, h.nv + 1)
-    h.adj = extend(h.adj, h.nedges)
+    h.xadj = __extend(h.xadj, h.nv + 1)
+    h.adj = __extend(h.adj, h.nedges)
     h.xadj[1] = 1
 
     for i in 1:g.nv

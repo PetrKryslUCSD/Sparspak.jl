@@ -50,7 +50,7 @@ or the number of columns in the matrix.
 module SpkProblem
 
 using SparseArrays
-using ..SpkUtilities: _BIGGY, extend
+using ..SpkUtilities: _BIGGY, __extend
 using ..SpkGrid: Grid
 
 """
@@ -135,9 +135,9 @@ function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
     if (p.lastused > p.lenlink - 1)
         p.lenlink = max(2 * p.lenlink, 3 * p.ncols)
-        p.link = extend(p.link, p.lenlink)
-        p.rowsubs = extend(p.rowsubs, p.lenlink)
-        p.values = extend(p.values, p.lenlink, _BIGGY())
+        p.link = __extend(p.link, p.lenlink)
+        p.rowsubs = __extend(p.rowsubs, p.lenlink)
+        p.values = __extend(p.values, p.lenlink, _BIGGY())
     end
 
     p.nrows = max(rnum, p.nrows)
@@ -145,13 +145,13 @@ function inaij(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
     if (p.ncols > p.lenhead)
         p.lenhead = 2 * p.ncols
-        p.head = extend(p.head, p.lenhead)
-        p.x = extend(p.x, p.lenhead)
+        p.head = __extend(p.head, p.lenhead)
+        p.x = __extend(p.x, p.lenhead)
     end
 
     if (p.nrows > p.lenrhs)
         p.lenrhs = 2 * p.nrows
-        p.rhs = extend(p.rhs, p.lenrhs)
+        p.rhs = __extend(p.rhs, p.lenrhs)
     end
 
     ptr = p.head[cnum]    # ^ * check if rnum is in the row list.
@@ -216,7 +216,7 @@ function inbi(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
 
     p.nrows = max(rnum, p.nrows)
     if (p.nrows > p.lenrhs)
-        p.lenrhs = 2 * p.nrows; p.rhs = extend(p.rhs, p.lenrhs) 
+        p.lenrhs = 2 * p.nrows; p.rhs = __extend(p.rhs, p.lenrhs) 
     end
 
     p.rhs[rnum] = p.rhs[rnum] + bi 

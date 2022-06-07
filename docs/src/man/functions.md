@@ -16,30 +16,6 @@ Private = true
 Order = [:function]
 ```
 
-## Multiple minimum degree (MMD) ordering.
-
-```@autodocs
-Modules = [Sparspak.SpkMmd]
-Private = true
-Order = [:function]
-```
-
-## Symbolic Factorization
-
-```@autodocs
-Modules = [Sparspak.SpkSymfct]
-Private = true
-Order = [:function]
-```
-
-## Elimination Trees
-
-```@autodocs
-Modules = [Sparspak.SpkETree]
-Private = true
-Order = [:function]
-```
-
 ## Graphs
 
 ```@autodocs
@@ -56,18 +32,34 @@ Private = true
 Order = [:function]
 ```
 
-## Grid
+## Multiple minimum degree (MMD) ordering.
 
 ```@autodocs
-Modules = [Sparspak.SpkGrid]
+Modules = [Sparspak.SpkMmd]
 Private = true
 Order = [:function]
 ```
 
-## Utilities
+## Elimination Trees
 
 ```@autodocs
-Modules = [Sparspak.SpkUtilities]
+Modules = [Sparspak.SpkETree]
+Private = true
+Order = [:function]
+```
+
+## Symbolic Factorization
+
+```@autodocs
+Modules = [Sparspak.SpkSymfct]
+Private = true
+Order = [:function]
+```
+
+## Grid
+
+```@autodocs
+Modules = [Sparspak.SpkGrid]
 Private = true
 Order = [:function]
 ```

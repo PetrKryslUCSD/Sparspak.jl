@@ -57,11 +57,3 @@ Modules = [Sparspak.SpkGrid]
 Private = true
 Order = [:type]
 ```
-
-## Utilities
-
-```@autodocs
-Modules = [Sparspak.SpkUtilities]
-Private = true
-Order = [:type]
-```

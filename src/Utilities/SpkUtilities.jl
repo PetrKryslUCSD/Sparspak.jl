@@ -6,16 +6,14 @@ module SpkUtilities
 
 _BIGGY() = typemax(Float64)
 
-"""
-    extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))
 
-Change the size (smaller or larger).    
-- The contents of the vectors / arrays are preserved.
-- The changes in size may be positive or negative.
-- flagval is the initialization value of the new parts of the arrays.
-    If it is absent,  the default is zero (for numerical arrays).
-"""
-function extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))
+#     __extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))
+# Change the size (smaller or larger).    
+# - The contents of the vectors / arrays are preserved.
+# - The changes in size may be positive or negative.
+# - flagval is the initialization value of the new parts of the arrays.
+#     If it is absent,  the default is zero (for numerical arrays).
+function __extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))
     len = length(v)
     v = resize!(v, newlen)
     if newlen > len
@@ -26,12 +24,10 @@ function extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))
     return v
 end
 
-"""
-    extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
 
-Change the size of a matrix (smaller or larger).
-"""
-function extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
+#     __extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
+# Change the size of a matrix (smaller or larger).
+function __extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
     tempv = fill(zero(eltype(v)), newrow, newcol)
     lencol = size(v, 2)
     lenrow = size(v, 1); 

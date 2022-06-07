@@ -96,7 +96,7 @@ using ..SpkETree: ETree, getetree, getpostorder
 using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
 using ..SpkLUFactor: lufactor, lulsolve, luusolve
 using ..SpkProblem: Problem
-using ..SpkUtilities: extend
+using ..SpkUtilities: __extend
 using ..SpkMmd: mmd
 
 mutable struct SparseBase{IT, FT}
@@ -224,7 +224,7 @@ function symbolicfactor(s::SparseBase{IT, FT}) where {IT, FT}
 #       Find supernodes. Split them so none are larger than maxBlockSize
 # -  -  -
     s.nsub, s.nsuper = findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
-    s.xsuper = extend(s.xsuper, s.nsuper + 1)
+    s.xsuper = __extend(s.xsuper, s.nsuper + 1)
 
     s.lindx = fill(zero(IT), s.nsub)
     s.xlindx = fill(zero(IT), s.nsuper + 1)
