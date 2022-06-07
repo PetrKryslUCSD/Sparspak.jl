@@ -91,7 +91,7 @@ using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
 using ..SpkETree: ETree, getetree, getpostorder
 using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
-using ..SpkLUFactor: lufactor, lulsolve, luusolve
+using ..SpkLUFactor: _lufactor!, _lulsolve!, _luusolve!
 using ..SpkProblem: Problem
 using ..SpkUtilities: __extend
 using ..SpkMmd: mmd
@@ -389,7 +389,7 @@ function factor(s::SparseBase{IT, FT}) where {IT, FT}
         return false
     end
 
-    s.errflag = lufactor(s.n, s.nsuper, s.xsuper, s.snode, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, s.ipiv)
+    s.errflag = _lufactor!(s.n, s.nsuper, s.xsuper, s.snode, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, s.ipiv)
 
     if (s.errflag != 0)
         @error "$(@__FILE__): An empty problem. No matrix."
@@ -415,9 +415,9 @@ function triangularsolve(s::SparseBase{IT, FT}, solution::Vector{FT}) where {IT,
     rhs = fill(zero(FT), s.n)
     rhs .= solution[s.order.rperm]
 
-    lulsolve(s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.ipiv, rhs)
+    _lulsolve!(s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.ipiv, rhs)
 
-    luusolve(s.n, s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, rhs)
+    _luusolve!(s.n, s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, rhs)
 
     solution .= rhs[s.order.rinvp]
 
