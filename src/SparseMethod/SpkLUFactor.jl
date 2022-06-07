@@ -57,7 +57,7 @@ using ..SpkSpdMMops: mmpyi, assmb, luswap, ldindx, igathr, dgemm!, dtrsm!, dgetr
 #      temp - real vector for accumulating updates.  must
 #                           accomodate all columns of a supernode.
 
-function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, xunz::Vector{IT}, unz::Vector{FT}, ipvt::Vector{IT}) where {IT, FT}
+function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, xunz::Vector{IT}, unz::Vector{FT}, ipvt::Vector{IT}) where {IT, FT}
     @assert length(xsuper) == (nsuper + 1)
     @assert length(snode) == n
     @assert length(xlindx) == (nsuper + 1)
@@ -254,20 +254,19 @@ function lufactor(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xlin
     return iflag
 end
 
-"""  Purpose:
-     Given the L U factorization of a sparse structurally symmetric
-     positive definite matrix, this subroutine performs the
-     triangular solution.  It uses output from LUFactor.
- Input parameters:
-     nsuper - number of supernodes.
-     xsuper - supernode partition.
-     (xlindx, lindx) - row indices for each supernode.
-     (xlnz, lnz) - Cholesky factor.
- Updated parameters:
-     rhs - on input, contains the right hand side.  on
-                          output, contains the solution.
-"""
-function lulsolve(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, ipiv::Vector{IT}, rhs::Vector{FT}) where {IT, FT}
+
+ #     Given the L U factorization of a sparse structurally symmetric
+ #     positive definite matrix, this subroutine performs the
+ #     triangular solution.  It uses output from LUFactor.
+ # Input parameters:
+ #     nsuper - number of supernodes.
+ #     xsuper - supernode partition.
+ #     (xlindx, lindx) - row indices for each supernode.
+ #     (xlnz, lnz) - Cholesky factor.
+ # Updated parameters:
+ #     rhs - on input, contains the right hand side.  on
+ #                          output, contains the solution.
+function _lulsolve!(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, ipiv::Vector{IT}, rhs::Vector{FT}) where {IT, FT}
      # integer :: nsuper
      # integer :: lindx(*), ipiv(*), xsuper(*), xlindx(*), xlnz(*)
      # real(double) :: lnz(*), rhs(*)
@@ -322,34 +321,33 @@ function lulsolve(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::Vec
     end
     return true
 end
-"""
-"""
-function luusolve(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, xunz::Vector{IT}, unz::Vector{FT}, rhs::Vector{FT}) where {IT, FT}
-     # integer :: nsuper, n
-     # integer :: lindx(*), xsuper(*), xlindx(*), xlnz(*), xunz(*)
-     # real(double) :: lnz(*), rhs(*), unz(*)
 
-     # integer :: fj, isub, j, jj, jlen, jlpnt, jsup, jupnt, jxpnt, nj
-     # integer :: length, maxlength
-     # real(double), dimension(:), allocatable :: temp
+function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}, xunz::Vector{IT}, unz::Vector{FT}, rhs::Vector{FT}) where {IT, FT}
+# integer :: nsuper, n
+# integer :: lindx(*), xsuper(*), xlindx(*), xlnz(*), xunz(*)
+# real(double) :: lnz(*), rhs(*), unz(*)
+
+# integer :: fj, isub, j, jj, jlen, jlpnt, jsup, jupnt, jxpnt, nj
+# integer :: length, maxlength
+# real(double), dimension(:), allocatable :: temp
 
     ONE = FT(1.0)
     ZERO = FT(0.0)
 
-     if  (nsuper <= 0)  return; end
+    if  (nsuper <= 0)  return; end
 
-     lngth = 0; maxlngth = 0
-     for j in 1:nsuper
+    lngth = 0; maxlngth = 0
+    for j in 1:nsuper
         lngth = xlindx[j + 1] - xlindx[j]
         maxlngth = max(lngth, maxlngth)
-     end
+    end
 
-     temp = fill(zero(FT), maxlngth)
+    temp = fill(zero(FT), maxlngth)
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #    backward substitution ...
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-     for jsup in nsuper:-1:1
+    for jsup in nsuper:-1:1
 
         fj    = xsuper[jsup]
         nj    = xsuper[jsup + 1] - fj
@@ -360,23 +358,23 @@ function luusolve(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lin
 
         jj = jxpnt + nj - 1
         for j in 1:(jlen - nj)
-           jj = jj + 1
-           isub = lindx[jj]
-           if (isub > n)
-              @error "$(@__FILE__): $(isub) index out of bounds in rhs"
-              return false
-          end
-           temp[j] = rhs[isub]
+            jj = jj + 1
+            isub = lindx[jj]
+            if (isub > n)
+                @error "$(@__FILE__): $(isub) index out of bounds in rhs"
+                return false
+            end
+            temp[j] = rhs[isub]
         end  
         if (jlen > nj)
-           dgemv!('t', jlen - nj, nj, -ONE, view(unz, jupnt:length(unz)), jlen - nj, view(temp, 1:length(temp)), ONE, view(rhs, fj:length(rhs)))
+            dgemv!('t', jlen - nj, nj, -ONE, view(unz, jupnt:length(unz)), jlen - nj, view(temp, 1:length(temp)), ONE, view(rhs, fj:length(rhs)))
         end
 
         dtrsm!('l', 'u', 'n', 'n', nj, 1, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(rhs, fj:length(rhs)), nj)
 
-     end
-return true
-   end
+    end
+    return true
+end
 
 end  # module
 
