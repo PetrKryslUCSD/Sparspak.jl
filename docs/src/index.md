@@ -69,8 +69,7 @@ The description of the types and the functions, organized by module and/or other
 
 ```@contents
 Pages = [
-    "man/types.md",
-    "man/functions.md",
+    "man/reference.md",
 ]
 Depth = 3
 ```
