@@ -87,7 +87,7 @@ CurrentModule = Sparspak.SpkSparseSolver
 ```
 
 ```@docs
-SparseSolver{IT, FT}
+SparseSolver
 findorder!
 findorderperm!
 symbolicfactor!
