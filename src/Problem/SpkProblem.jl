@@ -443,7 +443,7 @@ Input:
                              present.
 
 Output:
-   res - the calculated residual
+- `res` - the calculated residual
 """
 function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mtype = "T") where {FT}
         # type (problem) :: p
