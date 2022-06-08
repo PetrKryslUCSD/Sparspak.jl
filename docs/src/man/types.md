@@ -17,7 +17,7 @@ CurrentModule = Sparspak.SpkSparseSolver
 ```
 
 ```@docs
-SparseSolver
+SparseSolver{IT, FT}
 ```
 
 ## Elimination Trees
