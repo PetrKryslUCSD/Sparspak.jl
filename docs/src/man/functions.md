@@ -34,53 +34,67 @@ inmatrix!
 factor!
 triangularsolve!
 solve!
-Order = [:function]
 ```
 
 ## Graphs
 
+```@meta
+CurrentModule = Sparspak.SpkGraph
+```
+
 ```@docs
-Modules = [Sparspak.SpkGraph]
-Private = true
-Order = [:function]
+Graph(p::Problem{IT}, diagonal=false) where {IT}
+makestructuresymmetric(g::Graph{IT}) where {IT}
+sortgraph!(g::Graph{IT}) where {IT}
+isstructuresymmetric(g::Graph{IT}) where {IT}
 ```
 
 ## Ordering
 
+```@meta
+CurrentModule = Sparspak.SpkOrdering
+```
+
 ```@docs
-Modules = [Sparspak.SpkOrdering]
-Private = true
-Order = [:function]
+
 ```
 
 ## Multiple minimum degree (MMD) ordering.
 
+```@meta
+CurrentModule = Sparspak.SpkMMD
+```
+
 ```@docs
-Modules = [Sparspak.SpkMmd]
-Private = true
-Order = [:function]
+
 ```
 
 ## Elimination Trees
 
+```@meta
+CurrentModule = Sparspak.SpkSymfct
+```
+
 ```@docs
-Modules = [Sparspak.SpkETree]
-Private = true
-Order = [:function]
+
 ```
 
 ## Symbolic Factorization
 
+```@meta
+CurrentModule = Sparspak.SpkSymfct
+```
+
 ```@docs
-Modules = [Sparspak.SpkSymfct]
-Private = true
-Order = [:function]
+
 ```
 
 ## Grid
 
+```@meta
+CurrentModule = Sparspak.SpkGrid
+```
+
 ```@docs
-Modules = [Sparspak.SpkGrid]
-Private = true
-Order = [:function]
+
 ```
