@@ -13,7 +13,7 @@
 |          | Learning    |   Working   |
 |:---: | :---: | :---: | 
 | Practical    | [Tutorials](tutorials/tutorials.md) | [How to](howto/howto.md) |
-| Theoretical    | [Concepts](concepts/concepts.md) | [Reference](reference/reference.md) |
+| Theoretical    | [Concepts](concepts/concepts.md) | [Reference](man/man.md) |
 
 
 
