@@ -12,43 +12,11 @@ subroutines from the book "Computer Solution of Large Sparse Positive Definite
 Systems" by Alan George and Joseph Liu. Originally written in Fortran 77, later
 rewritten in Fortran 90. Here is the software translated into Julia.
 
+The rewrite is released with an express permission from the authors (George and Liu)  under the MIT license.
+
 ## News
 
 - 06/03/2022: The sparse LU solver has been now rewritten and tested.
-
-## Simple usage
-
-This code makes up a random-coefficient (but diagonally dominant) sparse matrix
-and a simple right hand side vector. The sparse linear algebraic equation
-problem is then solved with the LU factorization. The solution is tested
-against the solution with the built-in solver.
-```
-using LinearAlgebra
-using SparseArrays
-using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
-using Sparspak.SparseSolver: SparseSolver, solve!
-
-function _test()
-    n = 1357
-    A = sprand(n, n, 1/n)
-    A = -A - A' + 20 * LinearAlgebra.I
-    
-    p = Problem(n, n)
-    insparse!(p, A);
-    infullrhs!(p, 1:n);
-    
-    s = SparseSolver(p)
-    solve!(s, p)
-    A = outsparse(p)
-    x = A \ p.rhs
-    @show norm(p.x - x) / norm(x) < 1.0e-6
-
-    return true
-end
-
-_test()
-```
-For more details see the file `test/test_sparse_method.jl`, module `msprs016`.
 
 ## Reference
 
