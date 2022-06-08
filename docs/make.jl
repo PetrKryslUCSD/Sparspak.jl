@@ -18,7 +18,7 @@ makedocs(
 	"How to" => "howto/howto.md",
 	"Tutorials" => "tutorials/tutorials.md",
     "Concepts" => "concepts/concepts.md",
-    "Reference" => ["man/types.md", "man/functions.md",],
+    "Reference" => "man/man.md",
         ]
 	)
 
