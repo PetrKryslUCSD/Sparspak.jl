@@ -1,14 +1,14 @@
 # A collection of routines to find an MMD (multiple minimum degree) ordering.
 # There are no declarations here.
 
-# Multiple minimum degree Ordering algorithm (MMD).
-# Written by Erik Demaine, eddemaine@uwaterloo.ca
-# Based on a Fortran 77 code written by Joseph Liu.
-# For information on the minimum degree algorithm see the articles:
-# The evolution of the minimum degree algorithm by Alan George and
-# Joseph Liu, SIAM Rev. 31 pp. 1 - 19, 1989.0
-# Modification of the minimum degree algorithm by multiple
-# elimination, ACM Trans. Math. Soft. 2 pp.141 - 152, 1985
+Multiple minimum degree Ordering algorithm (MMD).
+Written by Erik Demaine, eddemaine@uwaterloo.ca
+Based on a Fortran 77 code written by Joseph Liu.
+For information on the minimum degree algorithm see the articles:
+The evolution of the minimum degree algorithm by Alan George and
+Joseph Liu, SIAM Rev. 31 pp. 1 - 19, 1989.0
+Modification of the minimum degree algorithm by multiple
+elimination, ACM Trans. Math. Soft. 2 pp.141 - 152, 1985
 
 module SpkMmd
 
@@ -16,15 +16,35 @@ using OffsetArrays
 using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph
 
+"""
+    mmd(g::Graph, order::Ordering)
+
+Multiple minimum degree Ordering algorithm (MMD).
+
+Written by Erik Demaine, eddemaine@uwaterloo.ca
+Based on a Fortran 77 code written by Joseph Liu.
+
+For information on the minimum degree algorithm see the articles:
+
+The evolution of the minimum degree algorithm by Alan George and
+Joseph Liu, SIAM Rev. 31 pp. 1 - 19, 1989.0
+
+Modification of the minimum degree algorithm by multiple
+elimination, ACM Trans. Math. Soft. 2 pp.141 - 152, 1985
+
+Input: 
+- `g`: graph
+
+Output:
+- `order`: updated ordering. Rows and columns are permuted in the same way.
+"""
 function mmd(g::Graph, order::Ordering)
-    generalmmd(g.nv, g.xadj, g.adj, order.rperm, order.rinvp)
+    _generalmmd(g.nv, g.xadj, g.adj, order.rperm, order.rinvp)
     order.cinvp .= order.rinvp
     order.cperm .= order.rperm
 end
 
-"""     
-    generalmmd(n, xadj, adj, perm, invp)
-
+#=
 This routine implements the minimum degree algorithm.  It makes use of the
 implicit representation of elimination graphs by quotient graphs, and the
 notion of indistinguishable nodes.  It also implements the modifications by
@@ -57,8 +77,8 @@ Working arrays -
   marker - marker vector.
   mergeParent - the parent map for the merged forest.
     needsUpdate (node) - > 0 iff node needs degree update.(0 otherwise)
-"""
-function generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT}, invp::Vector{IT}) where {IT}
+=#
+function _generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT}, invp::Vector{IT}) where {IT}
     delta = zero(eltype(xadj))
     maxint = typemax(eltype(xadj))
     #
@@ -167,7 +187,7 @@ function generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT}, 
                 marker[findall(marker .< maxint)] .= 0
             end
             
-            mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+            _mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
             
             num = num + supersize[mdnode]
             #  -
@@ -184,14 +204,14 @@ function generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT}, 
         if (num > n)
             @goto main
         end
-        mindeg, tag = mmdupdate(elimhead, n, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+        mindeg, tag = _mmdupdate(elimhead, n, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     end # 
     @label main
-    mmdnumber(n, perm, invp, mergeparent)
+    _mmdnumber(n, perm, invp, mergeparent)
     return true
 end
 
-"""    Purpose - This routine eliminates the node mdNode of
+#=    Purpose - This routine eliminates the node mdNode of
       minimum degree from the adjacency structure, which
       is stored in the quotient Graph format.  It also
       transforms the quotient Graph representation of the
@@ -218,8 +238,8 @@ end
       marker - marker vector.
       mergeParent - the parent map for the merged forest.
        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
-"""
-function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+=#
+function _mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     maxint = typemax(eltype(xadj))
 # 
 #       Find reachable set and place in data structure.
@@ -335,7 +355,7 @@ function mmdelim(mdnode, xadj, adjncy, deghead, degnext, degprev, supersize, eli
     end
 end
 
-"""    Purpose - This routine updates the degrees of nodes
+#=    Purpose - This routine updates the degrees of nodes
       after a multiple elimination step.
    Input parameters -
       elimHead - the beginning of the list of eliminated
@@ -363,8 +383,8 @@ end
       tag - tag value.
       mergeParent - the parent map for the merged forest.
        needsUpdate (node) - > 0 iff node needs update. (0 otherwise)
-"""
-function mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
+=#
+function _mmdupdate(elimhead, neqns, xadj, adjncy, delta, mindeg, deghead, degnext, degprev, supersize, elimnext, marker, tag, mergeparent, needsupdate, invp)
     maxint = typemax(eltype(xadj))
 #
     mindeglimit = mindeg + delta
@@ -568,7 +588,7 @@ end
 #       Working arrays -
 #       mergeLastnum (r) - last number used for a merged tree rooted at r.
 #       
-function mmdnumber(neqns, perm, invp, mergeparent)
+function _mmdnumber(neqns, perm, invp, mergeparent)
     
 # ----------------------------------------
 #           Initially, no nodes except roots in the

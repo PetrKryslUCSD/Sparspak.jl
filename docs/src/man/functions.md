@@ -49,16 +49,6 @@ sortgraph!(g::Graph{IT}) where {IT}
 isstructuresymmetric(g::Graph{IT}) where {IT}
 ```
 
-## Ordering
-
-```@meta
-CurrentModule = Sparspak.SpkOrdering
-```
-
-```@docs
-
-```
-
 ## Multiple minimum degree (MMD) ordering.
 
 ```@meta
@@ -66,7 +56,7 @@ CurrentModule = Sparspak.SpkMMD
 ```
 
 ```@docs
-
+mmd(g::Graph, order::Ordering)
 ```
 
 ## Elimination Trees
@@ -76,7 +66,8 @@ CurrentModule = Sparspak.SpkSymfct
 ```
 
 ```@docs
-
+getetree!(g::Graph, order::Ordering, t::ETree)
+getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
 ```
 
 ## Symbolic Factorization
