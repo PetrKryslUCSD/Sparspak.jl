@@ -9,6 +9,14 @@ module SpkETree
 using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph
 
+"""
+    ETree{IT}
+
+Elimination Tree type.
+
+Used for finding and manipulating elimination trees, finding
+(weighted) postorderings of them, and more.
+"""
 mutable struct ETree{IT}
     nv::IT
     parent::Vector{IT}
