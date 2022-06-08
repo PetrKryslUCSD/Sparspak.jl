@@ -39,7 +39,7 @@ solve!
 ## Multiple minimum degree (MMD) ordering.
 
 ```@meta
-CurrentModule = Sparspak.SpkMMD
+CurrentModule = Sparspak.SpkMmd
 ```
 
 ```@docs
