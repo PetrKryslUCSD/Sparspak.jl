@@ -8,6 +8,7 @@ CurrentModule = Sparspak.SpkProblem
 
 ```@docs
 Problem
+Order = [:type]
 ```
 
 ## Sparse LU Solver
@@ -18,6 +19,7 @@ CurrentModule = Sparspak.SpkSparseSolver
 
 ```@docs
 SparseSolver
+Order = [:type]
 ```
 
 ## Elimination Trees
@@ -28,6 +30,7 @@ CurrentModule = Sparspak.SpkETree
 
 ```@docs
 ETree
+Order = [:type]
 ```
 
 ## Graphs
@@ -38,6 +41,7 @@ CurrentModule = Sparspak.SpkGraph
 
 ```@docs
 Graph
+Order = [:type]
 ```
 
 ## Ordering
@@ -48,6 +52,7 @@ CurrentModule = Sparspak.SpkOrdering
 
 ```@docs
 Ordering
+Order = [:type]
 ```
 
 ## Grid
@@ -58,4 +63,5 @@ CurrentModule = Sparspak.SpkGrid
 
 ```@docs
 Grid
+Order = [:type]
 ```

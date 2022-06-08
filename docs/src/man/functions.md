@@ -34,11 +34,12 @@ inmatrix!
 factor!
 triangularsolve!
 solve!
+Order = [:function]
 ```
 
 ## Graphs
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkGraph]
 Private = true
 Order = [:function]
@@ -46,7 +47,7 @@ Order = [:function]
 
 ## Ordering
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkOrdering]
 Private = true
 Order = [:function]
@@ -54,7 +55,7 @@ Order = [:function]
 
 ## Multiple minimum degree (MMD) ordering.
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkMmd]
 Private = true
 Order = [:function]
@@ -62,7 +63,7 @@ Order = [:function]
 
 ## Elimination Trees
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkETree]
 Private = true
 Order = [:function]
@@ -70,7 +71,7 @@ Order = [:function]
 
 ## Symbolic Factorization
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkSymfct]
 Private = true
 Order = [:function]
@@ -78,7 +79,7 @@ Order = [:function]
 
 ## Grid
 
-```@autodocs
+```@docs
 Modules = [Sparspak.SpkGrid]
 Private = true
 Order = [:function]
