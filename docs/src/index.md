@@ -8,6 +8,26 @@
 - Factorizations of various kinds are supported.
 - Solutions with multiple right hand sides, and solutions with preserved structure but changed matrix coefficients are supported. 
 
+## Documentation
+
+|          | Learning    |   Working   |
+|:---: | :---: | :---: | 
+| Practical    | [Tutorials](tutorials/tutorials.md) | [How to](howto/howto.md) |
+| Theoretical    | [Concepts](concepts/concepts.md) | [Reference](reference/reference.md) |
+
+
+
+## Reference Manual
+
+The description of the types and the functions, organized by module and/or other logical principle.
+
+```@contents
+Pages = [
+    "man/reference.md",
+]
+Depth = 3
+```
+
 ## Installation
 
 The latest release of Sparspak can be installed from the Julia REPL prompt with
@@ -55,22 +75,4 @@ _test()
 For more details see the file `test/test_sparse_method.jl`, module `msprs016`.
 
 
-## User guide
 
-```@contents
-Pages = [
-    "guide/guide.md",
-]
-Depth = 1
-```
-
-## Reference Manual
-
-The description of the types and the functions, organized by module and/or other logical principle.
-
-```@contents
-Pages = [
-    "man/reference.md",
-]
-Depth = 3
-```
