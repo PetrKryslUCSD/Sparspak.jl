@@ -1,5 +1,3 @@
-[Table of contents](https://petrkryslucsd.github.io/Sparspak.jl/latest/index.html)
-
 # How-to guide
 
 ## How to install
