@@ -34,7 +34,7 @@ using OffsetArrays
 # Work parameters:
 #     (i) marker - array of length n used to mark the
 #                          vertices visited in each row subtree.
-function findcolumncounts(n, xadj, adj, perm, invp, parent, colcnt, nlnz)
+function _findcolumncounts!(n, xadj, adj, perm, invp, parent, colcnt, nlnz)
 #
     marker = fill(zero(eltype(xadj)), n)
     nlnz = n
@@ -102,7 +102,7 @@ end
 #     (i) marker - array of length n used to mark indices
 #                         as they are introduced into each supernode"s
 #                         index set.
-function symbolicfact(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode, nofsub, xlindx, lindx)
+function _symbolicfact!(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode, nofsub, xlindx, lindx)
         # integer :: n, nsuper, nofsub
         # integer :: xadj(*), adj(*), perm(*), invp(*), xsuper(*)
         # integer :: colcnt(*), snode(*), xlindx(*), lindx(*)
@@ -315,11 +315,11 @@ end
         # integer parent(nsuper), count(nsuper)
         # integer k, par, current, col
 
-function findschedule(nsuper, xsuper, snode, xlindx, lindx, schedule)
+function _findschedule!(nsuper, xsuper, snode, xlindx, lindx, schedule)
     count = fill(zero(IT), nsuper)
     parent = fill(zero(IT), nsuper)
 
-    findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
+    _findsupernodetree!(nsuper, xsuper, snode, xlindx, lindx, parent)
 
     count = 0; current = 0
     for k in 1:nsuper
@@ -369,7 +369,7 @@ end
 # integer lindx(*), xlindx(*), snode(*), xsuper(*), parent(*)
 # integer j, jsup, nsuper
 #
-function findsupernodetree(nsuper, xsuper, snode, xlindx, lindx, parent)
+function _findsupernodetree!(nsuper, xsuper, snode, xlindx, lindx, parent)
     parent[nsuper] = 0
 
     for jsup = 1: (nsuper - 1)
@@ -412,7 +412,7 @@ end
 #     (i) xsuper - beginning of each supernode
 #     (i) snode - array of length n for recording
 #                           supernode membership.
-function findsupernodes(n, parent, colcnt, nofsub, nsuper, xsuper, snode, maxsize)
+function _findsupernodes!(n, parent, colcnt, nofsub, nsuper, xsuper, snode, maxsize)
         # integer :: n, nofsub, nsuper, kcol, jsup, k, maxsize, marker(n)
         # integer :: parent(*), colcnt(*), xsuper(*), snode(*)
         # integer :: limit, index

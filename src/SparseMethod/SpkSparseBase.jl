@@ -89,8 +89,8 @@ module SpkSparseBase
 
 using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph, makestructuresymmetric
-using ..SpkETree: ETree, getetree!, getpostorder!
-using ..SpkSymfct: findcolumncounts, symbolicfact, findsupernodes
+using ..SpkETree: ETree, _getetree!, _getpostorder!
+using ..SpkSymfct: _findcolumncounts!, _symbolicfact!, _findsupernodes!
 using ..SpkLUFactor: _lufactor!, _lulsolve!, _luusolve!
 using ..SpkProblem: Problem
 using ..SpkUtilities: __extend
@@ -207,19 +207,19 @@ function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
 # -  -  -  -  -  -  -  -  -
 #       Compute elimination tree
 # -  -
-    getetree!(s.g, s.order, s.t)
-    getpostorder!(s.t, s.order)
+    _getetree!(s.g, s.order, s.t)
+    _getpostorder!(s.t, s.order)
 
 # -
 #       Compute row and column factor nonzero counts.
 # -
-    findcolumncounts(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
-    getpostorder!(s.t, s.order, s.colcnt)
+    _findcolumncounts!(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.t.parent, s.colcnt, s.nnzl)
+    _getpostorder!(s.t, s.order, s.colcnt)
 
 #-  -    -
 #       Find supernodes. Split them so none are larger than maxBlockSize
 # -  -  -
-    s.nsub, s.nsuper = findsupernodes(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
+    s.nsub, s.nsuper = _findsupernodes!(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
     s.xsuper = __extend(s.xsuper, s.nsuper + 1)
 
     s.lindx = fill(zero(IT), s.nsub)
@@ -237,7 +237,7 @@ function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
 # -
     findnonzeroindexs(s.n, s.colcnt, s.nsuper, s.xsuper, s.xlnz, s.xunz, s.tempsizeneed)
     
-    symbolicfact(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.colcnt, s.nsuper, s.xsuper, s.snode, s.nsub, s.xlindx, s.lindx)
+    _symbolicfact!(s.g.nv, s.g.xadj, s.g.adj, s.order.rperm, s.order.rinvp, s.colcnt, s.nsuper, s.xsuper, s.snode, s.nsub, s.xlindx, s.lindx)
 
 # -
 #       We now know how many elements we need, so allocate for it.

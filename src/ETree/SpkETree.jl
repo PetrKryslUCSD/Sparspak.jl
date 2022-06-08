@@ -33,7 +33,7 @@ function ETree(nv::IT) where {IT}
 end
 
 """
-    getetree!(g::Graph, order::Ordering, t::ETree)
+    _getetree!(g::Graph, order::Ordering, t::ETree)
 
 Given a graph and an ordering, find the corresponding elimination tree. 
 
@@ -44,7 +44,7 @@ Input Parameter:
 Updated Parameters:
 - `t` - the elimination tree.
 """
-function getetree!(g::Graph, order::Ordering, t::ETree)
+function _getetree!(g::Graph, order::Ordering, t::ETree)
     _findetree!(g.nv, g.xadj, g.adj, order.rperm, order.rinvp, t.parent)
 end
 
@@ -88,7 +88,7 @@ function _findetree!(n, xadj, adj, rperm, rinvp, parent)
 end
 
 """
-    getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
+    _getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
 
 Find a postordering of elimination tree t. The resulting ordering is returned in
 the object `order`. The vector argument `weight` is optional. If it is present,
@@ -103,7 +103,7 @@ Input Parameters:
 Updated Parameters:
 - `order` - the required ordering
 """
-function getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
+function _getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
     firstson = fill(zero(IT), t.nv)
     brother = fill(zero(IT), t.nv)
     stack = fill(zero(IT), t.nv)
@@ -122,7 +122,7 @@ function getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
     order.cperm = order.rperm; order.cinvp = order.rinvp
 end
 
-function getpostorder!(t::ETree{IT}, order::Ordering) where {IT}
+function _getpostorder!(t::ETree{IT}, order::Ordering) where {IT}
     firstson = fill(zero(IT), t.nv)
     brother = fill(zero(IT), t.nv)
     stack = fill(zero(IT), t.nv)

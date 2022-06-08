@@ -36,6 +36,16 @@ triangularsolve!
 solve!
 ```
 
+## Multiple minimum degree (MMD) ordering.
+
+```@meta
+CurrentModule = Sparspak.SpkMMD
+```
+
+```@docs
+mmd(g::Graph, order::Ordering)
+```
+
 ## Graphs
 
 ```@meta
@@ -49,37 +59,6 @@ sortgraph!(g::Graph{IT}) where {IT}
 isstructuresymmetric(g::Graph{IT}) where {IT}
 ```
 
-## Multiple minimum degree (MMD) ordering.
-
-```@meta
-CurrentModule = Sparspak.SpkMMD
-```
-
-```@docs
-mmd(g::Graph, order::Ordering)
-```
-
-## Elimination Trees
-
-```@meta
-CurrentModule = Sparspak.SpkSymfct
-```
-
-```@docs
-getetree!(g::Graph, order::Ordering, t::ETree)
-getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
-```
-
-## Symbolic Factorization
-
-```@meta
-CurrentModule = Sparspak.SpkSymfct
-```
-
-```@docs
-
-```
-
 ## Grid
 
 ```@meta
@@ -87,5 +66,5 @@ CurrentModule = Sparspak.SpkGrid
 ```
 
 ```@docs
-
+Grid(h::IT, k::IT) where {IT}
 ```
