@@ -59,11 +59,11 @@ Type of a sparse-matrix coupled linear algebraic equations problem.
 
 Fields 
 - `nrows`: 
- * number of rows in the matrix
- * number of elements in a row permutation
+    * number of rows in the matrix
+    * number of elements in a row permutation
 - `ncols`:
- * number of columns in the matrix
- * number of elements in a column permutation
+    * number of columns in the matrix
+    * number of elements in a column permutation
 
 Other variables:
 
@@ -80,27 +80,26 @@ distinction between "nonzeros" and "nonzero values" below.
 The elements of the matrix are stored by columns using three "parallel"
 arrays: (`link`, `rowsubs`, `values`). The first element of column `i` stored is
 found in `values[head[i]]`. The row subscript of the element is
-rowSubs(head(i)). The next element in the column is values(link(head(i)))
-and so on. A zero value for link marks the end of the column.
+`rowsubs[head[i]]`. The next element in the column is `values[link[head[i]]]`
+and so on. A zero value for `link` marks the end of the column.
 
-NOTE: the elements in each column are stored in increasing
-order of row subscript. Some algorithms used in the
-package depend on this fact.
+NOTE: the elements in each column are stored in increasing order of row
+subscript. Some algorithms used in the package depend on this fact.
 
-The right hand side of the matrix equation is stored in rhs,
-and the solution (when provided or computed) is stored in the array x.
+The right hand side of the matrix equation is stored in `rhs`,
+and the solution (when provided or computed) is stored in the array `x`.
 The size of the arrays is extended as required, and their lengths
 for not generally correspond to the number of nonzeros in the matrix:
 or the number of columns in the matrix.
     
 
-    The user can improve efficiency by providing an estimate of the
-    number of nonzeros in the matrix -  - this is done via the optional
-    keyword parameter "NNZ" in the subroutine Construct.
+The user can improve efficiency by providing an estimate of the number of
+nonzeros in the matrix -  - this is done via the optional keyword
+parameter `nnz`.
     
-    Similarly, the user can improve efficiency by providing
-    estimates for the number of rows and columns in the matrix via the
-        optional keyword parameters "nRows" and "nCols".
+Similarly, the user can improve efficiency by providing estimates for the number
+of rows and columns in the matrix via the optional keyword parameters `nrows`
+and `ncols`.
 """
 mutable struct Problem{IT, FT}
     info::String
