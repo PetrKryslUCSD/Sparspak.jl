@@ -43,7 +43,7 @@ CurrentModule = Sparspak.SpkMMD
 ```
 
 ```@docs
-mmd(g::Graph, order::Ordering)
+mmd!(g::Graph, order::Ordering)
 ```
 
 ## Graphs

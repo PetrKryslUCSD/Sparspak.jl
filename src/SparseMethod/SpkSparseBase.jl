@@ -94,7 +94,7 @@ using ..SpkSymfct: _findcolumncounts!, _symbolicfact!, _findsupernodes!
 using ..SpkLUFactor: _lufactor!, _lulsolve!, _luusolve!
 using ..SpkProblem: Problem
 using ..SpkUtilities: __extend
-using ..SpkMmd: mmd
+using ..SpkMmd: mmd!
 
 mutable struct _SparseBase{IT, FT}
     order::Ordering
@@ -181,7 +181,7 @@ function _findorder!(s::_SparseBase{IT}, orderfunction::F) where {IT, F}
 end
 
 function _findorder!(s::_SparseBase{IT}) where {IT}
-    return _findorder!(s, mmd)
+    return _findorder!(s, mmd!)
 end
 
 function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}

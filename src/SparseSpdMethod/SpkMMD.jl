@@ -14,7 +14,7 @@ using ..SpkOrdering: Ordering
 using ..SpkGraph: Graph
 
 """
-    mmd(g::Graph, order::Ordering)
+    mmd!(g::Graph, order::Ordering)
 
 Multiple minimum degree Ordering algorithm (MMD).
 
@@ -35,7 +35,7 @@ Input:
 Output:
 - `order`: updated ordering. Rows and columns are permuted in the same way.
 """
-function mmd(g::Graph, order::Ordering)
+function mmd!(g::Graph, order::Ordering)
     _generalmmd(g.nv, g.xadj, g.adj, order.rperm, order.rinvp)
     order.cinvp .= order.rinvp
     order.cperm .= order.rperm
