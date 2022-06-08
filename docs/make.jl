@@ -15,8 +15,10 @@ makedocs(
 	sitename = "Sparspak.jl",
 	pages = Any[
 	"Home" => "index.md",
-	"Guide" => "guide/guide.md",
-	"Reference" => ["man/types.md", "man/functions.md",],
+	"How to" => "howto/howto.md",
+	"Tutorials" => "tutorials/tutorials.md",
+    "Concepts" => "concepts/concepts.md",
+    "Reference" => ["man/types.md", "man/functions.md",],
         ]
 	)
 
