@@ -7,7 +7,7 @@ CurrentModule = Sparspak.SpkProblem
 ```
 
 ```@docs
-Problem
+Problem{IT, FT}
 ```
 
 ## Sparse LU Solver
@@ -27,7 +27,7 @@ CurrentModule = Sparspak.SpkETree
 ```
 
 ```@docs
-ETree
+ETree{IT}
 ```
 
 ## Graphs
@@ -37,7 +37,7 @@ CurrentModule = Sparspak.SpkGraph
 ```
 
 ```@docs
-Graph
+Graph{IT}
 ```
 
 ## Ordering
@@ -47,7 +47,7 @@ CurrentModule = Sparspak.SpkOrdering
 ```
 
 ```@docs
-Ordering
+Ordering{IT}
 ```
 
 ## Grid
@@ -57,5 +57,5 @@ CurrentModule = Sparspak.SpkGrid
 ```
 
 ```@docs
-Grid
+Grid{IT}
 ```
