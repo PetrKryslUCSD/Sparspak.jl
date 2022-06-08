@@ -15,7 +15,7 @@ insparse!
 infullrhs!
 outsparse
 computeresidual
-makerhs
+makerhs!
 makegridproblem
 ```
 
