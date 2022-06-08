@@ -16,7 +16,7 @@ makedocs(
 	pages = Any[
 	"Home" => "index.md",
 	"Guide" => "guide/guide.md",
-	"Reference" => "man/reference.md",
+	"Reference" => ["man/types.md", "man/functions.md",],
         ]
 	)
 
