@@ -9,9 +9,9 @@ CurrentModule = Sparspak.SpkProblem
 ```@docs
 Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, 
     FT}
-inaij!
-inbi!
-insparse!
+inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
+inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
+insparse!(p::Problem{IT,FT}, spm) where {IT,FT}
 infullrhs!
 outsparse
 computeresidual
