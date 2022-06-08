@@ -1,4 +1,4 @@
 # Reference Manual
 
-[Functions](man/functions.md)
-[Types](man/types.md)
+- [Functions](functions.md)
+- [Types](types.md)
