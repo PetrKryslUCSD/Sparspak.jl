@@ -271,7 +271,7 @@ function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
 end
 
 """
-    insparse(p::Problem{IT,FT}, spm) where {IT,FT}
+    insparse!(p::Problem{IT,FT}, spm) where {IT,FT}
 
 Input sparse matrix.
 
@@ -283,7 +283,7 @@ function insparse!(p::Problem{IT,FT}, spm) where {IT,FT}
 end
 
 """
-    insparse(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where 
+    insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where 
     {IT,FT}
 
 Build a problem from a sparse matrix in the COO format.
@@ -379,7 +379,7 @@ function makegridproblem(h::IT, k::IT) where {IT}
 end
 
 """
-    makerhs(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
+    makerhs!(p::Problem, x::Vector{FT} = FT[], mtype = "T") where {FT}
 
 This routine constructs the RHS of a problem given an `x` for the
 equation `Ax = rhs`. The `x` must have the same number of elements
