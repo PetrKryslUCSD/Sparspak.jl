@@ -28,6 +28,11 @@ mutable struct SparseSolver{IT, FT}
     condestdone::Bool
 end
 
+"""
+    SparseSolver(p::Problem)
+
+Create a sparse solver from a problem.
+"""
 function SparseSolver(p::Problem)
     ma = p.nrows
     na = p.ncols

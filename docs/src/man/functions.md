@@ -29,6 +29,7 @@ CurrentModule = Sparspak.SpkSparseSolver
 
 ```@docs
 SparseSolver
+SparseSolver(p::Problem)
 solve!
 ```
 
