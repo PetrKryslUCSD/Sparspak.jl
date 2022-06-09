@@ -45,10 +45,35 @@ function SparseSolver(p::Problem)
 end
 
 """
+    solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+
+Execute all the steps of the solution process.
+
+Given a symmetric matrix `A`, the steps are:
+
+1. Reordering of the matrix `A`. 
+2. Symbolic factorization of the(reordered) matrix `A`. 
+3. Putting numerical values of `A` into the data structures. 
+4. Numerical factorization of `A`. 
+5. Forward and backward substitution (triangular solution).
+
+The solution can be retrieved as `p.x`.
+"""
+function solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    findorder!(s) || ErrorException("Finding Order.")
+    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
+    inmatrix!(s, p) || ErrorException("Matrix input.")
+    factor!(s) || ErrorException("Numerical Factorization.")
+    triangularsolve!(s, p) || ErrorException("Triangular Solve.")
+    return true
+end
+
+"""
     findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
 
 Find reordering of the coefficient matrix.
 
+- `orderfunction`: ordering function
 """
 function findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
     if (s.orderdone)
@@ -179,30 +204,6 @@ function triangularsolve!(s::SparseSolver{IT, FT}, solution::Vector{FT}) where {
     end
     _triangularsolve!(s.slvr, solution)
     s.refinedone = false
-    return true
-end
-
-"""
-    solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
-
-Execute all the steps of the solution process.
-
-Given a symmetric matrix `A`, the steps are:
-
-1. Reordering of the matrix `A`. 
-2. Symbolic factorization of the(reordered) matrix `A`. 
-3. Putting numerical values of `A` into the data structures. 
-4. Numerical factorization of `A`. 
-5. Forward and backward substitution (triangular solution).
-
-The solution can be retrieved as `p.x`.
-"""
-function solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
-    findorder!(s) || ErrorException("Finding Order.")
-    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
-    inmatrix!(s, p) || ErrorException("Matrix input.")
-    factor!(s) || ErrorException("Numerical Factorization.")
-    triangularsolve!(s, p) || ErrorException("Triangular Solve.")
     return true
 end
 

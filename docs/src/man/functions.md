@@ -25,16 +25,25 @@ makegridproblem
 CurrentModule = Sparspak.SpkSparseSolver
 ```
 
+### Main interface
+
 ```@docs
 SparseSolver
+solve!
+```
+
+### Fine-granularity actions
+
+```@docs
 findorder!
 findorderperm!
 symbolicfactor!
 inmatrix!
 factor!
 triangularsolve!
-solve!
 ```
+
+
 
 ## Multiple minimum degree (MMD) ordering.
 
