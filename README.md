@@ -18,6 +18,10 @@ The rewrite is released with an express permission from the authors (George and 
 
 - 06/03/2022: The sparse LU solver has been now rewritten and tested.
 
+## Contributing
+
+Check out the list of current issues. You may find [the contributor guidelines](https://opensource.com/life/16/3/contributor-guidelines-template-and-tips) helpful.
+
 ## Reference
 
 Alan George, Joseph Liu,
