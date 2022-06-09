@@ -15,16 +15,16 @@ On a Surface Pro 7 with 16 GB of RAM, i7-1065G7 @ 1.30 GHz, the following result
 
 |         | UMFPACK | Sparspak |
 | :---: | :---: | :---: |
-| Without MKL  | 22   |    31    |
-| With MKL |    19   |   21 |
+| Without MKL [sec] | 22   |    31    |
+| With MKL [sec] |    19   |   21 |
 
 On the same machine with Windows Subsystem for Linux, WSL 2, running Ubuntu 22.04, the results were as
 
 
 |         | UMFPACK | Sparspak |
 | :---: | :---: | :---: |
-| Without MKL  | 19   |    39    |
-| With MKL |    16   |   19 |
+| Without MKL  [sec] | 19   |    39    |
+| With MKL  [sec] |    16   |   19 |
 
 Clearly, MKL can make a huge difference 
 
