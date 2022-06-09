@@ -12,7 +12,7 @@ subroutines from the book "Computer Solution of Large Sparse Positive Definite
 Systems" by Alan George and Joseph Liu. Originally written in Fortran 77, later
 rewritten in Fortran 90. Here is the software translated into Julia.
 
-The rewrite is released with an express permission from the authors (George and Liu)  under the MIT license.
+The Julia rewrite is released  under the MIT license with an express permission from the authors (George and Liu). Many thanks!
 
 ## News
 
