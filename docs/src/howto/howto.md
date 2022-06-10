@@ -37,7 +37,7 @@ function _test()
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @show norm(p.x - x) / norm(x) 
@@ -70,7 +70,7 @@ function _test()
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @show norm(p.x - x) / norm(x) 

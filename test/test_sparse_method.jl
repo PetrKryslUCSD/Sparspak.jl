@@ -160,7 +160,7 @@ function _test()
     s = SparseSolver(p)
     findorder!(s)
     symbolicfactor!(s)
-    inmatrix!(s, p)
+    inmatrix!(s)
     
    @test s.slvr.unz  == vec([-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
    @test s.slvr.lnz  == vec([4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0,  4.0, -1.0, -1.0,  4.0])
@@ -202,7 +202,7 @@ function _test()
     s = SparseSolver(p)
     findorder!(s)
     symbolicfactor!(s)
-    inmatrix!(s, p)
+    inmatrix!(s)
     factor!(s)
     s_xlnz = vec([ 1           3           5           7           9          11          13          15          17          19          21          23])                                 
     s_xunz = vec([ 1           2           3           4           5           6           7           8           9          10          10          10 ])
@@ -250,9 +250,9 @@ function _test()
     s = SparseSolver(p)
     findorder!(s)
     symbolicfactor!(s)
-    inmatrix!(s, p)
+    inmatrix!(s)
     factor!(s)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -293,13 +293,13 @@ function _test()
     s = SparseSolver(p)
     findorder!(s)
     symbolicfactor!(s)
-    inmatrix!(s, p)
+    inmatrix!(s)
     factor!(s)
     # before  LULSolve 
     # rhs = 34.0, 20.0, 18.0, 16.0, 14.0, 2.00, 4.00, 6.00, 8.00, 10.0, 12.0              
     # after  LULSolve  
     # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -338,7 +338,7 @@ function _test()
     p = maketridiagproblem(1101)
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -380,7 +380,7 @@ function _test()
     p = makerandomproblem(31)
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     
     A = outsparse(p)
     
@@ -441,7 +441,7 @@ function _test()
     p = makerandomproblem(301)
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -566,7 +566,7 @@ function _test()
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -594,7 +594,7 @@ function _test()
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
-    solve!(s, p)
+    solve!(s)
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -620,7 +620,7 @@ function _test()
     
     s = SparseSolver(p)
     A = outsparse(p)
-    solve!(s, p)
+    solve!(s)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -645,7 +645,7 @@ function _test()
     
     s = SparseSolver(p)
     A = outsparse(p)
-    solve!(s, p)
+    solve!(s)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 

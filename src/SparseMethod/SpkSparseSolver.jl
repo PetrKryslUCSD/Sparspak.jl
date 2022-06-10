@@ -14,6 +14,7 @@ import ..SpkSparseBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _tr
 Type of LU general sparse solver.
 """
 mutable struct SparseSolver{IT, FT}
+    p::Problem{IT, FT}
     slvr::_SparseBase{IT, FT}
     n::IT
     ma::IT
@@ -32,6 +33,8 @@ end
     SparseSolver(p::Problem)
 
 Create a sparse solver from a problem.
+
+The solver pulls all it needs from the problem.
 """
 function SparseSolver(p::Problem)
     ma = p.nrows
@@ -46,11 +49,11 @@ function SparseSolver(p::Problem)
     factordone = false
     refinedone = false
     condestdone = false
-    return SparseSolver(slvr, n, ma, na, mc, nc, inmatrixdone, orderdone, symbolicdone, factordone, refinedone, condestdone)
+    return SparseSolver(p, slvr, n, ma, na, mc, nc, inmatrixdone, orderdone, symbolicdone, factordone, refinedone, condestdone)
 end
 
 """
-    solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    solve!(s::SparseSolver{IT}) where {IT}
 
 Execute all the steps of the solution process.
 
@@ -64,14 +67,16 @@ Given a symmetric matrix `A`, the steps are:
 
 The solution can be retrieved as `p.x`.
 """
-function solve!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+function solve!(s::SparseSolver{IT}) where {IT}
     findorder!(s) || ErrorException("Finding Order.")
     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
-    inmatrix!(s, p) || ErrorException("Matrix input.")
+    inmatrix!(s) || ErrorException("Matrix input.")
     factor!(s) || ErrorException("Numerical Factorization.")
-    triangularsolve!(s, p) || ErrorException("Triangular Solve.")
+    triangularsolve!(s) || ErrorException("Triangular Solve.")
     return true
 end
+
+
 
 """
     findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
@@ -139,17 +144,17 @@ function symbolicfactor!(s::SparseSolver{IT}) where {IT}
 end
 
 """
-    inmatrix!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+    inmatrix!(s::SparseSolver{IT}) where {IT}
 
 Put numerical values of the matrix stored in the problem into the data
 structures of the solver.
 """
-function inmatrix!(s::SparseSolver{IT}, p::Problem{IT}) where {IT}
+function inmatrix!(s::SparseSolver{IT}) where {IT}
     if ( ! s.symbolicdone)
         @error "$(@__FILE__): Sequence error. Symbolic factor not done yet."
         return false
     end
-    success = _inmatrix!(s.slvr, p)
+    success = _inmatrix!(s.slvr, s.p)
     s.inmatrixdone = true
     return success
 end
@@ -174,22 +179,22 @@ function factor!(s::SparseSolver{IT}) where {IT}
 end
 
 """
-    triangularsolve!(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
+    triangularsolve!(s::SparseSolver{IT}) where {IT}
 
 Forward and backward substitution (triangular solution).
 """
-function triangularsolve!(s::SparseSolver{IT},  p::Problem{IT}) where {IT}
+function triangularsolve!(s::SparseSolver{IT}) where {IT}
     if ( ! s.factordone)
         @error "$(@__FILE__): Sequence error. Factorization not done yet."
         return false
     end
 
-    temp = p.rhs[1:p.nrows]
+    temp = deepcopy(s.p.rhs[1:s.p.nrows])
     @assert length(temp) == s.n
 
     triangularsolve!(s, temp)
 
-    p.x .= temp
+    s.p.x .= temp
 
     s.refinedone = false
     return true
