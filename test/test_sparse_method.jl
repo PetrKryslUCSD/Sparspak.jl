@@ -1,4 +1,10 @@
 using Test
+using Logging: disable_logging, global_logger, ConsoleLogger, BelowMinLevel, min_enabled_level
+
+# disable_logging(BelowMinLevel)
+# global_logger(ConsoleLogger(stderr, BelowMinLevel))
+
+# @show min_enabled_level(global_logger())
 
 module msprs001
 using Test
@@ -646,6 +652,61 @@ function _test()
     s = SparseSolver(p)
     A = outsparse(p)
     solve!(s)
+    x = A \ p.rhs
+    @test norm(p.x - x) / norm(x) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+module msprs019
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
+    end
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
+
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(11)
+    
+    s = SparseSolver(p)
+    # The actions are purposefully mixed up
+    @test_throws ErrorException symbolicfactor!(s) == false # ordering not done
+    
+    
+    findorder!(s) 
+    @test_throws ErrorException inmatrix!(s) == false
+
+    findorder!(s) 
+    symbolicfactor!(s)
+    @test_throws ErrorException factor!(s) == false
+
+    findorder!(s) 
+    symbolicfactor!(s)
+    inmatrix!(s)
+    @test_throws ErrorException triangularsolve!(s) == false
+    
+    solve!(s)
+    
+    A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
