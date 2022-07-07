@@ -705,7 +705,7 @@ function _test()
     @test_throws ErrorException triangularsolve!(s) == false
     
     solve!(s)
-    
+
     A = outsparse(p)
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
@@ -715,3 +715,4 @@ end
 
 _test()
 end # module
+
