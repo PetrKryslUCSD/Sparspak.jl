@@ -7,8 +7,14 @@ the LU factorization.
 module SpkSpdMMops
 
 using LinearAlgebra
-using LinearAlgebra.BLAS: @blasfunc, libblastrampoline, BlasInt
+using LinearAlgebra.BLAS: @blasfunc, BlasInt
 using Libdl
+
+if VERSION < v"1.7"
+    const libblas = Base.libblas_name
+else
+    const libblas = LinearAlgebra.BLAS.libblastrampoline
+end
 
 # import LinearAlgebra, OpenBLAS64_jll
 # LinearAlgebra.BLAS.lbt_forward(OpenBLAS64_jll.libopenblas_path)
@@ -165,20 +171,28 @@ function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}
     end
 end
 
+for (gemm, FT) in
+        ((:dgemm_, :Float64),
+         (:sgemm_, :Float32),
+         (:zgemm_, :ComplexF64),
+         (:cgemm_, :ComplexF32))
+@eval begin
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
-    alpha::FT,
-    A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
-    B::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldb::IT,
-    beta::FT,
-    C::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldc::IT) where {IT, FT}
-    ccall((@blasfunc(dgemm_), libblastrampoline), Cvoid,
+    alpha::$FT,
+    A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
+    B::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldb::IT,
+    beta::$FT,
+    C::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldc::IT) where {IT}
+    ccall((@blasfunc($gemm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
-            Ref{BlasInt}, Ref{FT}, Ptr{FT}, Ref{BlasInt},
-            Ptr{FT}, Ref{BlasInt}, Ref{FT}, Ptr{FT},
+            Ref{BlasInt}, Ref{$FT}, Ptr{$FT}, Ref{BlasInt},
+            Ptr{$FT}, Ref{BlasInt}, Ref{$FT}, Ptr{$FT},
             Ref{BlasInt}, Clong, Clong),
         transA, transB, m, n, k, alpha, A, lda,
         B, ldb, beta, C, ldc, 1, 1)
     C
+end
+end # @eval begin
 end
 
 # SUBROUTINE DGETRF( M, N, A, LDA, IPIV, INFO )
@@ -187,13 +201,22 @@ end
 # *     .. Array Arguments ..
 #       INTEGER            IPIV( * )
 #       DOUBLE PRECISION   A( LDA, * )
-function dgetrf!(m::IT, n::IT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+
+for (getrf, FT) in
+        ((:dgetrf_, :Float64),
+         (:sgetrf_, :Float32),
+         (:zgetrf_, :ComplexF64),
+         (:cgetrf_, :ComplexF32))
+@eval begin
+function dgetrf!(m::IT, n::IT, A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT}
     info = Ref{BlasInt}()
-    ccall((@blasfunc(dgetrf_), libblastrampoline), Cvoid,
-        (Ref{BlasInt}, Ref{BlasInt}, Ptr{FT},
+    ccall((@blasfunc($getrf), libblas), Cvoid,
+        (Ref{BlasInt}, Ref{BlasInt}, Ptr{$FT},
             Ref{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt}),
         m, n, A, lda, ipiv, info)
     return info[] #Error code is stored in LU factorization type
+end
+end # @eval begin
 end
 
 #       SUBROUTINE DTRSM(SIDE,UPLO,TRANSA,DIAG,M,N,ALPHA,A,LDA,B,LDB)
@@ -204,16 +227,25 @@ end
 # *     .. Array Arguments ..
 #       DOUBLE PRECISION A(LDA,*),B(LDB,*)
 # dtrsm("r", "u", "n", "n", jlen - nj, nj, one(FT), lnz[jlpnt], jlen, lnz[jlpnt + nj], jlen)
-function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT, A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, B::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, ldb::IT) where {IT, FT}
-    ccall((@blasfunc(dtrsm_), libblastrampoline), Cvoid,
+
+for (trsm, FT) in
+        ((:dtrsm_, :Float64),
+         (:strsm_, :Float32),
+         (:ztrsm_, :ComplexF64),
+         (:ctrsm_, :ComplexF32))
+@eval begin
+function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT, A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, B::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldb::IT) where {IT}
+    ccall((@blasfunc($trsm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
-            Ref{BlasInt}, Ref{BlasInt}, Ref{FT}, Ptr{FT},
-            Ref{BlasInt}, Ptr{FT}, Ref{BlasInt},
+            Ref{BlasInt}, Ref{BlasInt}, Ref{$FT}, Ptr{$FT},
+            Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt},
             Clong, Clong, Clong, Clong),
         side, uplo, transa, diag,
         m, n, alpha, A, lda, B, ldb,
         1, 1, 1, 1)
     B
+end
+end # @eval begin
 end
 
 # SUBROUTINE DLASWP( N, A, LDA, K1, K2, IPIV, INCX )
@@ -224,12 +256,20 @@ end
 #  *       .. Array Arguments ..
 #  *       INTEGER            IPIV( * )
 #  *       DOUBLE PRECISION   A( LDA, * )
-function dlaswp!(a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, k1::IT, k2::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+for (laswp, FT) in
+        ((:dlaswp_, :Float64),
+         (:slaswp_, :Float32),
+         (:zlaswp_, :ComplexF64),
+         (:claswp_, :ComplexF32))
+@eval begin
+function dlaswp!(a::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, k1::IT, k2::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT}
     # dlaswp(1, rhs(fj), nj, 1, nj, ipiv(fj), 1)
-    ccall((@blasfunc(dlaswp_), libblastrampoline), Cvoid,
-        (Ref{BlasInt}, Ptr{FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
+    ccall((@blasfunc($laswp), libblas), Cvoid,
+        (Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
         1, a, lda, k1, k2, ipiv, 1)
     a
+end
+end # @eval begin
 end
 
 #SUBROUTINE DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
@@ -239,17 +279,25 @@ end
 #      CHARACTER TRANS
 #*     .. Array Arguments ..
 #      DOUBLE PRECISION A(LDA,*),X(*),Y(*)
-function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::FT,
-    A::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
-    X::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true},
-    beta::FT, Y::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
-    ccall((@blasfunc(dgemv_), libblastrampoline), Cvoid,
-        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{FT},
-            Ptr{FT}, Ref{BlasInt}, Ptr{FT}, Ref{BlasInt},
-            Ref{FT}, Ptr{FT}, Ref{BlasInt}, Clong),
+for (gemv, FT) in
+        ((:dgemv_, :Float64),
+         (:sgemv_, :Float32),
+         (:zgemv_, :ComplexF64),
+         (:cgemv_, :ComplexF32))
+@eval begin
+function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
+    A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
+    X::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true},
+    beta::$FT, Y::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}) where {IT}
+    ccall((@blasfunc($gemv), libblas), Cvoid,
+        (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$FT},
+            Ptr{$FT}, Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt},
+            Ref{$FT}, Ptr{$FT}, Ref{BlasInt}, Clong),
         trans, m, n, alpha, A, lda, X, 1, beta, Y, 1, 
         1)
     Y
+end
+end # @eval begin
 end
 
 end 
