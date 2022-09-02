@@ -16,6 +16,7 @@ The Julia rewrite is released  under the MIT license with an express permission 
 
 ## News
 
+- 09/01/2022: Configuration now allows for both Julia 1.6 (LTS) and the subsequent Julia versions.
 - 06/03/2022: The sparse LU solver has been now rewritten and tested.
 
 ## Contributing
