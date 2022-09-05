@@ -222,41 +222,46 @@ function ttrsm(T=Float64)
     tgnrc=0.0
     for m in rand(1:50,15)
         for n in rand(1:50,15)
-            for side in ['r']
-                k= side=='l' ? m : n
-                A=rand(T,k,k)
-                for i=1:k
-                    A[i,i]=10.0 #Diagonal(10I,size(A[1,1],1))
-                end
-                B=rand(T,m,n)
-                alpha=rand(T)
-                alpha64=f64(alpha)
-                vA=vec(A)
-                vA64=vec(f64(A))
-                gB=copy(B)
-                vgB=vec(gB)
-                B64=f64(B)
-                vB64=vec(B64)
-                
-                tblas += @elapsed dtrsm!(side, 'l', 'n', 'n', m,n, alpha64, vA64, k, vB64,m)
-                tgnrc += @elapsed gtrsm!(side, 'l', 'n', 'n', m,n, alpha, vA, k, vgB,m)
-                if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
-                    error(" error for l, side $side, $n, $m")
-                end
-
-                vA=vec(A)
-                vA64=vec(f64(A))
-                gB=copy(B)
-                vB=vec(B)
-                vgB=vec(gB)
-                B64=f64(B)
-                vB64=vec(B64)
-                
-                
-                tblas += @elapsed dtrsm!(side, 'u', 'n', 'n', m,n, alpha64, vA64, k, vB64,m)
-                tgnrc += @elapsed gtrsm!(side, 'u', 'n', 'n', m,n, alpha, vA, k, vgB,m)
-                if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
-                    error(" error for u, side $side, $n, $m")
+            for side in ['r','l']
+                for transa in ['n']
+                    for diag  in ['n','u']
+                        
+                        k= side=='l' ? m : n
+                        A=rand(T,k,k)
+                        for i=1:k
+                            A[i,i]=10.0 #Diagonal(10I,size(A[1,1],1))
+                        end
+                        B=rand(T,m,n)
+                        alpha=rand(T)
+                        alpha64=f64(alpha)
+                        vA=vec(A)
+                        vA64=vec(f64(A))
+                        gB=copy(B)
+                        vgB=vec(gB)
+                        B64=f64(B)
+                        vB64=vec(B64)
+                        
+                        tblas += @elapsed dtrsm!(side, 'l', transa, 'n', m,n, alpha64, vA64, k, vB64,m)
+                        tgnrc += @elapsed gtrsm!(side, 'l', transa, 'n', m,n, alpha, vA, k, vgB,m)
+                        if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
+                            error(" error for uplo l, side $side, transa $transa diag $diag $n, $m")
+                        end
+                        
+                        vA=vec(A)
+                        vA64=vec(f64(A))
+                        gB=copy(B)
+                        vB=vec(B)
+                        vgB=vec(gB)
+                        B64=f64(B)
+                        vB64=vec(B64)
+                        
+                        
+                        tblas += @elapsed dtrsm!(side, 'u', transa, diag, m,n, alpha64, vA64, k, vB64,m)
+                        tgnrc += @elapsed gtrsm!(side, 'u', transa, diag, m,n, alpha, vA, k, vgB,m)
+                        if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
+                            error(" error for uplo u, side $side, transa $transa diag $diag $n, $m")
+                        end
+                    end
                 end
             end
         end
@@ -264,7 +269,7 @@ function ttrsm(T=Float64)
     @info "trsm:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
-
+    
 #
 # Test glaswp! for a couple of random data,
 # compare timing between generic and blas  implementations

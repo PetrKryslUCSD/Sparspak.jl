@@ -14,9 +14,9 @@ using LinearAlgebra
 # C=alpha*transA(A)*transB(B) + beta*C
 #
 function ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
-    rC= reshape(C,m,n)
-    rA= transA=='n' ? reshape(A,m,k) :  transpose(reshape(A,k,m))
-    rB= transB=='n' ? reshape(B,k,n) :  transpose(reshape(B,n,k))
+    @views rC= reshape(C[1:m*n],m,n)
+    @views rA= transA=='n' ? reshape(A[1:k*m],m,k) :  transpose(reshape(A[1:k*m],k,m))
+    @views rB= transB=='n' ? reshape(B[1:k*n],k,n) :  transpose(reshape(B[1:k*n],n,k))
     mul!(rC,rA,rB,alpha, beta)
     true
 end
@@ -26,8 +26,11 @@ end
 # Y=alpha*transA(A)*X + beta*Y
 #
 function ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
-    rA= transA=='n' ? reshape(A,m,n) :  transpose(reshape(A,m,n))
-    mul!(Y,rA,X,alpha, beta)
+    if transA=='n'
+        @views mul!(Y[1:m],reshape(A[1:m*n],m,n),X[1:n],alpha, beta)
+    else
+        @views mul!(Y[1:n],transpose(reshape(A[1:m*n],m,n)),X[1:m],alpha, beta)
+    end
     true
 end
 
@@ -35,32 +38,39 @@ end
 #
 # In-place LU factorization of A
 #
-function ggetrf!(m,n,A,lda,ipiv)
-    ipiv.=lu!(reshape(A,m,n)).p
+function ggetrf!(m,n,A::AbstractVector{FT},lda,ipiv) where FT
+    @views ipiv[1:n].=lu!(reshape(A[1:m*n],m,n)).p
+    return 0
 end
 
 
 
 #
-# Triangular solve 
+# Triangular solve
 #
-function gtrsm!(side,uplo,transa,diag, m,n,alpha,A, lda, B, ldb)
-    if diag!='n'
-        error("generic *trsm for unit tridiagonal matrices not implemented")
-    end
-    if transa!='n'
-        error("generic *trsm for transposed matrices not implemented")
-    end
+function gtrsm!(side,uplo,transA,diag, m,n,alpha,A, lda, B, ldb)
     
     k= side=='l' ? m : n
-
-    if uplo=='u'
-        tA=UpperTriangular(reshape(A,k,k))
-    elseif uplo=='l'
-        tA=LowerTriangular(reshape(A,k,k))
+    if transA=='t'
+        @views kA=transpose(reshape(A[1:k*k],k,k))
+    else
+        @views kA=reshape(A[1:k*k],k,k)
     end
-    
-    rB=reshape(B,m,n)
+    if diag=='n'
+        if uplo=='u'
+            tA=UpperTriangular(kA)
+        elseif uplo=='l'
+            tA=LowerTriangular(kA)
+        end
+    elseif diag == 'u'
+        if uplo=='u'
+            tA=UnitUpperTriangular(kA)
+        elseif uplo=='l'
+            tA=UnitLowerTriangular(kA)
+        end
+    end
+
+    @views rB=reshape(B[1:m*n],m,n)
     if  side=='l'
         rB.=tA\(alpha*rB)
     elseif side == 'r'
