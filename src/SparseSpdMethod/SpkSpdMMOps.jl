@@ -179,10 +179,10 @@ for (gemm, FT) in
 @eval begin
 function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     alpha::$FT,
-    A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
-    B::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldb::IT,
+    A::AbstractVector{$FT}, lda::IT,
+    B::AbstractVector{$FT}, ldb::IT,
     beta::$FT,
-    C::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldc::IT) where {IT}
+    C::AbstractVector{$FT}, ldc::IT) where {IT}
     ccall((@blasfunc($gemm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
             Ref{BlasInt}, Ref{$FT}, Ptr{$FT}, Ref{BlasInt},
@@ -208,7 +208,7 @@ for (getrf, FT) in
          (:zgetrf_, :ComplexF64),
          (:cgetrf_, :ComplexF32))
 @eval begin
-function dgetrf!(m::IT, n::IT, A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT}
+function dgetrf!(m::IT, n::IT, A::AbstractVector{$FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT}
     info = Ref{BlasInt}()
     ccall((@blasfunc($getrf), libblas), Cvoid,
         (Ref{BlasInt}, Ref{BlasInt}, Ptr{$FT},
@@ -234,7 +234,9 @@ for (trsm, FT) in
          (:ztrsm_, :ComplexF64),
          (:ctrsm_, :ComplexF32))
 @eval begin
-function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT, A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, B::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, ldb::IT) where {IT}
+    function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT,
+                    A::AbstractVector{$FT}, lda::IT,
+                    B::AbstractVector{$FT}, ldb::IT) where {IT}
     ccall((@blasfunc($trsm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
             Ref{BlasInt}, Ref{BlasInt}, Ref{$FT}, Ptr{$FT},
@@ -262,7 +264,7 @@ for (laswp, FT) in
          (:zlaswp_, :ComplexF64),
          (:claswp_, :ComplexF32))
 @eval begin
-function dlaswp!(a::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT, k1::IT, k2::IT, ipiv::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT}
+function dlaswp!(a::AbstractVector{$FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT}
     # dlaswp(1, rhs(fj), nj, 1, nj, ipiv(fj), 1)
     ccall((@blasfunc($laswp), libblas), Cvoid,
         (Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
@@ -285,10 +287,10 @@ for (gemv, FT) in
          (:zgemv_, :ComplexF64),
          (:cgemv_, :ComplexF32))
 @eval begin
-function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
-    A::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}, lda::IT,
-    X::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true},
-    beta::$FT, Y::SubArray{$FT, 1, Vector{$FT}, Tuple{UnitRange{IT}}, true}) where {IT}
+    function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
+    A::AbstractVector{$FT}, lda::IT,
+    X::AbstractVector{$FT},
+    beta::$FT, Y::AbstractVector{$FT}) where {IT}
     ccall((@blasfunc($gemv), libblas), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$FT},
             Ptr{$FT}, Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt},
