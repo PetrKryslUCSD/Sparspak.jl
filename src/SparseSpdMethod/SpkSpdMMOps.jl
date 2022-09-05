@@ -6,9 +6,13 @@ the LU factorization.
 """
 module SpkSpdMMops
 
+
 using LinearAlgebra
 using LinearAlgebra.BLAS: @blasfunc, BlasInt
 using Libdl
+
+import ..GenericBlasLapackFragments:  ggemm!, ggemv!, ggetrf!, gtrsm!, glaswp!
+
 
 if VERSION < v"1.7"
     const libblas = Base.libblas_name
@@ -170,6 +174,51 @@ function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}
         vswap(m, view(a, ks:ks+m-1), view(a, is:is+m-1))
     end
 end
+
+
+
+#
+# Generic BLAS + LAPACK methods
+#
+# It extends  the dgemm! etc. functions  defined in Sparspak.SpkSpdMMops
+# by generic ones. The methods  are wrappers around ggemm! etc functions
+# which call  corresponding implementations  from Julia  linear algebra.
+#
+function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+                alpha::FT,
+                A::AbstractVector{FT}, lda::IT,
+                B::AbstractVector{FT}, ldb::IT,
+                beta::FT,
+                C::AbstractVector{FT}, ldc::IT) where {IT,FT}
+    ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
+end
+
+function dgemv!(transA::AbstractChar, m::IT, n::IT,
+                alpha::FT,
+                A::AbstractVector{FT}, lda::IT,
+                X::AbstractVector{FT},
+                beta::FT,
+                Y::AbstractVector{FT}) where {IT,FT}
+    ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
+end
+
+function dgetrf!(m::IT, n::IT, A::AbstractVector{FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+    ggetrf!(m,n,A,lda,ipiv)
+end
+
+function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT,
+    A::AbstractVector{FT}, lda::IT,
+    B::AbstractVector{FT}, ldb::IT) where {IT,FT}
+    gtrsm!(side,uplo,transa,diag, m,n,alpha,A, lda, B, ldb)
+end
+
+function dlaswp!(a::AbstractVector{FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+    glaswp!(a,lda,k1,k2,ipiv)
+end
+
+#
+# BLAS+LAPACK for standard floating point types
+#
 
 for (gemm, FT) in
         ((:dgemm_, :Float64),

@@ -27,3 +27,5 @@ end
 @time @testset "Sparse method" begin
     include("test_sparse_method.jl")
 end
+
+include("test_blfragments.jl")
