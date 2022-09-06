@@ -1,12 +1,22 @@
+#
+# Test the generic blas/lapack  code against blas calls in Sparspak
+#
+
 module test_blfragments
 using Test
 using LinearAlgebra
 using Random
 using LinearAlgebra.BLAS: BlasInt
+
+# These will be called for Float64, calling back to BLAS
 using Sparspak.SpkSpdMMops:  dgemm!,dgemv!,dgetrf!,dtrsm!,dlaswp!
+
+# These are the Julia based replacements which are explicitely called.
 using Sparspak.GenericBlasLapackFragments:  ggemm!,ggemv!,ggetrf!,gtrsm!,glaswp!, strided_reshape
 
-
+#
+# Two potentialy useful extensions for numeber types to be tested
+#
 using ForwardDiff
 using MultiFloats
 

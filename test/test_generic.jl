@@ -1,3 +1,6 @@
+#
+# Run generic tests for a larger number of problems
+#
 module generic001
 using Test
 using LinearAlgebra
@@ -41,6 +44,9 @@ _test(ForwardDiff.Dual{Float64,Float64,1})
 end # module
 
 
+#
+# Differntiate through sparse solve
+#
 module generic002
 using  Test
 using Tensors
@@ -57,6 +63,7 @@ function tridiagonal(p,n)
     Tridiagonal(a,b,c)
 end
 
+# Dense version for comprarison
 function f(p)
     n=20
     M=Matrix(tridiagonal(p,n))
@@ -66,6 +73,7 @@ end
 
 df(x)=Tensors.gradient(f,x)
 
+# Sparse version
 function g(p)
     n=20
     M=sparse(tridiagonal(p,n))
@@ -79,7 +87,6 @@ function g(p)
 end
 
 dg(x)=Tensors.gradient(g,x)
-
 
 function _test()
     X=1:0.1:10

@@ -180,7 +180,7 @@ end
 #
 # Generic BLAS + LAPACK methods
 #
-# It extends  the dgemm! etc. functions  defined in Sparspak.SpkSpdMMops
+# Extend  the dgemm! etc. functions  defined below in Sparspak.SpkSpdMMops
 # by generic ones. The methods  are wrappers around ggemm! etc functions
 # which call  corresponding implementations  from Julia  linear algebra.
 #
