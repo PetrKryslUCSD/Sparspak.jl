@@ -8,6 +8,9 @@ using Sparspak.SpkSparseSolver: SparseSolver, solve!
 using Random
 using MultiFloats, ForwardDiff
 
+f64(x::ForwardDiff.Dual{T}) where T=Float64(ForwardDiff.value(x))
+f64(x::MultiFloat)=Float64(x)
+
 Random.rand(rng::AbstractRNG, ::Random.SamplerType{ForwardDiff.Dual{T,V,N}}) where {T,V,N} = ForwardDiff.Dual{T,V,N}(rand(rng,T))
 
 function makerandomproblem(T, n)
@@ -21,19 +24,18 @@ function makerandomproblem(T, n)
 end
 
 function _test(T)
-    @info "testing $T"
-    p = makerandomproblem(T,301)
-    
-    s = SparseSolver(p)
-    solve!(s)
-    A = Matrix(outsparse(p))
-    x = A \ p.rhs
-    @test norm(p.x - x) / norm(x) < 1.0e-6
-
+    for n in rand(100:100:10000,10)
+        p = makerandomproblem(T,301)
+        A=outsparse(p)
+        s = SparseSolver(p)
+        solve!(s)
+        x = f64.(A) \ f64.(p.rhs)
+        @test norm(f64.(p.x) - x) / norm(x) < 1.0e-6
+    end
     return true
 end
 
-
+_test(MultiFloats.Float64x1)
 _test(MultiFloats.Float64x2)
 _test(ForwardDiff.Dual{Float64,Float64,1})
 end # module
@@ -80,8 +82,8 @@ dg(x)=Tensors.gradient(g,x)
 
 
 function _test()
-    @info df(4.0), dg(4.0)
-    @test df(4.0)≈dg(4.0)
+    X=1:0.1:10
+    @test all( x->(df(x)≈dg(x)), 1:0.1:10)
     true
 end
 

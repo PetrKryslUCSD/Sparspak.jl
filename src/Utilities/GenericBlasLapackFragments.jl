@@ -10,8 +10,17 @@ module GenericBlasLapackFragments
 
 using LinearAlgebra
 
-strided_reshape(A,lda,m,n)= lda == m ? reshape(view(A,1:m*n),m,n) : view(reshape(view(A,1:lda*n),lda,n),1:m,1:n)
-
+#
+# Reshape matrix with leading dimension lda>=m
+#
+function strided_reshape(A,lda,m,n)
+    @inbounds vA=view(A,1:lda*n)
+    if lda == m
+        reshape(vA,m,n)
+    else
+        view(reshape(vA,lda,n),1:m,1:n)
+    end
+end
 
 #
 # C=alpha*transA(A)*transB(B) + beta*C
@@ -41,34 +50,6 @@ function ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
     true
 end
 
-function xggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
-    if m==0 || n==0
-        return
-    end
-    @show typeof(A)
-    @show isa(A,AbstractVector{eltype(A)})
-#    a=reshape(A[1:m*n],m,n)
-    for i=1:length(Y)
-        Y[i]*=beta
-    end
-    if transA=='n'
-        for j=1:n # DO 60
-            for i=1:m # DO 50
-                Y[i]+=alpha*X[j]*A[(j-1)*lda+i]
-            end
-        end
-    else
-        for j=1:n # DO 120
-            temp=zero(eltype(A))
-            for i=1:m # DO 110
-                temp+=A[(j-1)*lda+i]*X[i]
-            end
-            Y[j]+=alpha*temp
-        end
-    end
-    true
-end
-
 #
 # In-place LU factorization of A
 #
@@ -84,34 +65,43 @@ end
 # Triangular solve
 #
 function gtrsm!(side,uplo,transA,diag, m,n,alpha,A, lda, B, ldb)
+    
     if m==0 || n==0
         return
     end
     
     k= side=='l' ? m : n
-    if transA=='t'
-        kA=transpose(strided_reshape(A,lda,k,k))
-    else
-        kA=strided_reshape(A,lda,k,k)
-    end
+
+    rA=strided_reshape(A,lda,k,k)
+
     if diag=='n'
         if uplo=='u'
-            tA=UpperTriangular(kA)
-        elseif uplo=='l'
-            tA=LowerTriangular(kA)
+            tA=UpperTriangular(rA)
+        else
+            tA=LowerTriangular(rA)
         end
-    elseif diag == 'u'
+    else
         if uplo=='u'
-            tA=UnitUpperTriangular(kA)
-        elseif uplo=='l'
-            tA=UnitLowerTriangular(kA)
+            tA=UnitUpperTriangular(rA)
+        else
+            tA=UnitLowerTriangular(rA)
         end
     end
+    
+    
+    if transA=='t'
+        kA=transpose(tA)
+    else
+        kA=tA
+    end
+    
+    
     rB=strided_reshape(B,ldb,m,n)
+    
     if  side=='l'
-        rB.=tA\(alpha*rB)
-    elseif side == 'r'
-        transpose(rB).=transpose(tA)\transpose(alpha*rB)
+        rB.=kA\(alpha*rB)
+    else
+        rB.=alpha*rB/kA
     end
 end
 

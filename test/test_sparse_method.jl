@@ -270,7 +270,7 @@ function _test(T=Float64)
     inmatrix!(s)
     factor!(s)
     solve!(s)
-    A = Matrix(outsparse(p)) # no generic method for sparse...
+    A = Float64.(outsparse(p)) # no generic method for sparse...
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -292,22 +292,23 @@ using Sparspak.SpkProblem
 using Sparspak.SpkProblem: inaij!, inbi!, outsparse
 using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!
 
-function maketridiagproblem(n)
-    p = SpkProblem.Problem(n, n)
+using MultiFloats
+function maketridiagproblem(n,T=Float64)
+    p = SpkProblem.Problem(n, n, 2*(n-1)+1, zero(T))
     for i in 1:(n-1)
-        inaij!(p, i + 1, i, -1.0)
-        inaij!(p, i, i, 4.0)
-        inaij!(p, i, i + 1, -1.0)
-        inbi!(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, T(-1.0))
+        inaij!(p, i, i, T(4.0))
+        inaij!(p, i, i + 1, T(-1.0))
+        inbi!(p, i, T(2.0 * i))
     end
-    inaij!(p, n, n, 4.0)
-    inbi!(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, T(4.0))
+    inbi!(p, n, 3.0 * n + T(1.0))
 
     return p
 end
 
-function _test()
-    p = maketridiagproblem(11000)
+function _test(T=Float64)
+    p = maketridiagproblem(11000,T)
     
     s = SparseSolver(p)
     findorder!(s)
@@ -319,7 +320,7 @@ function _test()
     # after  LULSolve  
     # rhs = 34.0, 28.5, 25.6, 22.857142857142858, 20.124401913875598, 2.00, 4.50, 7.2, 9.9285714285714288, 12.660287081339714, 20.784615384615385  
     solve!(s)
-    A = outsparse(p)
+    A = Float64.(outsparse(p))
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -327,6 +328,8 @@ function _test()
 end
 
 _test()
+_test(Float64x1)
+_test(Float64x2)
 end # module
 
 
@@ -339,26 +342,28 @@ using Sparspak.SpkProblem
 using Sparspak.SpkProblem: inaij!, inbi!, outsparse
 using Sparspak.SpkSparseSolver: SparseSolver,  solve!
 
-function maketridiagproblem(n)
-    p = SpkProblem.Problem(n, n)
+using MultiFloats
+
+function maketridiagproblem(n,T=Float64)
+    p = SpkProblem.Problem(n, n, 2*(n-1)+1, zero(T))
     for i in 1:(n-1)
-        inaij!(p, i + 1, i, -1.0)
-        inaij!(p, i, i, 4.0)
-        inaij!(p, i, i + 1, -1.0)
-        inbi!(p, i, 2.0 * i)
+        inaij!(p, i + 1, i, T(-1.0))
+        inaij!(p, i, i, T(4.0))
+        inaij!(p, i, i + 1, T(-1.0))
+        inbi!(p, i, T(2.0 * i))
     end
-    inaij!(p, n, n, 4.0)
-    inbi!(p, n, 3.0 * n + 1.0)
+    inaij!(p, n, n, T(4.0))
+    inbi!(p, n, 3.0 * n + T(1.0))
 
     return p
 end
 
-function _test()
+function _test(T=Float64)
     p = maketridiagproblem(1101)
     
     s = SparseSolver(p)
     solve!(s)
-    A = outsparse(p)
+    A = Float64.(outsparse(p))
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -366,6 +371,8 @@ function _test()
 end
 
 _test()
+_test(Float64x1)
+_test(Float64x2)
 end # module
 
 
@@ -376,6 +383,7 @@ using SparseArrays
 using Sparspak
 using Sparspak.SpkProblem: insparse!, outsparse, infullrhs!
 using Sparspak.SpkSparseSolver: SparseSolver, solve!
+
 using MultiFloats
 
 function makerandomproblem(n,T=Float64)
@@ -464,7 +472,7 @@ function makerandomproblem(n,T=Float64)
 end
 
 function _test(T=Float64)
-    @info T
+
     p = makerandomproblem(301,T)
 
     s = SparseSolver(p)
@@ -585,18 +593,19 @@ using Sparspak
 using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
 using Sparspak.SparseSolver: SparseSolver, solve!
 
-function _test()
+using MultiFloats
+function _test(T=Float64)
     n = 357
-    A = sprand(n, n, 1/n)
+    A = sprand(T, n, n, 1/n)
     A = -A - A' + 20 * LinearAlgebra.I
     
-    p = Problem(n, n)
+    p = Problem(n, n, nnz(A), zero(T))
     insparse!(p, A);
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
     solve!(s)
-    A = outsparse(p)
+    A = Float64.(outsparse(p))
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -604,6 +613,8 @@ function _test()
 end
 
 _test()
+_test(Float64x1)
+_test(Float64x2)
 end # module
 
 module msprs016
@@ -613,18 +624,19 @@ using SparseArrays
 using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
 using Sparspak.SparseSolver: SparseSolver, solve!
 
-function _test()
+using MultiFloats
+function _test(T=Float64)
     n = 1357
-    A = sprand(n, n, 1/n)
+    A = sprand(T, n, n, 1/n)
     A = -A - A' + 20 * LinearAlgebra.I
     
-    p = Problem(n, n)
+    p = Problem(n, n, nnz(A), zero(T))
     insparse!(p, A);
     infullrhs!(p, 1:n);
     
     s = SparseSolver(p)
     solve!(s)
-    A = outsparse(p)
+    A = Float64.(outsparse(p))
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6
 
@@ -632,6 +644,8 @@ function _test()
 end
 
 _test()
+_test(Float64x1)
+_test(Float64x2)
 end # module
 
 module msprs017

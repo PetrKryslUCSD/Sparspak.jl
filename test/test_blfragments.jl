@@ -214,12 +214,12 @@ function ttrsm(T=Float64)
     for m in rand(1:50,15)
         for n in rand(1:50,15)
             for side in ['r','l']
-                for transa in ['n']
-                    for diag  in ['n','u']
-                        for uplo  in ['l', 'u']
-
+                for uplo  in ['l','u']
+                    for transa in ['t','n']
+                        for diag  in ['u','n']
 
                             k= side=='l' ? m : n
+
                             lda=ldx()+k
                             A=-rand(T,lda*k)
                             rA=strided_reshape(A,lda,k,k)
@@ -228,14 +228,10 @@ function ttrsm(T=Float64)
                             end
 
                         
-                            if transa=='n'
-                                ldb= ldx()+m
-                                B=rand(T,ldb*n)
-                            else
-                                ldb= ldx()+n
-                                B=rand(T,ldb*m)
-                            end
-
+                            
+                            ldb= ldx()+m
+                            B=rand(T,ldb*n)
+                            
                             alpha=rand(T)
                             alpha64=f64(alpha)
                             B64=f64(B)
@@ -244,7 +240,7 @@ function ttrsm(T=Float64)
                             tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, A64, lda, B64,ldb)
                             tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, A, lda, B,ldb)
                             if ! isapprox(f64(B),B64,rtol=10*max(eps(T),eps(Float64)))
-                                error(" error for uplo $uplo, side $side, transa $transa diag $diag $n, $m")
+                                error(" error for side $side, uplo $uplo, transa $transa diag $diag $n, $m")
                             end
                         end
                     end
@@ -281,6 +277,7 @@ end
 # Run all tests for type T
 #
 function test_all_T(T=Float64)
+    @info "$T:"
     @testset "test $(T)" begin
         @test tgemm(T)
         @test tgemv(T)
