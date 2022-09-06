@@ -28,4 +28,11 @@ end
     include("test_sparse_method.jl")
 end
 
-include("test_blfragments.jl")
+@time @testset "Generic LAPACK/BLAS" begin
+    include("test_blfragments.jl")
+end
+
+@time @testset "Generic FT" begin
+    include("test_generic.jl")
+end
+
