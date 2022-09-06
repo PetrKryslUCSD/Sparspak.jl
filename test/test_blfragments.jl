@@ -59,13 +59,13 @@ end
 # Test ggemm! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function tgemm(T=Float64)
+function _tgemm(T=Float64;N=15)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
-    for m in rand(1:50,15)
-        for n in rand(1:50,15)
-            for k in rand(1:50,15)
+    for m in rand(1:50,N)
+        for n in rand(1:50,N)
+            for k in rand(1:50,N)
                 for transA in ['n','t']
                     for transB in ['n','t']
 
@@ -111,21 +111,26 @@ function tgemm(T=Float64)
             end
         end
     end
+    tgnrc,tblas
+end
+
+function tgemm(T=Float64)
+    _tgemm(T,N=1)
+    tgnrc,tblas=_tgemm(T,N=15)
     @info "gemm:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
-
 
 #
 # Test ggemv! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function tgemv(T=Float64)
+function _tgemv(T=Float64;N=15)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
-    for m in rand(1:50,15)
-        for n in rand(1:50,15)
+    for m in rand(1:50,N)
+        for n in rand(1:50,N)
             for transA in ['n','t']
                 
                 if transA=='n'
@@ -161,10 +166,15 @@ function tgemv(T=Float64)
             end
         end
     end
+    tgnrc,tblas
+end
+
+function tgemv(T=Float64)
+    _tgemv(T,N=1)
+    tgnrc,tblas=_tgemv(T,N=15)
     @info "gemv:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
-
 
 
 
@@ -172,11 +182,11 @@ end
 # Test ggetrf! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function tgetrf(T=Float64)
+function _tgetrf(T=Float64;N=25)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
-    for n in rand(1:50,25)
+    for n in rand(1:50,N)
         m=n
         lda=ldx()+m
         A=-rand(T,lda*n)
@@ -197,22 +207,27 @@ function tgetrf(T=Float64)
             error("error: ($m,$n)")
         end
     end
-    @info "getrf:  tgnrc/tblas=$(tgnrc/tblas)"
-    true
+    tgnrc,tblas
 end
 
 
+function tgetrf(T=Float64)
+    _tgetrf(T,N=1)
+    tgnrc,tblas=_tgetrf(T,N=25)
+    @info "getrf:  tgnrc/tblas=$(tgnrc/tblas)"
+    true
+end
 
 #
 # Test gtrsm! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function ttrsm(T=Float64)
+function _ttrsm(T=Float64;N=15)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
-    for m in rand(1:50,15)
-        for n in rand(1:50,15)
+    for m in rand(1:50,N)
+        for n in rand(1:50,N)
             for side in ['r','l']
                 for uplo  in ['l','u']
                     for transa in ['t','n']
@@ -248,18 +263,24 @@ function ttrsm(T=Float64)
             end
         end
     end
+    tgnrc,tblas
+end
+
+function ttrsm(T=Float64)
+    _ttrsm(T,N=1)
+    tgnrc,tblas=_ttrsm(T,N=15)
     @info "trsm:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
-    
+
 #
 # Test glaswp! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function tlaswp(T=Float64)
+function _tlaswp(T=Float64;N=15)
     tblas=0.0
     tgnrc=0.0
-    for n in rand(1:50,15)
+    for n in rand(1:50,N)
         ipiv=shuffle(1:n)
         A=rand(T,n)
         A64=f64(A)
@@ -269,6 +290,13 @@ function tlaswp(T=Float64)
             error("laswp failed for $n")
         end
     end
+    tgnrc,tblas
+end
+
+
+function tlaswp(T=Float64)
+    _tlaswp(T,N=1)
+    tgnrc,tblas=_tlaswp(T,N=15)
     @info "laswp:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
