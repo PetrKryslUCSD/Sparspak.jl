@@ -5,11 +5,13 @@ using SparseArrays
 using Sparspak
 using Sparspak.SpkProblem: insparse!, outsparse
 using Sparspak.SpkSparseSolver: SparseSolver, solve!
-using MultiFloats
+using Random
+using MultiFloats, ForwardDiff
+
+Random.rand(rng::AbstractRNG, ::Random.SamplerType{ForwardDiff.Dual{T,V,N}}) where {T,V,N} = ForwardDiff.Dual{T,V,N}(rand(rng,T))
 
 function makerandomproblem(T, n)
     spm = sprand(T, n, n, 1/n)
-#    spm=sparse(ones(n,n))
     spm = -spm - spm' + 20 * LinearAlgebra.I
     
     p = Sparspak.SpkProblem.Problem(n, n, nnz(spm), zero(T))
@@ -19,6 +21,7 @@ function makerandomproblem(T, n)
 end
 
 function _test(T)
+    @info "testing $T"
     p = makerandomproblem(T,301)
     
     s = SparseSolver(p)
@@ -30,6 +33,7 @@ function _test(T)
     return true
 end
 
-_test(Float64)
-#_test(MultiFloats.Float64x2)
+
+_test(MultiFloats.Float64x2)
+_test(ForwardDiff.Dual{Float64,Float64,1})
 end # module

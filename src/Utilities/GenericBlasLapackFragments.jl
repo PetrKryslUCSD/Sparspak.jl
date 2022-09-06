@@ -10,13 +10,16 @@ module GenericBlasLapackFragments
 
 using LinearAlgebra
 
+strided_reshape(A,lda,m,n)= lda == m ? reshape(view(A,1:m*n),m,n) : view(reshape(view(A,1:lda*n),lda,n),1:m,1:n)
+
+
 #
 # C=alpha*transA(A)*transB(B) + beta*C
 #
 function ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
-    @views rC= reshape(C[1:m*n],m,n)
-    @views rA= transA=='n' ? reshape(A[1:k*m],m,k) :  transpose(reshape(A[1:k*m],k,m))
-    @views rB= transB=='n' ? reshape(B[1:k*n],k,n) :  transpose(reshape(B[1:k*n],n,k))
+    rA= transA=='n' ? strided_reshape(A,lda,m,k) :  transpose(strided_reshape(A,lda,k,m))
+    rB= transB=='n' ? strided_reshape(B,ldb,k,n) :  transpose(strided_reshape(B,ldb,n,k))
+    rC= strided_reshape(C,ldc,m,n)
     mul!(rC,rA,rB,alpha, beta)
     true
 end
@@ -26,20 +29,52 @@ end
 # Y=alpha*transA(A)*X + beta*Y
 #
 function ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
+    if m==0 || n==0
+        return
+    end
+    rA=strided_reshape(A,lda,m,n)
     if transA=='n'
-        @views mul!(Y[1:m],reshape(A[1:m*n],m,n),X[1:n],alpha, beta)
+        @views mul!(Y[1:m],rA,X[1:n],alpha, beta)
     else
-        @views mul!(Y[1:n],transpose(reshape(A[1:m*n],m,n)),X[1:m],alpha, beta)
+        @views mul!(Y[1:n],transpose(rA),X[1:m],alpha, beta)
     end
     true
 end
 
+function xggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
+    if m==0 || n==0
+        return
+    end
+    @show typeof(A)
+    @show isa(A,AbstractVector{eltype(A)})
+#    a=reshape(A[1:m*n],m,n)
+    for i=1:length(Y)
+        Y[i]*=beta
+    end
+    if transA=='n'
+        for j=1:n # DO 60
+            for i=1:m # DO 50
+                Y[i]+=alpha*X[j]*A[(j-1)*lda+i]
+            end
+        end
+    else
+        for j=1:n # DO 120
+            temp=zero(eltype(A))
+            for i=1:m # DO 110
+                temp+=A[(j-1)*lda+i]*X[i]
+            end
+            Y[j]+=alpha*temp
+        end
+    end
+    true
+end
 
 #
 # In-place LU factorization of A
 #
 function ggetrf!(m,n,A::AbstractVector{FT},lda,ipiv) where FT
-    @views ipiv[1:n].=lu!(reshape(A[1:m*n],m,n)).p
+    rA=strided_reshape(A,lda,m,n)
+    @views ipiv[1:n].=lu!(rA).p
     return 0
 end
 
@@ -49,12 +84,15 @@ end
 # Triangular solve
 #
 function gtrsm!(side,uplo,transA,diag, m,n,alpha,A, lda, B, ldb)
+    if m==0 || n==0
+        return
+    end
     
     k= side=='l' ? m : n
     if transA=='t'
-        @views kA=transpose(reshape(A[1:k*k],k,k))
+        kA=transpose(strided_reshape(A,lda,k,k))
     else
-        @views kA=reshape(A[1:k*k],k,k)
+        kA=strided_reshape(A,lda,k,k)
     end
     if diag=='n'
         if uplo=='u'
@@ -69,8 +107,7 @@ function gtrsm!(side,uplo,transA,diag, m,n,alpha,A, lda, B, ldb)
             tA=UnitLowerTriangular(kA)
         end
     end
-
-    @views rB=reshape(B[1:m*n],m,n)
+    rB=strided_reshape(B,ldb,m,n)
     if  side=='l'
         rB.=tA\(alpha*rB)
     elseif side == 'r'

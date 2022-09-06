@@ -87,13 +87,14 @@ function tgemm(T=Float64)
 
                         lda= transA=='n' ? m : k
                         ldb= transB=='n' ? k : n
+                        ldc= m
                         
                         vC=vec(C)
                         C64=f64(C)
                         vC64=vec(C64)
 
-                        tblas+=@elapsed dgemm!(transA,transB, m,n,k, α64 ,vA64, lda ,vB64,ldb, β64,vC64,m)
-                        tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,vA, lda ,vB,ldb, β,vC,m)
+                        tblas+=@elapsed dgemm!(transA,transB, m,n,k, α64 ,vA64, lda ,vB64,ldb, β64,vC64,ldc)
+                        tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,vA, lda ,vB,ldb, β,vC,ldc)
                         if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
                             error("error in $transA-$transB ($n, $m, $k)")
                         end
@@ -173,9 +174,9 @@ function tgetrf(T=Float64)
         vA=vec(A)
         A64=f64(A)
         vA64=vec(A64)
-        
-        tblas+=@elapsed Alu64=dgetrf!(m,n,vA64,n,ipiv64)
-        tgnrc+=@elapsed Alu=ggetrf!(m,n,vA,n,ipiv)
+        lda=m
+        tblas+=@elapsed Alu64=dgetrf!(m,n,vA64,lda,ipiv64)
+        tgnrc+=@elapsed Alu=ggetrf!(m,n,vA,lda,ipiv)
         if ! isapprox(f64(A),A64,rtol=100*max(eps(T),eps(Float64)))
             error("error: ($m,$n)")
         end
@@ -214,9 +215,11 @@ function ttrsm(T=Float64)
                             vgB=vec(gB)
                             B64=f64(B)
                             vB64=vec(B64)
-                            
-                            tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, vA64, k, vB64,m)
-                            tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, vA, k, vgB,m)
+
+                            lda=k
+                            ldb= transa=='n' ? m : n
+                            tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, vA64, lda, vB64,ldb)
+                            tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, vA, lda, vgB,ldb)
                             if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
                                 error(" error for uplo $uplo, side $side, transa $transa diag $diag $n, $m")
                             end
