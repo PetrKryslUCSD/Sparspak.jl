@@ -65,63 +65,39 @@ function tgemm(T=Float64)
     for m in rand(1:50,15)
         for n in rand(1:50,15)
             for k in rand(1:50,15)
-                
-                A=rand(T,m,k)
-                B=rand(T,k,n)
-                C0=rand(T,m,n)
-                α=rand(T)
-                β=rand(T)
-                
+                for transA in ['n','t']
+                    for transB in ['n','t']
+                        A=rand(T,m,k)
+                        B=rand(T,k,n)
+                        C=rand(T,m,n)
+                        α=-one(T)
+                        β=one(T)
+                        
+                        
+                        vA=vec(A)
+                        A64=f64(A)
+                        vA64=vec(A64)
+                        
+                        vB=vec(B)
+                        B64=f64(B)
+                        vB64=vec(B64)
+                        
+                        α64=f64(α)
+                        β64=f64(β)
 
-                vA=vec(A)
-                A64=f64(A)
-                vA64=vec(A64)
+                        lda= transA=='n' ? m : k
+                        ldb= transB=='n' ? k : n
+                        
+                        vC=vec(C)
+                        C64=f64(C)
+                        vC64=vec(C64)
 
-                vB=vec(B)
-                B64=f64(B)
-                vB64=vec(B64)
-
-                α64=f64(α)
-                β64=f64(β)
-                
-                C=copy(C0)
-                vC=vec(C)
-                C64=f64(C)
-                vC64=vec(C64)
-                tblas+=@elapsed dgemm!('n', 'n', m,n,k, α64 ,vA64, m ,vB64,k, β64,vC64,m)
-                tgnrc+=@elapsed ggemm!('n', 'n', m,n,k, α ,vA, m ,vB,k, β,vC,m)
-                if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
-                    error("error in n-n ($n, $m, $k)")
-                end
-                
-                C=copy(C0)
-                vC=vec(C)
-                C64=f64(C)
-                vC64=vec(C64)
-                tblas+=@elapsed dgemm!('n', 't', m,n,k, α64 ,vA64, m ,vB64, n, β64,vC64,m)
-                tgnrc+=@elapsed ggemm!('n', 't', m,n,k, α ,vA, m ,vB,n, β,vC,m)
-                if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
-                    error("error in n-t ($n, $m, $k)")
-                end
-                
-                C=copy(C0)
-                vC=vec(C)
-                C64=f64(C)
-                vC64=vec(C64)
-                tblas+=@elapsed dgemm!('t', 'n', m,n,k, α64 ,vA64, k ,vB64, k, β64,vC64,m)
-                tgnrc+=@elapsed ggemm!('t', 'n', m,n,k, α ,vA, k ,vB,k, β,vC,m)
-                if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
-                    error("error in t-n ($n, $m, $k)")
-                end
-                
-                C=copy(C0)
-                vC=vec(C)
-                C64=f64(C)
-                vC64=vec(C64)
-                tblas+=@elapsed dgemm!('t', 't', m,n,k, α64 ,vA64, k ,vB64, n, β64,vC64,m)
-                tgnrc+=@elapsed ggemm!('t', 't', m,n,k, α ,vA, k ,vB,n, β,vC,m)
-                if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
-                    error("error in t-t ($n, $m, $k)")
+                        tblas+=@elapsed dgemm!(transA,transB, m,n,k, α64 ,vA64, lda ,vB64,ldb, β64,vC64,m)
+                        tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,vA, lda ,vB,ldb, β,vC,m)
+                        if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
+                            error("error in $transA-$transB ($n, $m, $k)")
+                        end
+                    end
                 end
             end
         end
@@ -140,36 +116,33 @@ function tgemv(T=Float64)
     tgnrc=0.0
     for m in rand(1:50,15)
         for n in rand(1:50,15)
-            A=rand(T,m,n)
-            α=rand(T)
-            β=rand(T)
-            
-            vA=vec(A)
-            A64=f64(A)
-            vA64=vec(A64)
-
-            α64=f64(α)
-            β64=f64(β)
-
-
-            X=rand(T,n)
-            Y=rand(T,m)
-            X64=f64(X)
-            Y64=f64(Y)
-            tblas+=@elapsed dgemv!('n', m,n, α64 ,vA64, m ,X64, β64,Y64)
-            tgnrc+=@elapsed ggemv!('n', m,n, α ,vA, m ,X, β,Y)
-            if ! isapprox(f64(Y),Y64,rtol=10*max(eps(T),eps(Float64)))
-                error("error in n ($n, $m)")
-            end
-
-            X=rand(T,m)
-            Y=rand(T,n)
-            X64=f64(X)
-            Y64=f64(Y)
-            tblas+=@elapsed dgemv!('t', m,n, α64 ,vA64, m ,X64, β64,Y64)
-            tgnrc+=@elapsed ggemv!('t', m,n, α ,vA, m ,X, β,Y)
-            if ! isapprox(f64(Y),Y64,rtol=10*max(eps(T),eps(Float64)))
-                error("error in t ($n, $m)")
+            for transA in ['n','t']
+                
+                A=rand(T,m,n)
+                α=rand(T)
+                β=rand(T)
+                
+                vA=vec(A)
+                A64=f64(A)
+                vA64=vec(A64)
+                
+                α64=f64(α)
+                β64=f64(β)
+                
+                if transA=='n'
+                    X=rand(T,n)
+                    Y=rand(T,m)
+                else
+                    X=rand(T,m)
+                    Y=rand(T,n)
+                end
+                X64=f64(X)
+                Y64=f64(Y)
+                tblas+=@elapsed dgemv!(transA, m,n, α64 ,vA64, m ,X64, β64,Y64)
+                tgnrc+=@elapsed ggemv!(transA, m,n, α ,vA, m ,X, β,Y)
+                if ! isapprox(f64(Y),Y64,rtol=10*max(eps(T),eps(Float64)))
+                    error("error in $transA ($n, $m)")
+                end
             end
         end
     end
@@ -196,11 +169,11 @@ function tgetrf(T=Float64)
         
         ipiv=zeros(BlasInt,min(m,n))
         ipiv64=zeros(BlasInt,min(m,n))
-
+        
         vA=vec(A)
         A64=f64(A)
         vA64=vec(A64)
-
+        
         tblas+=@elapsed Alu64=dgetrf!(m,n,vA64,n,ipiv64)
         tgnrc+=@elapsed Alu=ggetrf!(m,n,vA,n,ipiv)
         if ! isapprox(f64(A),A64,rtol=100*max(eps(T),eps(Float64)))
@@ -225,41 +198,28 @@ function ttrsm(T=Float64)
             for side in ['r','l']
                 for transa in ['n']
                     for diag  in ['n','u']
-                        
-                        k= side=='l' ? m : n
-                        A=rand(T,k,k)
-                        for i=1:k
-                            A[i,i]=10.0 #Diagonal(10I,size(A[1,1],1))
-                        end
-                        B=rand(T,m,n)
-                        alpha=rand(T)
-                        alpha64=f64(alpha)
-                        vA=vec(A)
-                        vA64=vec(f64(A))
-                        gB=copy(B)
-                        vgB=vec(gB)
-                        B64=f64(B)
-                        vB64=vec(B64)
-                        
-                        tblas += @elapsed dtrsm!(side, 'l', transa, 'n', m,n, alpha64, vA64, k, vB64,m)
-                        tgnrc += @elapsed gtrsm!(side, 'l', transa, 'n', m,n, alpha, vA, k, vgB,m)
-                        if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
-                            error(" error for uplo l, side $side, transa $transa diag $diag $n, $m")
-                        end
-                        
-                        vA=vec(A)
-                        vA64=vec(f64(A))
-                        gB=copy(B)
-                        vB=vec(B)
-                        vgB=vec(gB)
-                        B64=f64(B)
-                        vB64=vec(B64)
-                        
-                        
-                        tblas += @elapsed dtrsm!(side, 'u', transa, diag, m,n, alpha64, vA64, k, vB64,m)
-                        tgnrc += @elapsed gtrsm!(side, 'u', transa, diag, m,n, alpha, vA, k, vgB,m)
-                        if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
-                            error(" error for uplo u, side $side, transa $transa diag $diag $n, $m")
+                        for uplo  in ['l', 'u']
+                            
+                            k= side=='l' ? m : n
+                            A=rand(T,k,k)
+                            for i=1:k
+                                A[i,i]=10.0 #Diagonal(10I,size(A[1,1],1))
+                            end
+                            B=rand(T,m,n)
+                            alpha=rand(T)
+                            alpha64=f64(alpha)
+                            vA=vec(A)
+                            vA64=vec(f64(A))
+                            gB=copy(B)
+                            vgB=vec(gB)
+                            B64=f64(B)
+                            vB64=vec(B64)
+                            
+                            tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, vA64, k, vB64,m)
+                            tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, vA, k, vgB,m)
+                            if ! isapprox(f64(gB),B64,rtol=10*max(eps(T),eps(Float64)))
+                                error(" error for uplo $uplo, side $side, transa $transa diag $diag $n, $m")
+                            end
                         end
                     end
                 end
