@@ -9,18 +9,86 @@ module GenericBlasLapackFragments
 
 
 using LinearAlgebra
+using LinearAlgebra:BlasInt
 
 #
 # Reshape matrix with leading dimension lda>=m
 #
 function strided_reshape(A,lda,m,n)
-    @inbounds vA=view(A,1:lda*n)
+    vA=view(A,1:lda*n)
     if lda == m
         reshape(vA,m,n)
     else
         view(reshape(vA,lda,n),1:m,1:n)
     end
 end
+
+struct StridedReshape{T} <: AbstractMatrix{T}
+    v::Union{Vector{T},SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}}
+    lda::Int
+    m::Int
+    n::Int
+end
+
+idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
+Base.size(A::StridedReshape)=(A.m, A.n)
+Base.getindex(A::StridedReshape,i,j)= @inbounds A.v[idx(A,i,j)]
+Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
+
+xstrided_reshape(A,lda,m,n)=StridedReshape(A,lda,m,n)
+
+#
+# LU factorization copied from LinearAlgebra.jl  - originally it is (like many other operators
+# defined for StridedMatrix which is a union and not an abstract type
+# Modifications: use ipiv passed, no need to create LU object.
+function glu!(A, ipiv, pivot::Union{LinearAlgebra.RowMaximum,LinearAlgebra.NoPivot} = RowMaximum(), check::Bool = true)
+    # Extract values
+    m, n = size(A)
+    minmn = min(m,n)
+    
+    @inbounds begin
+        for k = 1:minmn
+            # find index max
+            kp = k
+            if pivot === RowMaximum() && k < m
+                amax = abs(A[k, k])
+                for i = k+1:m
+                    absi = abs(A[i,k])
+                    if absi > amax
+                        kp = i
+                        amax = absi
+                    end
+                end
+            end
+            ipiv[k] = kp
+            if !iszero(A[kp,k])
+                if k != kp
+                    # Interchange
+                    for i = 1:n
+                        tmp = A[k,i]
+                        A[k,i] = A[kp,i]
+                        A[kp,i] = tmp
+                    end
+                end
+                # Scale first column
+                Akkinv = inv(A[k,k])
+                for i = k+1:m
+                    A[i,k] *= Akkinv
+                end
+            end
+            # Update the rest
+            for j = k+1:n
+                for i = k+1:m
+                    A[i,j] -= A[i,k]*A[k,j]
+                end
+            end
+        end
+    end
+#    check && checknonsingular(info, pivot)
+end
+
+
+
 
 #
 # C=alpha*transA(A)*transB(B) + beta*C
@@ -54,8 +122,7 @@ end
 # In-place LU factorization of A
 #
 function ggetrf!(m,n,A::AbstractVector{FT},lda,ipiv) where FT
-    rA=strided_reshape(A,lda,m,n)
-    @views ipiv[1:n].=lu!(rA).p
+    glu!(strided_reshape(A,lda,m,n),ipiv)
     return 0
 end
 

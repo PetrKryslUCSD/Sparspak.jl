@@ -196,7 +196,7 @@ function _tgetrf(T=Float64;N=25)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
-    for n in rand(1:50,N)
+    for n in rand(1:100,N)
         m=n
         lda=ldx()+m
         A=-rand(T,lda*n)
@@ -223,7 +223,7 @@ end
 
 function tgetrf(T=Float64)
     _tgetrf(T,N=1)
-    tgnrc,tblas=_tgetrf(T,N=25)
+    tgnrc,tblas=_tgetrf(T,N=50)
     @info "getrf:  tgnrc/tblas=$(tgnrc/tblas)"
     true
 end
