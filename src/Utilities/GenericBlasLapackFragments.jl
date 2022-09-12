@@ -11,18 +11,12 @@ module GenericBlasLapackFragments
 using LinearAlgebra
 using LinearAlgebra:BlasInt
 
-#
-# Reshape matrix with leading dimension lda>=m
-#
-function xstrided_reshape(A,lda,m,n)
-    vA=view(A,1:lda*n)
-    if lda == m
-        reshape(vA,m,n)
-    else
-        view(reshape(vA,lda,n),1:m,1:n)
-    end
-end
 
+#
+# Struct to allow strided reshape in the case where
+# length(v)<lda*n, but length(v) is still large enough to hold all columns
+# of the mxn submatrix
+#
 struct StridedReshape{T} <: AbstractMatrix{T}
     v::Union{Vector{T},SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}}
     lda::Int
@@ -30,18 +24,47 @@ struct StridedReshape{T} <: AbstractMatrix{T}
     n::Int
 end
 
-idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
+@inline idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
 Base.size(A::StridedReshape)=(A.m, A.n)
 Base.getindex(A::StridedReshape,i,j)= @inbounds A.v[idx(A,i,j)]
 Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
 
-strided_reshape(A,lda,m,n)=StridedReshape(A,lda,m,n)
+#
+# Reshape matrix with leading dimension lda>=m, taking into account the
+# (for standard blas entirely legal)
+# possibility that for the largest column only m elements are stored (instead of lda)
+function strided_reshape(A,lda,m,n)
+    if lda == m
+        #
+        # In this case we can assume that the A buffer is large enough to hold
+        # all elements of the reshaped matrix:
+        #
+        reshape(view(A,1:lda*n),m,n)
+    else
+        if length(A)>=lda*n
+            #
+            # Also, in this case we can assume that the A buffer is large enough to hold
+            # all elements of the reshaped matrix:
+            #
+            vA=view(A,1:lda*n)
+            # But we will only work with the mxn submatrix
+            view(reshape(vA,lda,n),1:m,1:n)
+        else
+            # In the (rare) case where there is not enough
+            # memory to hold the last column of reshape(vA,lda,n)
+            # As the occurance may be rare, we probably can live with the current performance
+            # hits.
+            StridedReshape(A,lda,m,n)
+        end
+    end
+end
 
 #
 # LU factorization copied from LinearAlgebra.jl  - originally it is (like many other operators
 # defined for StridedMatrix which is a union and not an abstract type
 # Modifications: use ipiv passed, no need to create LU object.
-function glu!(A, ipiv, pivot::Union{LinearAlgebra.RowMaximum,LinearAlgebra.NoPivot} = RowMaximum(), check::Bool = true)
+# Needed only for the StridedReshape case.
+function glu!(A::StridedReshape{T}, ipiv, pivot::Union{LinearAlgebra.RowMaximum,LinearAlgebra.NoPivot} = RowMaximum(), check::Bool = true) where T
     # Extract values
     m, n = size(A)
     minmn = min(m,n)
@@ -87,7 +110,14 @@ function glu!(A, ipiv, pivot::Union{LinearAlgebra.RowMaximum,LinearAlgebra.NoPiv
 #    check && checknonsingular(info, pivot)
 end
 
-
+#
+# In the general case we can conveniently fall back to the standard Julia implementation
+#
+function glu!(A,  ipiv)  where T
+    n=size(A,2)
+    ipiv[1:n].=lu!(A).p
+    return 0
+end
 
 
 #
@@ -111,9 +141,9 @@ function ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
     end
     rA=strided_reshape(A,lda,m,n)
     if transA=='n'
-        @views mul!(Y[1:m],rA,X[1:n],alpha, beta)
+       @views mul!(Y[1:m],rA,X[1:n],alpha, beta)
     else
-        @views mul!(Y[1:n],transpose(rA),X[1:m],alpha, beta)
+       @views mul!(Y[1:n],transpose(rA),X[1:m],alpha, beta)
     end
     true
 end
