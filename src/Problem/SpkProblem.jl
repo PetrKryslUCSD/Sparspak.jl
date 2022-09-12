@@ -49,6 +49,7 @@
 module SpkProblem
 
 using SparseArrays
+using LinearAlgebra.BLAS: BlasInt
 using ..SpkUtilities: _BIGGY, __extend
 using ..SpkGrid: Grid
 
@@ -101,7 +102,7 @@ Similarly, the user can improve efficiency by providing estimates for the number
 of rows and columns in the matrix via the optional keyword parameters `nrows`
 and `ncols`.
 """
-mutable struct Problem{IT, FT}
+mutable struct Problem{IT<:BlasInt, FT}
     info::String
     # `lenhead` is the current length of the arrays `head` and `x`.
     lenhead::IT
@@ -142,8 +143,7 @@ end
 
 Construct a problem.
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, 
-    FT}
+function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT<:BlasInt, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
@@ -174,7 +174,7 @@ Input a matrix coefficient.
 
 The value is *added* to the existing contents.
 """
-function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
+function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:BlasInt, FT}
     if (rnum < 1 || cnum < 1)
         @warn "$(@__FILE__): invalid matrix subscripts $(rnum), $(cnum): input ignored"
         return false
@@ -255,7 +255,7 @@ end
 
 Input an entry of the right-hand side vector.
 """
-function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT, FT}
+function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT<:BlasInt, FT}
     if (rnum < 1)
         @error "$(@__FILE__): Invalid rhs subscript $(rnum)."
         return false
@@ -277,7 +277,7 @@ Input sparse matrix.
 
 Build a problem from a sparse matrix.
 """
-function insparse!(p::Problem{IT,FT}, spm) where {IT,FT}
+function insparse!(p::Problem{IT,FT}, spm) where {IT<:BlasInt, FT}
     I, J, V = findnz(spm)
     return insparse!(p, I, J, V)
 end
@@ -288,7 +288,7 @@ end
 
 Build a problem from a sparse matrix in the COO format.
 """
-function insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT,FT}
+function insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT<:BlasInt, FT}
     for i in eachindex(I)
         if ! inaij!(p, I[i], J[i], V[i])
             return false 
@@ -302,7 +302,7 @@ end
 
 Output the sparse matrix.
 """
-function outsparse(p::Problem{IT,FT})  where {IT,FT}
+function outsparse(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
     if (p.nrows == 0 && p.ncols == 0) 
         return spzeros(p.nrows, p.ncols)
     end
@@ -337,7 +337,7 @@ Input:
 Output:
 - `p` - the Problem object to be filled
 """
-function makegridproblem(g::Grid{IT}) where {IT}
+function makegridproblem(g::Grid{IT}) where {IT<:BlasInt}
     M1 = -1.0; FOUR = 4.0
     n = g.h * g.k
     p = Problem(n, n)
@@ -373,7 +373,7 @@ Input:
 Output:
 - `p` - the Problem object to be filled
 """
-function makegridproblem(h::IT, k::IT) where {IT}
+function makegridproblem(h::IT, k::IT) where {IT<:BlasInt}
     g = Grid(h, k)
     return makegridproblem(g)
 end
@@ -509,7 +509,7 @@ Input:
 Updated:
 - `p` - the problem in which rhs is to be inserted.
 """
-function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT,FT}
+function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT<:BlasInt, FT}
     for i in p.nrows:-1:1
         inbi!(p, i, FT(rhs[i]))
     end
