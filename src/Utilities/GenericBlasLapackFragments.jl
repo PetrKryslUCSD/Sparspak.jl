@@ -19,9 +19,9 @@ using LinearAlgebra:BlasInt
 #
 struct StridedReshape{T} <: AbstractMatrix{T}
     v::Union{Vector{T},SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}}
-    lda::Int
-    m::Int
-    n::Int
+    lda::BlasInt
+    m::BlasInt
+    n::BlasInt
 end
 
 @inline idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
