@@ -14,7 +14,7 @@ using LinearAlgebra:BlasInt
 #
 # Reshape matrix with leading dimension lda>=m
 #
-function strided_reshape(A,lda,m,n)
+function xstrided_reshape(A,lda,m,n)
     vA=view(A,1:lda*n)
     if lda == m
         reshape(vA,m,n)
@@ -35,7 +35,7 @@ Base.size(A::StridedReshape)=(A.m, A.n)
 Base.getindex(A::StridedReshape,i,j)= @inbounds A.v[idx(A,i,j)]
 Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
 
-xstrided_reshape(A,lda,m,n)=StridedReshape(A,lda,m,n)
+strided_reshape(A,lda,m,n)=StridedReshape(A,lda,m,n)
 
 #
 # LU factorization copied from LinearAlgebra.jl  - originally it is (like many other operators
