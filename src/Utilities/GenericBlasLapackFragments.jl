@@ -60,11 +60,18 @@ function strided_reshape(A,lda,m,n)
 end
 
 #
-# LU factorization copied from LinearAlgebra.jl  - originally it is (like many other operators
-# defined for StridedMatrix which is a union and not an abstract type
-# Modifications: use ipiv passed, no need to create LU object.
-# Needed only for the StridedReshape case.
-function glu!(A::StridedReshape{T}, ipiv, pivot::Union{LinearAlgebra.RowMaximum,LinearAlgebra.NoPivot} = RowMaximum(), check::Bool = true) where T
+# LU factorization adapted from generic_lufact! (https://github.com/JuliaLang/LinearAlgebra.jl/blob/main/src/lu.jl).
+# Originally it is (like many other LA operators) defined for StridedMatrix which is a union and not an abstract type,
+# so we cannot use that code directly. See https://github.com/JuliaLang/julia/issues/2345 for some discussion about this.
+#
+# Modifications:
+# - Use ipiv passed instead of creating one
+# - No need to return LU object 
+# - Remove unused parameters - always do pivoting anyway
+#
+# Needed only for the rare (?) StridedReshape case.
+#
+function glu!(A::StridedReshape{T}, ipiv) where T
     # Extract values
     m, n = size(A)
     minmn = min(m,n)
@@ -73,7 +80,7 @@ function glu!(A::StridedReshape{T}, ipiv, pivot::Union{LinearAlgebra.RowMaximum,
         for k = 1:minmn
             # find index max
             kp = k
-            if pivot === RowMaximum() && k < m
+            if k < m #   pivot === RowMaximum() &&
                 amax = abs(A[k, k])
                 for i = k+1:m
                     absi = abs(A[i,k])
@@ -107,7 +114,6 @@ function glu!(A::StridedReshape{T}, ipiv, pivot::Union{LinearAlgebra.RowMaximum,
             end
         end
     end
-#    check && checknonsingular(info, pivot)
 end
 
 #
