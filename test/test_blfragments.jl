@@ -113,7 +113,7 @@ function _tgemm(T=Float64;N=15)
                         
                         tblas+=@elapsed dgemm!(transA,transB, m,n,k, α64 ,A64, lda ,B64,ldb, β64,C64,ldc)
                         tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,A, lda ,B,ldb, β,C,ldc)
-                        if ! isapprox(f64(C),C64,rtol=10*max(eps(T),eps(Float64)))
+                        if ! isapprox(f64(C),C64,rtol=100*max(eps(T),eps(Float64)))
                             error("error in $transA-$transB ($n, $m, $k)")
                         end
                     end
@@ -170,7 +170,7 @@ function _tgemv(T=Float64;N=15)
                 Y64=f64(Y)
                 tblas+=@elapsed dgemv!(transA, m,n, α64 ,A64, m ,X64, β64,Y64)
                 tgnrc+=@elapsed ggemv!(transA, m,n, α ,A, m ,X, β,Y)
-                if ! isapprox(f64(Y),Y64,rtol=10*max(eps(T),eps(Float64)))
+                if ! isapprox(f64(Y),Y64,rtol=100*max(eps(T),eps(Float64)))
                     error("error in $transA ($n, $m)")
                 end
             end
@@ -264,7 +264,7 @@ function _ttrsm(T=Float64;N=15)
 
                             tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, A64, lda, B64,ldb)
                             tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, A, lda, B,ldb)
-                            if ! isapprox(f64(B),B64,rtol=10*max(eps(T),eps(Float64)))
+                            if ! isapprox(f64(B),B64,rtol=100*max(eps(T),eps(Float64)))
                                 error(" error for side $side, uplo $uplo, transa $transa diag $diag $n, $m")
                             end
                         end
