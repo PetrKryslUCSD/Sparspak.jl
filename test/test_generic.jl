@@ -49,32 +49,34 @@ end # module
 #
 module generic002
 using  Test
-using Tensors
 using LinearAlgebra
 using Sparspak
 using SparseArrays
 using ForwardDiff
 
+
 function tridiagonal(p,n)
     T=typeof(p)
-    b=T[p^i for i=1:n]
-    a=fill(T(-0.1),n-1)
-    c=fill(T(-0.1),n-1)
+    b=T[(p^i) for i=1:n]
+    a=T[(-0.1) for i=1:n-1]
+    c=T[(-0.1) for i=1:n-1]
     Tridiagonal(a,b,c)
 end
 
 # Dense version for comprarison
-function f(p)
+function f(x)
+    p=x[1]
     n=20
     M=Matrix(tridiagonal(p,n))
     f=ones(n)
     sum(M\f)
 end
 
-df(x)=Tensors.gradient(f,x)
+df(x)=ForwardDiff.gradient(f,[x])[1]
 
 # Sparse version
-function g(p)
+function g(x)
+    p=x[1]
     n=20
     M=sparse(tridiagonal(p,n))
     f=ones(n)
@@ -86,13 +88,18 @@ function g(p)
     sum(pr.x)
 end
 
-dg(x)=Tensors.gradient(g,x)
+dg(x)=ForwardDiff.gradient(g,[x])[1]
+
+
+
 
 function _test()
     X=1:0.1:10
     @test all( x->(df(x)≈dg(x)), 1:0.1:10)
     true
 end
+
+
 
 _test()
 end # module
