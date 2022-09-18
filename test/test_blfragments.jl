@@ -48,6 +48,7 @@ f64(V::AbstractVector{Complex{T}}) where T =[Complex{Float64}(ForwardDiff.value(
 f64(V::AbstractMatrix{Complex{T}}) where T =[Complex{Float64}(ForwardDiff.value(V[i,j])) for i=1:size(V,1), j=1:size(V,2)]
 f64(x::Complex{T}) where T = Complex{Float64}(x)
 
+r(x)=round(x,digits=3)
 
 #
 # Verify f64 conversion
@@ -64,15 +65,34 @@ function tf64()
     true
 end
 
+function buflayout(m,n,mode)
+    if mode==:contiguous
+        lda=m
+        la=m*n
+    elseif mode==:strided
+        lda=m+rand(1:5)
+        la=lda*n
+    elseif mode==:strided_chopped
+        lda=m+rand(1:5)
+        la=lda*n - rand(1:lda-m)
+    elseif mode==:mixed
+        lda=m+rand(0:5)
+        la=lda*n - rand(0:lda-m)
+    else
+        error("Wrong buflayout mode: $(mode)")
+    end
+    la,lda
+end
+
 
 #
 # Test ggemm! for a couple of random data,
-# compare timing between generic and blas  implementations
+# compare timing between generic and blas  implementations.
+# 
 #
-function _tgemm(T=Float64;N=15)
+function _tgemm(T=Float64;N=15,mode=:random)
     tblas=0.0
     tgnrc=0.0
-    ldx()=rand(0:5)
     for m in rand(1:50,N)
         for n in rand(1:50,N)
             for k in rand(1:50,N)
@@ -80,23 +100,22 @@ function _tgemm(T=Float64;N=15)
                     for transB in ['n','t']
 
                         if transA=='n'
-                            lda= ldx()+m
-                            A=rand(T,lda*k)
+                            la,lda=buflayout(m,k,mode)
                         else
-                            lda= ldx()+k
-                            A=rand(T,lda*m)
+                            la,lda=buflayout(k,m,mode)
                         end
+                        A=rand(T,la)
                         
                         if transB=='n'
-                            ldb= ldx()+k
-                            B=rand(T,ldb*n)
+                            lb,ldb=buflayout(k,n,mode)
                         else
-                            ldb= ldx()+n
-                            B=rand(T,ldb*k)
+                            lb,ldb=buflayout(n,k,mode)
                         end
+                        B=rand(T,lb)
 
-                        ldc=ldx()+m
-                        C=rand(T,ldc*n)
+                        lc,ldc=buflayout(m,n,mode)
+                        C=rand(T,lc)
+
 
                         α=-one(T)
                         β=one(T)
@@ -124,10 +143,13 @@ function _tgemm(T=Float64;N=15)
     tgnrc,tblas
 end
 
+const N_compile=10
 function tgemm(T=Float64)
-    _tgemm(T,N=1)
-    tgnrc,tblas=_tgemm(T,N=15)
-    @info "gemm:  tgnrc/tblas=$(tgnrc/tblas)"
+    _tgemm(T,N=N_compile,mode=:mixed)
+    ctgnrc,ctblas=_tgemm(T,N=15,mode=:contiguous)
+    stgnrc,stblas=_tgemm(T,N=15,mode=:strided)
+    sctgnrc,sctblas=_tgemm(T,N=15,mode=:strided_chopped)
+    @info "gemm:  tgnrc/tblas: contig: $(ctgnrc/ctblas |>r) strided: $(stgnrc/stblas |>r) StridedReshape: $(sctgnrc/sctblas|>r)"
     true
 end
 
@@ -135,21 +157,19 @@ end
 # Test ggemv! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function _tgemv(T=Float64;N=15)
+function _tgemv(T=Float64;N=15,mode=:mixed)
     tblas=0.0
     tgnrc=0.0
-    ldx()=rand(0:5)
     for m in rand(1:50,N)
         for n in rand(1:50,N)
             for transA in ['n','t']
                 
                 if transA=='n'
-                    lda= ldx()+m
-                    A=rand(T,lda*n)
+                    la,lda=buflayout(m,n,mode)
                 else
-                    lda= ldx()+n
-                    A=rand(T,lda*m)
+                    la,lda=buflayout(n,m,mode)
                 end
+                A=rand(T,la)
    
                 α=rand(T)
                 β=rand(T)
@@ -180,9 +200,11 @@ function _tgemv(T=Float64;N=15)
 end
 
 function tgemv(T=Float64)
-    _tgemv(T,N=1)
-    tgnrc,tblas=_tgemv(T,N=15)
-    @info "gemv:  tgnrc/tblas=$(tgnrc/tblas)"
+    _tgemv(T,N=N_compile,mode=:mixed)
+    ctgnrc,ctblas=_tgemv(T,N=30,mode=:contiguous)
+    stgnrc,stblas=_tgemv(T,N=30,mode=:strided)
+    sctgnrc,sctblas=_tgemv(T,N=30,mode=:strided_chopped)
+    @info "gemv:  tgnrc/tblas: contig: $(ctgnrc/ctblas |>r) strided: $(stgnrc/stblas |>r) StridedReshape: $(sctgnrc/sctblas|>r)"
     true
 end
 
@@ -192,15 +214,13 @@ end
 # Test ggetrf! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function _tgetrf(T=Float64;N=25)
+function _tgetrf(T=Float64;N=25, mode=:mixed)
     tblas=0.0
     tgnrc=0.0
-    ldx()=rand(0:5)
     for n in rand(1:100,N)
         m=n
-        lda=ldx()+m
-        A=-rand(T,lda*n)
-
+        la,lda=buflayout(m,n,mode)
+        A=-rand(T,la)
         rA=strided_reshape(A,lda,m,m)
         for i=1:n
             rA[i,i]=2.0*max(m,n)  
@@ -220,11 +240,12 @@ function _tgetrf(T=Float64;N=25)
     tgnrc,tblas
 end
 
-
 function tgetrf(T=Float64)
-    _tgetrf(T,N=1)
-    tgnrc,tblas=_tgetrf(T,N=50)
-    @info "getrf:  tgnrc/tblas=$(tgnrc/tblas)"
+    _tgetrf(T,N=N_compile,mode=:mixed)
+    ctgnrc,ctblas=_tgetrf(T,N=15,mode=:contiguous)
+    stgnrc,stblas=_tgetrf(T,N=15,mode=:strided)
+    sctgnrc,sctblas=_tgetrf(T,N=15,mode=:strided_chopped)
+    @info "getrf: tgnrc/tblas: contig: $(ctgnrc/ctblas |>r) strided: $(stgnrc/stblas |>r) StridedReshape: $(sctgnrc/sctblas|>r)"
     true
 end
 
@@ -232,7 +253,7 @@ end
 # Test gtrsm! for a couple of random data,
 # compare timing between generic and blas  implementations
 #
-function _ttrsm(T=Float64;N=15)
+function _ttrsm(T=Float64;N=15,mode=:mixed)
     tblas=0.0
     tgnrc=0.0
     ldx()=rand(0:5)
@@ -244,18 +265,22 @@ function _ttrsm(T=Float64;N=15)
                         for diag  in ['u','n']
 
                             k= side=='l' ? m : n
+#                            lda=ldx()+k
+#                            A=-rand(T,lda*k)
 
-                            lda=ldx()+k
-                            A=-rand(T,lda*k)
+                            la,lda=buflayout(k,k,mode)
+                            A=-rand(T,la)
                             rA=strided_reshape(A,lda,k,k)
                             for i=1:k
                                 rA[i,i]=10.0 #Diagonal(10I,size(A[1,1],1))
                             end
 
+#                            ldb= ldx()+m
+#                            B=rand(T,ldb*n)
+
                         
-                            
-                            ldb= ldx()+m
-                            B=rand(T,ldb*n)
+                            lb,ldb=buflayout(m,n,mode)
+                            B=rand(T,lb)
                             
                             alpha=rand(T)
                             alpha64=f64(alpha)
@@ -277,9 +302,11 @@ function _ttrsm(T=Float64;N=15)
 end
 
 function ttrsm(T=Float64)
-    _ttrsm(T,N=1)
-    tgnrc,tblas=_ttrsm(T,N=15)
-    @info "trsm:  tgnrc/tblas=$(tgnrc/tblas)"
+    _ttrsm(T,N=N_compile,mode=:mixed)
+    ctgnrc,ctblas=_ttrsm(T,N=15,mode=:contiguous)
+    stgnrc,stblas=_ttrsm(T,N=15,mode=:strided)
+    sctgnrc,sctblas=_ttrsm(T,N=15,mode=:strided_chopped)
+    @info "trsm:  tgnrc/tblas: contig: $(ctgnrc/ctblas |>r) strided: $(stgnrc/stblas |>r) StridedReshape: $(sctgnrc/sctblas|>r)"
     true
 end
 
@@ -305,9 +332,9 @@ end
 
 
 function tlaswp(T=Float64)
-    _tlaswp(T,N=1)
+    _tlaswp(T,N=N_compile)
     tgnrc,tblas=_tlaswp(T,N=15)
-    @info "laswp:  tgnrc/tblas=$(tgnrc/tblas)"
+    @info "laswp:  tgnrc/tblas=$(tgnrc/tblas |>r)"
     true
 end
 
@@ -330,7 +357,7 @@ end
 #
 function test_all()
     @testset "setup" begin
-        tf64()
+        @test tf64()
     end
     test_all_T(Float64)
     test_all_T(Float32)
@@ -343,5 +370,6 @@ end
 _test()=test_all()
 
 _test()
+
 end
 
