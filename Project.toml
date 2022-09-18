@@ -1,7 +1,7 @@
 name = "Sparspak"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
