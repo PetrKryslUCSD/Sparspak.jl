@@ -364,6 +364,8 @@ function test_all()
     test_all_T(ComplexF64)
     test_all_T(ComplexF32)
     test_all_T(ForwardDiff.Dual{Float64,Float64,1})
+    test_all_T(ForwardDiff.Dual{Float64,Float64,2})
+    test_all_T(MultiFloats.Float64x1)
     test_all_T(MultiFloats.Float64x2)
 end
 
