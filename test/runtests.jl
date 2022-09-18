@@ -24,6 +24,15 @@ end
     include("test_grid.jl")
 end
 
+@time @testset "Generic LAPACK/BLAS" begin
+    include("test_blfragments.jl")
+end
+
 @time @testset "Sparse method" begin
     include("test_sparse_method.jl")
 end
+
+@time @testset "Generic floating type" begin
+    include("test_generic.jl")
+end
+

@@ -161,8 +161,8 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where
     values = fill(_BIGGY(), lenlink)
     rscales = FT[]
     cscales = FT[]
-
-    return Problem(info, lenhead, lenlink, lenrhs, lastused, head,
+    
+    return Problem{IT,FT}(info, lenhead, lenlink, lenrhs, lastused, head,
         link, rowsubs, nrows, ncols, nnz, dnz, nedges, dedges, values,
         rscales, cscales, x, rhs)
 end
