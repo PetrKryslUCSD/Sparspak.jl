@@ -1,6 +1,6 @@
 module SpkLUFactor
 
-using ..SpkSpdMMops: mmpyi, assmb, luswap, ldindx, igathr, dgemm!, dtrsm!, dgetrf!, dlaswp!, dgemv!
+using ..SpkSpdMMops: mmpyi, assmb, luswap, ldindx, igathr, _gemm!, _trsm!, _getrf!, _laswp!, _gemv!
 
 
 #      this subroutine computes an LU factorization of a sparse
@@ -149,9 +149,9 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
 #           nups  ...  number of rows / columns updated.
             if  (klen == jlen)
 #               Dense cmod(jsup, ksup). jsup and ksup have identical structure.
-                dgemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, jlpnt:length(lnz)), jlen)
+                _gemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, jlpnt:length(lnz)), jlen)
                 if  (jlen > nj)
-                    dgemm!('n', 't', jlen - nj, nj, nk, -ONE, view(unz, (kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, jupnt:length(unz)), jlen - nj)
+                    _gemm!('n', 't', jlen - nj, nj, nk, -ONE, view(unz, (kupnt + nj):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, jupnt:length(unz)), jlen - nj)
                 end
                 nups = nj
                 if  (klen > nj)
@@ -187,10 +187,10 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
 #                       Dense cmod(jsup, ksup). ilpnt  ...  pointer to first
 #                       nonzero in column kfirst.
                         ilpnt = xlnz[kfirst] + (kfirst - fj)
-                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, ilpnt:length(lnz)), jlen)
+                        _gemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, ONE, view(lnz, ilpnt:length(lnz)), jlen)
                         iupnt = xunz[kfirst]
                         if  (klen > nups)
-                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, iupnt:length(unz)), jlen - nj)
+                            _gemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, ONE, view(unz, iupnt:length(unz)), jlen - nj)
                         end
                     else
 #                       General sparse cmod(jsup, ksup). compute cmod
@@ -201,12 +201,12 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
                         end
 #                       Gather indices of ksup relative to jsup.
                         igathr(klen, view(lindx, kxpnt:length(lindx)), map, relind)
-                        dgemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), vtemp, klen)
+                        _gemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), vtemp, klen)
 #                       Incorporate the cmod(jsup, ksup) block update into the
 #                       appropriate columns of L.
                         assmb(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), view(xlnz, fj:length(xlnz)), lnz, jlen)
                         if  (klen > nups)
-                            dgemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), vtemp, klen - nups)
+                            _gemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), vtemp, klen - nups)
 #                           incorporate the cmod(jsup, ksup) block update into
 #                           the appropriate rows of u.
                             assmb(klen - nups, nups, temp, view(relind, 1:length(relind)), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
@@ -227,17 +227,17 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
 #           Next updating supernode (ksup).
         end
 #       Apply partial lu to the diagonal block.
-        iflag = dgetrf!(nj, nj, view(lnz, jlpnt:length(lnz)), jlen, view(ipvt, fj:length(ipvt)))
+        iflag = _getrf!(nj, nj, view(lnz, jlpnt:length(lnz)), jlen, view(ipvt, fj:length(ipvt)))
         if  (iflag != 0)
             iflag = - 1
         end
 #       Update columns.
-        dtrsm!('r', 'u', 'n', 'n', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
+        _trsm!('r', 'u', 'n', 'n', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
 #       Apply permutation to rows.
         if  (jlen > nj)
             luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
 #           Update rows.
-            dtrsm!('r', 'l', 't', 'u', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
+            _trsm!('r', 'l', 't', 'u', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
         end
 #       Insert jsup into linked list of first supernode it will update.
         if  (jlen > nj)
@@ -305,11 +305,11 @@ function _lulsolve!(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::V
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #       pivot rows of RHS to match pivoting of L and U.
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-        dlaswp!(view(rhs, fj:length(rhs)), nj, 1, nj, view(ipiv, fj:length(ipiv)))
+        _laswp!(view(rhs, fj:length(rhs)), nj, 1, nj, view(ipiv, fj:length(ipiv)))
 
-        dtrsm!('l', 'l', 'n', 'u', nj, 1, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(rhs, fj:length(rhs)), nj)
+        _trsm!('l', 'l', 'n', 'u', nj, 1, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(rhs, fj:length(rhs)), nj)
 
-        dgemv!('n', jlen - nj, nj, -ONE, view(lnz, (jlpnt + nj):length(lnz)), jlen, view(rhs, fj:length(rhs)), ZERO, view(temp, 1:length(temp)))
+        _gemv!('n', jlen - nj, nj, -ONE, view(lnz, (jlpnt + nj):length(lnz)), jlen, view(rhs, fj:length(rhs)), ZERO, view(temp, 1:length(temp)))
 
         jj = jxpnt + nj - 1
         for  j in 1:(jlen - nj)
@@ -367,10 +367,10 @@ function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, l
             temp[j] = rhs[isub]
         end  
         if (jlen > nj)
-            dgemv!('t', jlen - nj, nj, -ONE, view(unz, jupnt:length(unz)), jlen - nj, view(temp, 1:length(temp)), ONE, view(rhs, fj:length(rhs)))
+            _gemv!('t', jlen - nj, nj, -ONE, view(unz, jupnt:length(unz)), jlen - nj, view(temp, 1:length(temp)), ONE, view(rhs, fj:length(rhs)))
         end
 
-        dtrsm!('l', 'u', 'n', 'n', nj, 1, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(rhs, fj:length(rhs)), nj)
+        _trsm!('l', 'u', 'n', 'n', nj, 1, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(rhs, fj:length(rhs)), nj)
 
     end
     return true

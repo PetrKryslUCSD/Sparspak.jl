@@ -16,6 +16,7 @@ The Julia rewrite is released  under the MIT license with an express permission 
 
 ## News
 
+- 09/18/2022: Jürgen Fuhrmann implemented dispatch to allow for arbitrary-precision floating point numbers and ForwardDiff.Dual to be routed around BLAS routines. This then should allow Automatic Differentiation (AD) of a sparse-matrix solve.
 - 09/01/2022: Configuration now allows for both Julia 1.6 (LTS) and the subsequent Julia versions.
 - 06/03/2022: The sparse LU solver has been now rewritten and tested.
 

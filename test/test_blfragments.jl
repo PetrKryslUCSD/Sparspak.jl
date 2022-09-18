@@ -9,7 +9,7 @@ using Random
 using LinearAlgebra.BLAS: BlasInt
 
 # These will be called for Float64, calling back to BLAS
-using Sparspak.SpkSpdMMops:  dgemm!,dgemv!,dgetrf!,dtrsm!,dlaswp!
+using Sparspak.SpkSpdMMops:  _gemm!,_gemv!,_getrf!,_trsm!,_laswp!
 
 # These are the Julia based replacements which are explicitely called.
 using Sparspak.GenericBlasLapackFragments:  ggemm!,ggemv!,ggetrf!,gtrsm!,glaswp!, strided_reshape
@@ -130,7 +130,7 @@ function _tgemm(T=Float64;N=15,mode=:random)
                         
                         
                         
-                        tblas+=@elapsed dgemm!(transA,transB, m,n,k, α64 ,A64, lda ,B64,ldb, β64,C64,ldc)
+                        tblas+=@elapsed _gemm!(transA,transB, m,n,k, α64 ,A64, lda ,B64,ldb, β64,C64,ldc)
                         tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,A, lda ,B,ldb, β,C,ldc)
                         if ! isapprox(f64(C),C64,rtol=100*max(eps(T),eps(Float64)))
                             error("error in $transA-$transB ($n, $m, $k)")
@@ -188,7 +188,7 @@ function _tgemv(T=Float64;N=15,mode=:mixed)
                 end
                 X64=f64(X)
                 Y64=f64(Y)
-                tblas+=@elapsed dgemv!(transA, m,n, α64 ,A64, m ,X64, β64,Y64)
+                tblas+=@elapsed _gemv!(transA, m,n, α64 ,A64, m ,X64, β64,Y64)
                 tgnrc+=@elapsed ggemv!(transA, m,n, α ,A, m ,X, β,Y)
                 if ! isapprox(f64(Y),Y64,rtol=100*max(eps(T),eps(Float64)))
                     error("error in $transA ($n, $m)")
@@ -231,7 +231,7 @@ function _tgetrf(T=Float64;N=25, mode=:mixed)
         
         A64=f64(A)
 
-        tblas+=@elapsed Alu64=dgetrf!(m,n,A64,lda,ipiv64)
+        tblas+=@elapsed Alu64=_getrf!(m,n,A64,lda,ipiv64)
         tgnrc+=@elapsed Alu=ggetrf!(m,n,A,lda,ipiv)
         if ! isapprox(f64(A),A64,rtol=100*max(eps(T),eps(Float64)))
             error("error: ($m,$n)")
@@ -287,7 +287,7 @@ function _ttrsm(T=Float64;N=15,mode=:mixed)
                             B64=f64(B)
                             A64=f64(A)
 
-                            tblas += @elapsed dtrsm!(side, uplo, transa, diag, m,n, alpha64, A64, lda, B64,ldb)
+                            tblas += @elapsed _trsm!(side, uplo, transa, diag, m,n, alpha64, A64, lda, B64,ldb)
                             tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, A, lda, B,ldb)
                             if ! isapprox(f64(B),B64,rtol=100*max(eps(T),eps(Float64)))
                                 error(" error for side $side, uplo $uplo, transa $transa diag $diag $n, $m")
@@ -321,7 +321,7 @@ function _tlaswp(T=Float64;N=15)
         ipiv=shuffle(1:n)
         A=rand(T,n)
         A64=f64(A)
-        tblas += @elapsed dlaswp!(A64,n,1,n,ipiv)
+        tblas += @elapsed _laswp!(A64,n,1,n,ipiv)
         tgnrc += @elapsed glaswp!(A,n,1,n,ipiv)
         if ! (f64(A)≈ A64)
             error("laswp failed for $n")

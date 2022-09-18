@@ -180,11 +180,11 @@ end
 #
 # Generic BLAS + LAPACK methods
 #
-# Extend  the dgemm! etc. functions  defined below in Sparspak.SpkSpdMMops
+# Extend  the _gemm! etc. functions  defined below in Sparspak.SpkSpdMMops
 # by generic ones. The methods  are wrappers around ggemm! etc functions
 # which call  corresponding implementations  from Julia  linear algebra.
 #
-function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+function _gemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
                 alpha::FT,
                 A::AbstractVector{FT}, lda::IT,
                 B::AbstractVector{FT}, ldb::IT,
@@ -193,7 +193,7 @@ function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
 end
 
-function dgemv!(transA::AbstractChar, m::IT, n::IT,
+function _gemv!(transA::AbstractChar, m::IT, n::IT,
                 alpha::FT,
                 A::AbstractVector{FT}, lda::IT,
                 X::AbstractVector{FT},
@@ -202,17 +202,17 @@ function dgemv!(transA::AbstractChar, m::IT, n::IT,
     ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
 end
 
-function dgetrf!(m::IT, n::IT, A::AbstractVector{FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+function _getrf!(m::IT, n::IT, A::AbstractVector{FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT,FT}
     ggetrf!(m,n,A,lda,ipiv)
 end
 
-function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT,
+function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT,
     A::AbstractVector{FT}, lda::IT,
     B::AbstractVector{FT}, ldb::IT) where {IT,FT}
     gtrsm!(side,uplo,transa,diag, m,n,alpha,A, lda, B, ldb)
 end
 
-function dlaswp!(a::AbstractVector{FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+function _laswp!(a::AbstractVector{FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT,FT}
     glaswp!(a,lda,k1,k2,ipiv)
 end
 
@@ -226,7 +226,7 @@ for (gemm, FT) in
          (:zgemm_, :ComplexF64),
          (:cgemm_, :ComplexF32))
 @eval begin
-function dgemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+function _gemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
     alpha::$FT,
     A::AbstractVector{$FT}, lda::IT,
     B::AbstractVector{$FT}, ldb::IT,
@@ -257,7 +257,7 @@ for (getrf, FT) in
          (:zgetrf_, :ComplexF64),
          (:cgetrf_, :ComplexF32))
 @eval begin
-function dgetrf!(m::IT, n::IT, A::AbstractVector{$FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT}
+function _getrf!(m::IT, n::IT, A::AbstractVector{$FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT}
     info = Ref{BlasInt}()
     ccall((@blasfunc($getrf), libblas), Cvoid,
         (Ref{BlasInt}, Ref{BlasInt}, Ptr{$FT},
@@ -283,7 +283,7 @@ for (trsm, FT) in
          (:ztrsm_, :ComplexF64),
          (:ctrsm_, :ComplexF32))
 @eval begin
-    function dtrsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT,
+    function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT,
                     A::AbstractVector{$FT}, lda::IT,
                     B::AbstractVector{$FT}, ldb::IT) where {IT}
     ccall((@blasfunc($trsm), libblas), Cvoid,
@@ -313,7 +313,7 @@ for (laswp, FT) in
          (:zlaswp_, :ComplexF64),
          (:claswp_, :ComplexF32))
 @eval begin
-function dlaswp!(a::AbstractVector{$FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT}
+function _laswp!(a::AbstractVector{$FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT}
     # dlaswp(1, rhs(fj), nj, 1, nj, ipiv(fj), 1)
     ccall((@blasfunc($laswp), libblas), Cvoid,
         (Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
@@ -336,7 +336,7 @@ for (gemv, FT) in
          (:zgemv_, :ComplexF64),
          (:cgemv_, :ComplexF32))
 @eval begin
-    function dgemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
+    function _gemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
     A::AbstractVector{$FT}, lda::IT,
     X::AbstractVector{$FT},
     beta::$FT, Y::AbstractVector{$FT}) where {IT}
