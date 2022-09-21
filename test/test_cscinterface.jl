@@ -1,6 +1,6 @@
 using Test
 
-module jl_mgrap001
+module csc_mgrap001
 using Test
 using LinearAlgebra
 using SparseArrays
@@ -22,7 +22,7 @@ end
 _test()
 end # module
 
-module jl_mgrap002
+module csc_mgrap002
 using Test
 using LinearAlgebra
 using SparseArrays
@@ -43,7 +43,7 @@ end
 _test()
 end # module
 
-module jl_mgrap003
+module csc_mgrap003
 using Test
 using LinearAlgebra
 using SparseArrays
@@ -65,7 +65,7 @@ _test()
 end # module
 
 
-module jl_mgrap004
+module csc_mgrap004
 using Test
 using LinearAlgebra
 using SparseArrays
@@ -89,11 +89,11 @@ end
 _test()
 end # module
 
-module jl_msolver001
+module csc_msolver001
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
 
 
 

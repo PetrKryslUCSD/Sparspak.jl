@@ -27,8 +27,6 @@ module SpkGraph
 
 using ..SpkUtilities: __extend
 using ..SpkProblem: Problem
-using SparseArrays
-
 
 """
     Graph{IT}
@@ -112,43 +110,6 @@ function Graph(p::Problem{IT}, diagonal=false) where {IT}
     
     return Graph(nv, nedges, nrows, ncols, xadj, adj)
 end
-
-function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
-    nv = size(m,1)
-    nrows = size(m,2)
-    ncols = size(m,1)
-    colptr = SparseArrays.getcolptr(m)
-    rowval = SparseArrays.getrowval(m)
-    
-    if (diagonal)
-        nedges = nnz(m)
-    else
-        nedges = nnz(m) - min(nrows,ncols)
-    end
-
-    #jf if diagonal == true, we possibly can just use colptr & rowval
-    #jf and skip the loop
-   
-    xadj = fill(zero(IT), nv + 1)
-    adj = fill(zero(IT), nedges)
-
-    k = 1
-    for i in 1:ncols
-        xadj[i] = k
-        for iptr in colptr[i]:colptr[i+1]-1
-            j = rowval[iptr]
-            if (i != j || diagonal)
-                adj[k] = j
-                k = k + 1
-            end
-        end
-    end
-    
-    xadj[ncols+1] = k
-    
-    return Graph(nv, nedges, nrows, ncols, xadj, adj)
-end
-
 
 """
     makestructuresymmetric(g::Graph{IT}) where {IT}

@@ -36,6 +36,6 @@ end
     include("test_generic.jl")
 end
 
-@time @testset "Julian API" begin
-    include("test_jlapi.jl")
+@time @testset "SparseMatrixCSC Interface" begin
+    include("test_cscinterface.jl")
 end

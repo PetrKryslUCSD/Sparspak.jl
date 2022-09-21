@@ -55,24 +55,6 @@ function SparseSolver(p::Problem)
     return SparseSolver(p, slvr, n, ma, na, mc, nc, _inmatrixdone, _orderdone, _symbolicdone, _factordone, _trisolvedone, _refinedone, _condestdone)
 end
 
-function SparseSolver(m::SparseMatrixCSC)
-    ma = size(m,2)
-    na = size(m,1)
-    mc = 0
-    nc = 0
-    n = ma
-    slvr = _SparseBase(m)
-    _orderdone = false
-    _symbolicdone = false
-    _inmatrixdone = false
-    _factordone = false
-    _trisolvedone = false
-    _refinedone = false
-    _condestdone = false
-    return SparseSolver(m, slvr, n, ma, na, mc, nc, _inmatrixdone, _orderdone, _symbolicdone, _factordone, _trisolvedone, _refinedone, _condestdone)
-end
-
-
 """
     solve!(s::SparseSolver{IT}) where {IT}
 
@@ -97,15 +79,6 @@ function solve!(s::SparseSolver{IT}) where {IT}
     return true
 end
 
-function solve!(s::SparseSolver{IT}, rhs) where {IT}
-    findorder!(s) || ErrorException("Finding Order.")
-    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
-    inmatrix!(s) || ErrorException("Matrix input.")
-    factor!(s) || ErrorException("Numerical Factorization.")
-    temp=copy(rhs)
-    triangularsolve!(s,temp) || ErrorException("Triangular Solve.")
-    return temp
-end
 
 
 """

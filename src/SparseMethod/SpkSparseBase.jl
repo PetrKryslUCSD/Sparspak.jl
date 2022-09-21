@@ -95,7 +95,6 @@ using ..SpkLUFactor: _lufactor!, _lulsolve!, _luusolve!
 using ..SpkProblem: Problem
 using ..SpkUtilities: __extend
 using ..SpkMmd: mmd!
-using SparseArrays
 
 mutable struct _SparseBase{IT, FT}
     order::Ordering
@@ -170,50 +169,6 @@ function _SparseBase(p::Problem{IT,FT}) where {IT,FT}
         colcnt, snode, xsuper, xlindx, lindx, xlnz, xunz, ipiv,
         lnz, unz)
 end
-
-
-function _SparseBase(m::SparseMatrixCSC{FT,IT}) where {IT,FT}
-    maxblocksize = 30   # This can be set by the user
-    
-    tempsizeneed = zero(IT)
-    n = size(m,2)
-    nnz = SparseArrays.nnz(m)
-    nnzl = zero(IT)
-    nsub = zero(IT)
-
-    nsuper = zero(IT)
-    if (n > zero(IT))
-        nsuper = 1
-    end
-
-    factorops = zero(FT)
-    solveops = zero(FT)
-    realstore = zero(FT)
-    integerstore = zero(FT)
-    errflag = 0
-
-    order = Ordering(n)   # ordering object for the solver
-    g = Graph(m)
-    t = ETree(n)
-
-    colcnt = IT[]
-    snode = IT[]
-    xsuper = IT[]
-    xlindx = IT[]
-    lindx = IT[]
-    xlnz = IT[]
-    xunz = IT[]
-    ipiv = IT[]
-    lnz = FT[]
-    unz = FT[]
-
-    return _SparseBase(order, t, g, errflag, n, nnz, nnzl, nsub, nsuper, maxblocksize,
-        tempsizeneed, factorops, solveops, realstore, integerstore,
-        colcnt, snode, xsuper, xlindx, lindx, xlnz, xunz, ipiv,
-        lnz, unz)
-end
-
-
 
 function _findorder!(s::_SparseBase{IT}, orderfunction::F) where {IT, F}
     if (s.n == 0)
@@ -418,79 +373,6 @@ function _inmatrix!(s::_SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
     end
     return doit(p.ncols, p.link, p.head, s.order.rinvp, s.order.cinvp, p.rowsubs, s.snode, s.xsuper, s.xlindx, s.lindx, p.values, s.xlnz, s.lnz, s.xunz, s.unz)
 end
-
-
-
-function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT, FT}
-    if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No matrix."
-        return false
-    end
-
-    s.lnz .= zero(FT)
-    s.unz .= zero(FT)
-    s.ipiv .= zero(IT)
-
-    function doit(ncols, colptr, rowval, cinvp, rinvp, snode, xsuper, xlindx, lindx, nzval, xlnz, lnz, xunz, unz)
-        for i in 1:ncols
-            for iptr in colptr[i]:colptr[i+1]-1
-                inew = rinvp[rowval[iptr]];
-                jnew = cinvp[i]
-                value = nzval[iptr]
-                
-                if (inew >= xsuper[snode[jnew]])
-#               Lies in L.  get pointers and lengths needed to search
-#               column jnew of L for location l(inew, jnew).
-                    jsup = snode[jnew];
-                    fstcol = xsuper[jsup]
-                    fstsub = xlindx[jsup]
-                    lstsub = xlindx[jsup + 1] - 1
-                    nnzloc = 0;
-                    for nxtsub in fstsub:lstsub
-                        irow = lindx[nxtsub]
-                        if  (irow > inew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
-                            return false
-                        end
-                        if  (irow == inew)
-#                       find a proper offset into lnz and increment by value
-                            _p = xlnz[jnew] + nnzloc
-                            lnz[_p] += value
-                            break
-                        end
-                        nnzloc = nnzloc + 1
-                    end
-                else
-#               Lies in U
-                    jsup = snode[inew]
-                    fstcol = xsuper[jsup]
-                    lstcol = xsuper[jsup + 1] - 1
-                    width = lstcol - fstcol + 1
-                    lstsub = xlindx[jsup + 1] - 1
-                    fstsub = xlindx[jsup] + width
-                    nnzloc = 0;
-                    for nxtsub in fstsub:lstsub
-                        irow = lindx[nxtsub]
-                        if  (irow > jnew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
-                            return false
-                        end
-                        if  (irow == jnew)
-#                       find a proper offset into unz and increment by value
-                            _p = xunz[inew] + nnzloc
-                            unz[_p] += value
-                            break
-                        end
-                        nnzloc = nnzloc + 1
-                    end
-                end
-            end
-        end
-        return true
-    end
-    return doit(size(m,1), m.colptr, m.rowval, s.order.rinvp, s.order.cinvp, s.snode, s.xsuper, s.xlindx, s.lindx, m.nzval, s.xlnz, s.lnz, s.xunz, s.unz)
-end
-
 
 # This routine calls the lower - level routine LUFactor which
 # computes and L U factorization of the matrix stored in the
