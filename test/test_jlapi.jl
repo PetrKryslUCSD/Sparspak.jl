@@ -4,7 +4,6 @@ module jl_mgrap001
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.SpkProblem
 using Sparspak.SpkGraph
 
 function _test()
@@ -23,11 +22,10 @@ end
 _test()
 end # module
 
-module mgrap002
+module jl_mgrap002
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.SpkProblem
 using Sparspak.SpkGraph
 
 function _test()
@@ -45,11 +43,10 @@ end
 _test()
 end # module
 
-module mgrap003
+module jl_mgrap003
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.SpkProblem
 using Sparspak.SpkGraph
 
 function _test()
@@ -68,11 +65,10 @@ _test()
 end # module
 
 
-module mgrap004
+module jl_mgrap004
 using Test
 using LinearAlgebra
 using SparseArrays
-using Sparspak.SpkProblem
 using Sparspak.SpkGraph
 
 function _test()
@@ -92,3 +88,24 @@ end
 
 _test()
 end # module
+
+module jl_msolver001
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+
+
+
+function _test(T=Float64, n=20)
+    spm = sprand(T, n, n, 1/n)
+    spm = -spm - spm' + 40 * LinearAlgebra.I
+    slv = SparseSolver(spm)
+    exsol = ones(T,n)
+    rhs = spm*exsol
+    sol = solve!(slv,rhs)
+end
+
+
+_test()
+end
