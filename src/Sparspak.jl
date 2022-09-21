@@ -32,6 +32,7 @@ const SparseSolver = SpkSparseSolver
 
 
 include("SparseCSCInterface/SparseCSCInterface.jl")
-
+import .SparseCSCInterface: sparspaklu, sparspaklu!
+export sparspaklu, sparspaklu!
 
 end # module

@@ -1,5 +1,5 @@
 module SparseCSCInterface
-using SparseArrays
+using SparseArrays, LinearAlgebra
 using ..SpkGraph: Graph
 using ..SpkOrdering: Ordering
 using ..SpkETree: ETree
@@ -15,13 +15,23 @@ function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
     ncols = size(m,1)
     colptr = SparseArrays.getcolptr(m)
     rowval = SparseArrays.getrowval(m)
-    
+
+
     if (diagonal)
         nedges = nnz(m)
     else
-        nedges = nnz(m) - min(nrows,ncols)
+        dedges=0
+        for i in 1:ncols
+            for iptr in colptr[i]:colptr[i+1]-1
+                if  rowval[iptr]==i
+                    dedges+=1
+                    continue
+                end
+            end
+        end
+        nedges = nnz(m) - dedges
     end
-
+    
     #jf if diagonal == true, we possibly can just use colptr & rowval
     #jf and skip the loop
    
@@ -106,7 +116,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT
                 inew = rinvp[rowval[iptr]];
                 jnew = cinvp[i]
                 value = nzval[iptr]
-                
+## jf: all of this could go into  a function, so we can keep things synced                
                 if (inew >= xsuper[snode[jnew]])
 #               Lies in L.  get pointers and lengths needed to search
 #               column jnew of L for location l(inew, jnew).
@@ -190,6 +200,58 @@ function solve!(s::SparseSolver{IT}, rhs) where {IT}
     return temp
 end
 
+#########################################################################
+# SparspakLU
 
+"""
+    sparspaklu(m)
+
+Calculate LU factorization using sparspak. Steps are
+`findorder`, `symbolicfactor`, `factor`.
+
+Returns  a  Sparspak.SpkSparseSolver.SparseSolver instance, 
+which has methods for `LinearAlgebra.ldiv!` and `Base.:\`  .
+"""
+function sparspaklu(m::SparseMatrixCSC)
+    lu=SparseSolver(m)
+    findorder!(lu) || ErrorException("Finding Order.")
+    symbolicfactor!(lu) || ErrorException("Symbolic Factorization.")
+    inmatrix!(lu) || ErrorException("Matrix input.")
+    factor!(lu) || ErrorException("Numerical Factorization.")
+    lu
+end
+
+
+"""
+    sparspaklu!(lu,m)
+
+Calculate numerical LU factorization, reusing sparspak LU factorization `lu`,
+reusing ordering and symbolic factorization.
+"""
+function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
+    #JF: check if structure is the same
+    lu.p=m
+    lu._inmatrixdone = false
+    lu._factordone = false
+    lu._trisolvedone = false
+    inmatrix!(lu) || ErrorException("Matrix input.")
+    factor!(lu) || ErrorException("Numerical Factorization.")
+    lu
+end
+
+function LinearAlgebra.ldiv!(u, lu::SparseSolver, v)
+    u.=v
+    triangularsolve!(lu,u) || ErrorException("Triangular Solve.")
+    lu._trisolvedone = false
+    u
+end
+
+function LinearAlgebra.ldiv!(lu::SparseSolver, v)
+    triangularsolve!(lu,v) || ErrorException("Triangular Solve.")
+    lu._trisolvedone = false
+    v
+end
+
+Base.:\(lu::SparseSolver, v)=ldiv!(lu,copy(v))
 
 end

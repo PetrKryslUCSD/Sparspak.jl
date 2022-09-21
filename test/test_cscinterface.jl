@@ -110,3 +110,35 @@ end
 
 _test()
 end
+
+
+module csc_msolver002
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+
+
+
+function _test(T=Float64, n=20)
+    spm = sprand(T, n, n, 1/n)
+    spm = -spm - spm' + 40 * LinearAlgebra.I
+
+    
+    exsol = ones(T,n)
+    rhs = spm*exsol
+    lu=sparspaklu(spm)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    spm.nzval.-=0.1
+    rhs = spm*exsol
+    lu=sparspaklu!(lu,spm)
+    sol=lu\rhs
+    @test sol≈exsol
+    
+end
+
+
+_test()
+end
