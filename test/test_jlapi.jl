@@ -104,6 +104,7 @@ function _test(T=Float64, n=20)
     exsol = ones(T,n)
     rhs = spm*exsol
     sol = solve!(slv,rhs)
+    @test sol≈exsol
 end
 
 
