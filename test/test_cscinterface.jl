@@ -117,6 +117,9 @@ using Test
 using LinearAlgebra
 using SparseArrays
 using Sparspak
+using Random
+using MultiFloats, ForwardDiff
+Random.rand(rng::AbstractRNG, ::Random.SamplerType{ForwardDiff.Dual{T,V,N}}) where {T,V,N} = ForwardDiff.Dual{T,V,N}(rand(rng,T))
 
 
 
@@ -140,5 +143,7 @@ function _test(T=Float64, n=20)
 end
 
 
-_test()
+_test(Float64)
+_test(Float64x2)
+_test(ForwardDiff.Dual{Float64,Float64,1})
 end
