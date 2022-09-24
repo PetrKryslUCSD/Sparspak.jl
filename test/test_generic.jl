@@ -45,7 +45,7 @@ end # module
 
 
 #
-# Differntiate through sparse solve
+# Differentiate through sparse solve
 #
 module generic002
 using  Test
@@ -103,3 +103,61 @@ end
 
 _test()
 end # module
+
+
+### Test timing
+module generic003
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+using Sparspak.SpkSparseSolver: SparseSolver, solve!
+using Sparspak.SpkProblem: insparse!, outsparse
+using BenchmarkTools, Random
+using ForwardDiff
+using MultiFloats
+using Printf
+
+Random.rand(rng::AbstractRNG, ::Random.SamplerType{ForwardDiff.Dual{T,V,N}}) where {T,V,N} = ForwardDiff.Dual{T,V,N}(rand(rng,T))
+
+
+function solve(spm::SparseMatrixCSC{Tv,Ti}, b) where {Tv, Ti}
+    n=size(spm,1)
+    p = Sparspak.SpkProblem.Problem(n, n, nnz(spm), zero(Tv))
+    Sparspak.SpkProblem.insparse!(p, spm);
+    Sparspak.SpkProblem.infullrhs!(p, b);
+    s = SparseSolver(p)
+    solve!(s)
+    p.x
+end
+
+
+function _testT(;T=Float64, n=20)
+    @printf("%40s:",T)
+    spm = sprand(T, n, n, 1/n)
+    spm = -spm - spm' + 40 * LinearAlgebra.I
+    x=ones(T,n)
+    b=spm*x
+    @test solve(spm,b)≈x
+    @btime solve($spm,$b)
+    nothing
+end
+
+
+function _test(;N=[10,100,1_000])
+    Random.seed!(9876)
+    for n in N
+        println("n=$n:")
+        _testT(;T=Float64,n)
+        _testT(;T=Float64x1,n)
+        _testT(;T=Float64x2,n)
+        _testT(;T=ForwardDiff.Dual{Float64,Float64,1},n)
+    end
+end
+
+
+_test()
+end # module
+
+
+

@@ -12,7 +12,7 @@ using LinearAlgebra.BLAS: BlasInt
 using Sparspak.SpkSpdMMops:  _gemm!,_gemv!,_getrf!,_trsm!,_laswp!
 
 # These are the Julia based replacements which are explicitely called.
-using Sparspak.GenericBlasLapackFragments:  ggemm!,ggemv!,ggetrf!,gtrsm!,glaswp!, strided_reshape
+using Sparspak.GenericBlasLapackFragments:  ggemm!,ggemv!,ggetrf!,gtrsm!,glaswp!
 
 #
 # Two potentialy useful extensions for numeber types to be tested
@@ -20,6 +20,56 @@ using Sparspak.GenericBlasLapackFragments:  ggemm!,ggemv!,ggetrf!,gtrsm!,glaswp!
 using ForwardDiff
 using MultiFloats
 
+
+#
+# Struct to allow strided reshape in the case where
+# length(v)<lda*n, but length(v) is still large enough to hold all columns
+# of the mxn submatrix
+#
+struct StridedReshape{T} <: AbstractMatrix{T}
+    v::Union{Vector{T},SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}}
+    lda::BlasInt
+    m::BlasInt
+    n::BlasInt
+end
+
+@inline idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
+Base.size(A::StridedReshape)=(A.m, A.n)
+Base.getindex(A::StridedReshape,i,j)= @inbounds A.v[idx(A,i,j)]
+Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
+
+#
+# Reshape matrix with leading dimension lda>=m, taking into account the
+# (for standard blas entirely legal)
+# possibility that for the largest column only m elements are stored (instead of lda)
+
+
+
+function strided_reshape(A::AbstractVector{T},lda,m,n)::Union{StridedReshape{T},SubArray{T, 2, Base.ReshapedArray{T, 2, SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}, Tuple{}}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, false},Base.ReshapedArray{T, 2, SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}, Tuple{}}} where T
+    if lda == m
+        #
+        # In this case we can assume that the A buffer is large enough to hold
+        # all elements of the reshaped matrix:
+        #
+        x=reshape(view(A,1:lda*n),m,n)
+    else
+        if length(A)>=lda*n
+            #
+            # Also, in this case we can assume that the A buffer is large enough to hold
+            # all elements of the reshaped matrix:
+            #
+            vA=view(A,1:lda*n)
+            # But we will only work with the mxn submatrix
+            view(reshape(vA,lda,n),1:m,1:n)
+        else
+            # In the (rare) case where there is not enough
+            # memory to hold the last column of reshape(vA,lda,n)
+            # As the occurance may be rare, we probably can live with the current performance
+            # hits.
+            StridedReshape(A,lda,m,n)
+        end
+    end
+end
 
 #
 # Random number generation for duals

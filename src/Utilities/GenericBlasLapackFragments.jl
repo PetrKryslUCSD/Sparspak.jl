@@ -1,63 +1,46 @@
 module GenericBlasLapackFragments
+
 #
 # This module provides generic implementations of those parts of the BLAS/LAPACK
 # API which are used in Sparspak.jl. 
 # 
-
-# The ggemm!  etc functions are  tested against
+# With the exception of  ggetrf!, the implementations are rewrites of the corresponding routines
+# from LAPACK 3.10.1 published on  https://netlib.org/lapack/explore-html/.
+# As they are not used "in the wild", but rather in the controlled environment of this package,
+# input consistency tests and bound checks have been removed in favor of performance. Any
+# generalization for wider use should consider removal the @inbounds macros.
+#
+# They metods are  tested against
 # the implementations in Sparspak.SpkSpdMMops which call into BLAS/LAPACK.
 
 
 using LinearAlgebra
-using LinearAlgebra:BlasInt
 
 
+# As  Sparspak passes all matrix data as vectors, we create wrapper structs
+# to organize 2D indexing which conforms to the usage in the BLAS routines.
+# These are _not_ coforming to the abstract matrix interface as they miss
+# the size() method. A proper size() method would have to take into account
+# transposed and non-transposed cases etc.
+# In the routines, the compiler will optimize them away, or rather place
+# them on the stack as immutable objects, so this approach leaves no
+# trace in the allocation statistics.
 #
-# Struct to allow strided reshape in the case where
-# length(v)<lda*n, but length(v) is still large enough to hold all columns
-# of the mxn submatrix
-#
-struct StridedReshape{T} <: AbstractMatrix{T}
-    v::Union{Vector{T},SubArray{T, 1, Vector{T}, Tuple{UnitRange{Int64}}, true}}
-    lda::BlasInt
-    m::BlasInt
-    n::BlasInt
+# The @inbounds macros in the accessor methods are the only ones in this
+# package (besides of glawsp)
+
+struct StridedReshape{Tv,Ti}
+    v::Union{Vector{Tv},SubArray{Tv, 1, Vector{Tv}, Tuple{UnitRange{Ti}}, true}}
+    lda::Ti
 end
 
 @inline idx(A::StridedReshape, i,j)= (j-1)*A.lda+i
-Base.size(A::StridedReshape)=(A.m, A.n)
 Base.getindex(A::StridedReshape,i,j)= @inbounds A.v[idx(A,i,j)]
 Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
 
-#
-# Reshape matrix with leading dimension lda>=m, taking into account the
-# (for standard blas entirely legal)
-# possibility that for the largest column only m elements are stored (instead of lda)
-function strided_reshape(A,lda,m,n)
-    if lda == m
-        #
-        # In this case we can assume that the A buffer is large enough to hold
-        # all elements of the reshaped matrix:
-        #
-        reshape(view(A,1:lda*n),m,n)
-    else
-        if length(A)>=lda*n
-            #
-            # Also, in this case we can assume that the A buffer is large enough to hold
-            # all elements of the reshaped matrix:
-            #
-            vA=view(A,1:lda*n)
-            # But we will only work with the mxn submatrix
-            view(reshape(vA,lda,n),1:m,1:n)
-        else
-            # In the (rare) case where there is not enough
-            # memory to hold the last column of reshape(vA,lda,n)
-            # As the occurance may be rare, we probably can live with the current performance
-            # hits.
-            StridedReshape(A,lda,m,n)
-        end
-    end
-end
+Base.getindex(A::StridedReshape,i)= @inbounds A.v[i]
+Base.setindex!(A::StridedReshape,v,i)= @inbounds A.v[i]=v
+
 
 #
 # LU factorization adapted from generic_lufact! (https://github.com/JuliaLang/LinearAlgebra.jl/blob/main/src/lu.jl).
@@ -69,19 +52,18 @@ end
 # - No need to return LU object 
 # - Remove unused parameters - always do pivoting anyway
 #
-# Needed only for the rare (?) StridedReshape case.
 #
-function glu!(A::StridedReshape{T}, ipiv) where T
-    # Extract values
-    m, n = size(A)
+function ggetrf!(m,n,a::AbstractVector{FT},lda,ipiv) where FT
+
     minmn = min(m,n)
+    A=StridedReshape(a,lda)
     
-    @inbounds begin
+    begin
         for k = 1:minmn
             # find index max
             kp = k
             if k < m #   pivot === RowMaximum() &&
-                amax = abs(A[k, k])
+                amax = abs(A[k,k])
                 for i = k+1:m
                     absi = abs(A[i,k])
                     if absi > amax
@@ -114,107 +96,369 @@ function glu!(A::StridedReshape{T}, ipiv) where T
             end
         end
     end
+    0
 end
 
-#
-# In the general case we can conveniently fall back to the standard Julia implementation
-#
-function glu!(A,  ipiv)  where T
-    n=size(A,2)
-    ipiv[1:n].=lu!(A).p
-    return 0
-end
+
 
 
 #
 # C=alpha*transA(A)*transB(B) + beta*C
 #
-function ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
-    rA= transA=='n' ? strided_reshape(A,lda,m,k) :  transpose(strided_reshape(A,lda,k,m))
-    rB= transB=='n' ? strided_reshape(B,ldb,k,n) :  transpose(strided_reshape(B,ldb,n,k))
-    rC= strided_reshape(C,ldc,m,n)
-    mul!(rC,rA,rB,alpha, beta)
-    true
+function ggemm!(transA,transB,m,n,k,alpha,a::AbstractVector{T},lda,b::AbstractVector{T},ldb,beta,c::AbstractVector{T},ldc) where T
+    oneT=one(T)
+    zeroT=zero(T)
+    nota= (transA=='n')
+    notb= (transB=='n')
+
+    A=StridedReshape(a,lda)
+    B=StridedReshape(b,ldb)
+    C=StridedReshape(c,ldc)
+    
+    
+    # skip the iput tests
+    
+    
+    if m==0 || n==0 || ( (iszero(alpha) || k==0) && isone(beta))
+        return
+    end
+    
+    if iszero(alpha)
+        if iszero(beta)
+            for i=1:n*m
+                C[i]=zeroT
+            end
+        else
+            for i=1:n*m
+                C[i]*=beta*C[i]
+            end
+        end
+        return 
+    end
+    
+    if notb
+        if nota
+            #  C := alpha*A*B + beta*C.
+            for j = 1:n # DO 90
+                if iszero(beta)
+                    for i=1:m
+                        C[i,j] = zeroT
+                    end
+                elseif !isone(beta)
+                    for i=1:m
+                        C[i,j] *= beta
+                    end
+                end
+                for l=1:k
+                    temp = alpha*B[l,j]
+                    for i=1:m
+                        C[i,j] += temp*A[i,l]
+                    end
+                end
+            end
+        else
+            #   C := alpha*A**T*B + beta*C
+            for j=1:n
+                for i=1:m
+                    temp=zeroT
+                    for l=1:k
+                        temp += A[l,i]*B[l,j]
+                    end
+                    if beta==zeroT
+                        C[i,j] = alpha*temp
+                    else
+                        C[i,j] = alpha*temp + beta*C[i,j]
+                    end
+                end
+            end
+        end
+    else
+        if nota
+            #   C := alpha*A*B**T + beta*C
+            for j=1:n
+                if iszero(beta)
+                    for i=1:m
+                        C[i,j] = zeroT
+                    end
+                elseif !isone(beta)
+                    for i=1:m
+                        C[i,j] = beta*C[i,j]
+                    end
+                end
+                for l=1:k
+                    temp = alpha*B[j,l]
+                    for i=1:m
+                        C[i,j] += temp*A[i,l]
+                    end
+                end
+            end
+        else
+            #   C := alpha*A**T*B**T + beta*C
+            for j=1:n
+                for i=1:m
+                    temp=zeroT
+                    for l=1:k
+                        temp +=  A[l,i]*B[j,l]
+                    end
+                    if iszero(beta)
+                        C[i,j] = alpha*temp
+                    else
+                        C[i,j] = alpha*temp + beta*C[i,j]
+                    end
+                end
+            end
+        end
+    end
 end
+
 
 
 #
 # Y=alpha*transA(A)*X + beta*Y
 #
-function ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
+function ggemv!(transA,m,n,alpha,a::AbstractVector{T},lda,X,beta,Y) where T
     if m==0 || n==0
         return
     end
-    rA=strided_reshape(A,lda,m,n)
+    
+    A=StridedReshape(a,lda)
+    
     if transA=='n'
-       @views mul!(Y[1:m],rA,X[1:n],alpha, beta)
+        for i=1:m
+            Y[i]*=beta
+        end
+        ii0=1
+        for j=1:n # DO 60
+            ii=ii0
+            alphax=alpha*X[j]
+            for i=1:m # DO 50
+                Y[i]+=alphax*A[ii]
+                ii+=1
+            end
+            ii0+=lda
+        end
     else
-       @views mul!(Y[1:n],transpose(rA),X[1:m],alpha, beta)
+        ii0=1
+        for j=1:n # DO 120
+            Y[j]*=beta
+            temp=zero(T)
+            ii=ii0
+            for i=1:m # DO 110
+                temp+=A[ii]*X[i]
+                ii+=1
+            end
+            Y[j]+=alpha*temp
+            ii0+=lda
+        end
     end
     true
 end
 
-#
-# In-place LU factorization of A
-#
-function ggetrf!(m,n,A::AbstractVector{FT},lda,ipiv) where FT
-    glu!(strided_reshape(A,lda,m,n),ipiv)
-    return 0
-end
+
 
 
 
 #
 # Triangular solve
 #
-function gtrsm!(side,uplo,transA,diag, m,n,alpha,A, lda, B, ldb)
-    
+function gtrsm!(side,uplo,transA,diag, m,n,alpha,a::AbstractVector{T}, lda, b::AbstractVector{T}, ldb) where T
+
     if m==0 || n==0
         return
     end
+    A=StridedReshape(a,lda)
+    B=StridedReshape(b,ldb)
+
+    oneT=one(T)
+    zeroT=zero(T)
     
-    k= side=='l' ? m : n
-
-    rA=strided_reshape(A,lda,k,k)
-
-    if diag=='n'
-        if uplo=='u'
-            tA=UpperTriangular(rA)
-        else
-            tA=LowerTriangular(rA)
+    lside = (side=='l')
+    nounit = (diag=='n')
+    upper = (uplo=='u')
+    
+    # skip input check
+    
+    if iszero(alpha)
+        for i=1:m*n
+            B[i]=zeroT
         end
-    else
-        if uplo=='u'
-            tA=UnitUpperTriangular(rA)
-        else
-            tA=UnitLowerTriangular(rA)
-        end
+        return
     end
     
-    
-    if transA=='t'
-        kA=transpose(tA)
-    else
-        kA=tA
-    end
-    
-    
-    rB=strided_reshape(B,ldb,m,n)
-    
-    if  side=='l'
-        rB.=kA\(alpha*rB)
-    else
-        rB.=alpha*rB/kA
+    if lside
+        if transA== 'n'
+            # form  B := alpha*inv( A )*B.
+            if upper
+                for j=1:n
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,j] *= alpha
+                        end
+                    end
+                    for k=m:-1:1
+                        if !iszero(B[k,j])
+                            if nounit
+                                B[k,j] /= A[k,k]
+                            end
+                            for i=1:k-1
+                                B[i,j] -= B[k,j]*A[i,k]
+                            end
+                        end
+                    end
+                end
+            else # !upper
+                for j=1:n
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,j] *= alpha
+                        end
+                    end
+                    for k=1:m
+                        if !iszero(B[k,j])
+                            if nounit
+                                B[k,j] /= A[k,k]
+                            end
+                            for i=k+1:m
+                                B[i,j] -=  B[k,j]*A[i,k]
+                            end
+                        end
+                    end
+                end
+            end
+        else # transa=='t'
+            #  form  B := alpha*inv( A**T )*B.
+            if upper
+                for j=1:n
+                    for i=1:m
+                        temp = alpha*B[i,j]
+                        for k=1:i-1
+                            temp -=  A[k,i]*B[k,j]
+                        end
+                        B[i,j] = temp
+                        if nounit
+                            temp /= A[i,i]
+                        end
+                        B[i,j]=temp
+                    end
+                end
+            else #!upper
+                for j=1:n
+                    for i=m:-1:1
+                        temp = alpha*B[i,j]
+                        for k=i+1:m
+                            temp -= A[k,i]*B[k,j]
+                        end
+                        if nounit
+                            temp /= A[i,i]
+                        end
+                        B[i,j] = temp
+                    end
+                end
+            end
+        end
+    else # !lside
+        if transA== 'n'
+            #    form  B := alpha*B*inv( A ).
+            if upper
+                for j=1:n
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,j] = alpha*B[i,j]
+                        end
+                    end
+                    for k=1:j-1
+                        if !iszero(A[k,j])
+                            for i=1:m
+                                B[i,j] -= A[k,j]*B[i,k]
+                            end
+                        end
+                    end
+                    if nounit
+                        temp=oneT/A[j,j]
+                        for i=1:m
+                            B[i,j] *= temp
+                        end
+                    end
+                end
+            else #!upper
+                for j=n:-1:1
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,j] *= alpha
+                        end
+                    end
+                    for k=j+1:n
+                        if !iszero(A[k,j])
+                            for i=1:m
+                                B[i,j] -= A[k,j]*B[i,k]
+                            end
+                        end
+                    end
+                    if nounit
+                        temp = oneT/A[j,j]
+                        for i=1:m
+                            B[i,j] *= temp
+                        end
+                    end
+                end
+            end
+        else
+            # form  B := alpha*B*inv( A**T ).
+            if upper
+                for k=n:-1:1
+                    if nounit
+                        temp = oneT/A[k,k]
+                        for i=1:m
+                            B[i,k] *= temp
+                        end
+                    end
+                    for j=1:k-1
+                        if !iszero(A[j,k])
+                            temp = A[j,k]
+                            for i=1:m
+                                B[i,j] -= temp*B[i,k]
+                            end
+                        end
+                    end
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,k] *= alpha
+                        end
+                    end
+                end
+            else #!upper
+                for k=1:n
+                    if nounit
+                        temp = oneT/A[k,k]
+                        for i=1:m
+                            B[i,k] *= temp
+                        end
+                    end
+                    for j=k+1:n
+                        if !iszero(A[j,k])
+                            temp = A[j,k]
+                            for i=1:m
+                                B[i,j] -=  temp*B[i,k]
+                            end
+                        end
+                    end
+                    if !isone(alpha)
+                        for i=1:m
+                            B[i,k] *= alpha
+                        end
+                    end
+                end
+            end
+        end
     end
 end
-
 
 
 #
 # Vector entry swap according to ipiv
 #
 function glaswp!(a,lda,k1,k2,ipiv)
-    for i=k1:k2
+    @inbounds for i=k1:k2
         ip=ipiv[i]
         if ip!=i
             temp=a[i]
