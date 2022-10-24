@@ -139,11 +139,11 @@ mutable struct Problem{IT<:BlasInt, FT}
 end
 
 """
-    Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT, FT}
+    Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=zero(FT), info = "") where {IT, FT}
 
 Construct a problem.
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT<:BlasInt, FT}
+function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=zero(FT), info = "") where {IT<:BlasInt, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
@@ -158,7 +158,7 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where
     x = fill(zero(FT), lenhead)
     link = fill(zero(IT), lenlink)
     rowsubs = fill(zero(IT), lenlink)
-    values = fill(_BIGGY(), lenlink)
+    values = fill(_BIGGY(FT), lenlink)
     rscales = FT[]
     cscales = FT[]
     
@@ -411,7 +411,7 @@ function makerhs!(p::Problem, x::Vector{FT}, mtype = "T") where {FT}
         p.x .= FT.(1:p.ncols)
     end
 
-    p.rhs .= 0.0
+    p.rhs .= zero(FT)
     res = deepcopy(p.rhs)
 
     computeresidual(p, res, p.x, mtype)

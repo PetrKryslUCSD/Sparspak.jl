@@ -41,7 +41,7 @@ Base.setindex!(A::StridedReshape,v,i,j)= @inbounds A.v[idx(A,i,j)]=v
 Base.getindex(A::StridedReshape,i)= @inbounds A.v[i]
 Base.setindex!(A::StridedReshape,v,i)= @inbounds A.v[i]=v
 
-
+struct RowNonZero end
 #
 # LU factorization adapted from generic_lufact! (https://github.com/JuliaLang/LinearAlgebra.jl/blob/main/src/lu.jl).
 # Originally it is (like many other LA operators) defined for StridedMatrix which is a union and not an abstract type,
@@ -58,17 +58,33 @@ function ggetrf!(m,n,a::AbstractVector{FT},lda,ipiv) where FT
     minmn = min(m,n)
     A=StridedReshape(a,lda)
     
+    
+    if FT<:AbstractFloat
+        pivot=RowMaximum()
+    elseif FT<:Complex{T} where T<:AbstractFloat
+        pivot=RowMaximum()
+    else
+        pivot=RowNonZero()
+    end
+        
     begin
         for k = 1:minmn
             # find index max
             kp = k
-            if k < m #   pivot === RowMaximum() &&
+            if pivot === RowMaximum() && k < m
                 amax = abs(A[k,k])
                 for i = k+1:m
                     absi = abs(A[i,k])
                     if absi > amax
                         kp = i
                         amax = absi
+                    end
+                end
+            elseif pivot === RowNonZero()
+                for i = k:m
+                    if !iszero(A[i,k])
+                        kp = i
+                        break
                     end
                 end
             end

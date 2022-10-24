@@ -4,7 +4,7 @@ See the comments below in the interface section of the module.
 """
 module SpkUtilities
 
-_BIGGY() = typemax(Float64)
+_BIGGY(T) = typemax(T)
 
 
 #     __extend(v::Vector, newlen::Integer, flagval=zero(eltype(v)))

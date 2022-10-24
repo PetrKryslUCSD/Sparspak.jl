@@ -65,7 +65,7 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
     @assert length(xunz) == (n + 1)
     @assert length(ipvt) == n
 
-    ONE = FT(1.0)
+    ONE = one(FT)
     
     link = fill(zero(IT), nsuper)
     lngth = fill(zero(IT), nsuper)
@@ -278,8 +278,8 @@ function _lulsolve!(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::V
 # -  -  -  -  -  -  -  -  -  -
 #    constants.
 # -  -  -  -  -  -  -  -  -  -
-    ONE = FT(1.0)
-    ZERO = FT(0.0)
+    ONE = one(FT)
+    ZERO = zero(FT)
 
     if  (nsuper <= 0)  return false; end
 
@@ -331,8 +331,8 @@ function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, l
 # integer :: length, maxlength
 # real(double), dimension(:), allocatable :: temp
 
-    ONE = FT(1.0)
-    ZERO = FT(0.0)
+    ONE = one(FT)
+    ZERO = zero(FT)
 
     if  (nsuper <= 0)  return; end
 
