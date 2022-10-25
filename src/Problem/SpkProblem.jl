@@ -143,7 +143,7 @@ end
 
 Construct a problem.
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=zero(FT), info = "") where {IT<:BlasInt, FT}
+function _Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=zero(FT), info = "") where {IT<:BlasInt, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
@@ -167,6 +167,10 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=zero(FT), info = "") 
         rscales, cscales, x, rhs)
 end
 
+Problem(nrows,ncols) = _Problem(nrows,ncols,2500,zero(Float64))
+Problem(nrows,ncols,nnz) = _Problem(nrows,ncols,nnz,zero(Float64))         
+Problem(nrows,ncols,nnz,z) = _Problem(nrows,ncols,nnz,z)
+
 """
     inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
@@ -184,7 +188,7 @@ function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:BlasInt,
         p.lenlink = max(2 * p.lenlink, 3 * p.ncols)
         p.link = __extend(p.link, p.lenlink)
         p.rowsubs = __extend(p.rowsubs, p.lenlink)
-        p.values = __extend(p.values, p.lenlink, _BIGGY())
+        p.values = __extend(p.values, p.lenlink, _BIGGY(FT))
     end
 
     p.nrows = max(rnum, p.nrows)
@@ -208,7 +212,7 @@ function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:BlasInt,
             break
         end
         if (p.rowsubs[ptr] == rnum)
-            if (p.values[ptr] == _BIGGY())
+            if (p.values[ptr] == _BIGGY(FT))
                 p.nnz = p.nnz + 1
                 p.values[ptr] = aij
                 if (rnum == cnum)
@@ -480,7 +484,7 @@ function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mt
         ptr = p.head[cnum]; t = x[cnum]
         while (ptr > 0)
             rnum = p.rowsubs[ptr];  temp = p.values[ptr]
-            if (temp != _BIGGY())
+            if (temp != _BIGGY(FT))
                 r[rnum] -= t * temp
                 if (rnum != cnum && flag == 1)
                     u = x[rnum]

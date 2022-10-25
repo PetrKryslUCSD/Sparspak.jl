@@ -44,7 +44,7 @@ function _test()
     @test norm(a - a1) / norm(a) < 1.0e-9
     a = __extend(a, 2, 2)
     a1 = [0.3814043930778628 0.07295808459382358 Inf Inf Inf; 0.5435778459423668 0.018608588657332392 Inf Inf Inf; Inf Inf Inf Inf Inf]
-    a = __extend(a, 3, 5, SpkUtilities._BIGGY())
+    a = __extend(a, 3, 5, SpkUtilities._BIGGY(Float64))
     @test a == a1
     return true
 end
