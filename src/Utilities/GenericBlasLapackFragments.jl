@@ -42,9 +42,16 @@ Base.getindex(A::StridedReshape,i)= @inbounds A.v[i]
 Base.setindex!(A::StridedReshape,v,i)= @inbounds A.v[i]=v
 
 
+@static if VERSION< v"1.7"
+    abstract type PivotingStrategy end
+    struct RowNonZero <: PivotingStrategy end
+    struct RowMaximum <: PivotingStrategy end
+    struct NoPivot <: PivotingStrategy end
+    lupivottype(::Type{T}) where {T} = RowMaximum()
+end
 
 
-@static if VERSION< v"1.9"
+@static if  VERSION >= v"1.7" && VERSION< v"1.9" 
     struct RowNonZero <: LinearAlgebra.PivotingStrategy end
     lupivottype(::Type{T}) where {T} = RowMaximum()
 end
