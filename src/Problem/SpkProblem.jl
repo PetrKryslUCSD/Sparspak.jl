@@ -498,7 +498,7 @@ end
 """
     infullrhs!(p::Problem{IT,FT}, rhs)  where {IT,FT}
 
-InRHSProblem adds a vector of values, rhs, to the current right hand
+Add a vector of values, rhs, to the current right hand
 side of a problem object.
 
 Input:
@@ -515,6 +515,17 @@ function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT<:BlasInt, FT}
     end
     return p
 end
+
+"""
+    zerorhs!(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+
+Zero out the right hand side vector.
+"""
+function zerorhs!(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+    p.rhs[:] .= zero(FT)
+    return p
+end
+    
 
 end # module 
 
