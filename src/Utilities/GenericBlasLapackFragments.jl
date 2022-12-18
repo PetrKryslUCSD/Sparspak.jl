@@ -42,33 +42,58 @@ Base.getindex(A::StridedReshape,i)= @inbounds A.v[i]
 Base.setindex!(A::StridedReshape,v,i)= @inbounds A.v[i]=v
 
 
+@static if VERSION< v"1.7"
+    abstract type PivotingStrategy end
+    struct RowNonZero <: PivotingStrategy end
+    struct RowMaximum <: PivotingStrategy end
+    struct NoPivot <: PivotingStrategy end
+    lupivottype(::Type{T}) where {T} = RowMaximum()
+end
+
+
+@static if  VERSION >= v"1.7" && VERSION< v"1.9" 
+    struct RowNonZero <: LinearAlgebra.PivotingStrategy end
+    lupivottype(::Type{T}) where {T} = RowMaximum()
+end
+
+
+@static if VERSION >= v"1.9"
+    import LinearAlgebra: lupivottype
+end
+
 #
-# LU factorization adapted from generic_lufact! (https://github.com/JuliaLang/LinearAlgebra.jl/blob/main/src/lu.jl).
+# LU factorization adapted from generic_lufact! (https://github.com/JuliaLang/LinearAlgebra.jl/blob/main/src/lu.jl)
+# with support of RowNonZero pivoting for finite fields etc.
 # Originally it is (like many other LA operators) defined for StridedMatrix which is a union and not an abstract type,
 # so we cannot use that code directly. See https://github.com/JuliaLang/julia/issues/2345 for some discussion about this.
 #
 # Modifications:
 # - Use ipiv passed instead of creating one
 # - No need to return LU object 
-# - Remove unused parameters - always do pivoting anyway
 #
 #
-function ggetrf!(m,n,a::AbstractVector{FT},lda,ipiv) where FT
+function ggetrf!(m,n,a::AbstractVector{FT},lda,ipiv; pivot::Union{NoPivot,RowMaximum,RowNonZero}=lupivottype(FT)) where FT
 
     minmn = min(m,n)
     A=StridedReshape(a,lda)
-    
     begin
         for k = 1:minmn
             # find index max
             kp = k
-            if k < m #   pivot === RowMaximum() &&
+            if pivot === RowMaximum() && k < m
                 amax = abs(A[k,k])
                 for i = k+1:m
                     absi = abs(A[i,k])
                     if absi > amax
                         kp = i
                         amax = absi
+                    end
+                end
+            elseif pivot === RowNonZero()
+                for i = k:m
+                    if !iszero(A[i,k])
+                        kp = i
+                        break
                     end
                 end
             end

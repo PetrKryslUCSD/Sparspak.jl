@@ -36,3 +36,7 @@ end
     include("test_generic.jl")
 end
 
+@time @testset "Galois" begin
+    include("test_galois.jl")
+end
+

@@ -2,6 +2,7 @@
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DataDrop = "aa547a04-dd37-49ab-8e73-656744f8a8fc"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GaloisFields = "8d0d7f98-d412-5cd4-8397-071c807280aa"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MultiFloats = "bdf0d083-296b-4888-a5b6-7498122e68a5"
