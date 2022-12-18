@@ -7,6 +7,7 @@ module SpkSparseSolver
 using ..SpkProblem: Problem
 using ..SpkSparseBase: _SparseBase
 import ..SpkSparseBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _triangularsolve!
+using SparseArrays
 
 """
     SparseSolver{IT, FT}
@@ -14,7 +15,7 @@ import ..SpkSparseBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _tr
 Type of LU general sparse solver.
 """
 mutable struct SparseSolver{IT, FT}
-    p::Problem{IT, FT}
+    p::Union{Problem{IT, FT},SparseMatrixCSC{FT,IT}}
     slvr::_SparseBase{IT, FT}
     n::IT
     ma::IT

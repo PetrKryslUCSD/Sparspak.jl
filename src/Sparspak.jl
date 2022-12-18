@@ -30,4 +30,9 @@ The module that defines a sparse-matrix LU solver.
 """
 const SparseSolver = SpkSparseSolver
 
+
+include("SparseCSCInterface/SparseCSCInterface.jl")
+import .SparseCSCInterface: sparspaklu, sparspaklu!
+export sparspaklu, sparspaklu!
+
 end # module
