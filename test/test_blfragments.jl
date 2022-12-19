@@ -21,6 +21,16 @@ using ForwardDiff
 using MultiFloats
 
 
+
+
+#
+# Relax rtol test of equality for computation results
+# by this factor: Float64 and other data types may have
+# some subtle differences in their arithmetics.
+# Besides some random exceptions, a factor of 100 should work,
+# we now seed the rng  in order to avoid such situations.
+const rtolfactor=100.0
+
 #
 # Struct to allow strided reshape in the case where
 # length(v)<lda*n, but length(v) is still large enough to hold all columns
@@ -182,8 +192,8 @@ function _tgemm(T=Float64;N=15,mode=:random)
                         
                         tblas+=@elapsed _gemm!(transA,transB, m,n,k, α64 ,A64, lda ,B64,ldb, β64,C64,ldc)
                         tgnrc+=@elapsed ggemm!(transA,transB, m,n,k, α ,A, lda ,B,ldb, β,C,ldc)
-                        if ! isapprox(f64(C),C64,rtol=100*max(eps(T),eps(Float64)))
-                            error("error in $transA-$transB ($n, $m, $k)")
+                        if ! isapprox(f64(C),C64,rtol=rtolfactor*max(eps(T),eps(Float64)))
+                            error("error in $transA-$transB ($n, $m, $k), rtol=$(norm(f64(C)-C64)/norm(C64))")
                         end
                     end
                 end
@@ -240,8 +250,8 @@ function _tgemv(T=Float64;N=15,mode=:mixed)
                 Y64=f64(Y)
                 tblas+=@elapsed _gemv!(transA, m,n, α64 ,A64, m ,X64, β64,Y64)
                 tgnrc+=@elapsed ggemv!(transA, m,n, α ,A, m ,X, β,Y)
-                if ! isapprox(f64(Y),Y64,rtol=100*max(eps(T),eps(Float64)))
-                    error("error in $transA ($n, $m)")
+                if ! isapprox(f64(Y),Y64,rtol=rtolfactor*max(eps(T),eps(Float64)))
+                    error("error in $transA ($n, $m), rtol=$(norm(f64(Y)-Y64)/norm(Y64))")
                 end
             end
         end
@@ -283,8 +293,8 @@ function _tgetrf(T=Float64;N=25, mode=:mixed)
 
         tblas+=@elapsed Alu64=_getrf!(m,n,A64,lda,ipiv64)
         tgnrc+=@elapsed Alu=ggetrf!(m,n,A,lda,ipiv)
-        if ! isapprox(f64(A),A64,rtol=100*max(eps(T),eps(Float64)))
-            error("error: ($m,$n)")
+        if ! isapprox(f64(A),A64,rtol=rtolfactor*max(eps(T),eps(Float64)))
+            error("error: ($m,$n), rtol=$(norm(f64(A)-A64)/norm(A64))")
         end
     end
     tgnrc,tblas
@@ -339,8 +349,8 @@ function _ttrsm(T=Float64;N=15,mode=:mixed)
 
                             tblas += @elapsed _trsm!(side, uplo, transa, diag, m,n, alpha64, A64, lda, B64,ldb)
                             tgnrc += @elapsed gtrsm!(side, uplo, transa, diag, m,n, alpha, A, lda, B,ldb)
-                            if ! isapprox(f64(B),B64,rtol=100*max(eps(T),eps(Float64)))
-                                error(" error for side $side, uplo $uplo, transa $transa diag $diag $n, $m")
+                            if ! isapprox(f64(B),B64,rtol=rtolfactor*max(eps(T),eps(Float64)))
+                                error(" error for side $side, uplo $uplo, transa $transa diag $diag $n, $m, rtol=$(norm(f64(B)-B64)/norm(B64))")
                             end
                         end
                     end
@@ -374,7 +384,7 @@ function _tlaswp(T=Float64;N=15)
         tblas += @elapsed _laswp!(A64,n,1,n,ipiv)
         tgnrc += @elapsed glaswp!(A,n,1,n,ipiv)
         if ! (f64(A)≈ A64)
-            error("laswp failed for $n")
+            error("laswp failed for $n, rtol=$(norm(f64(A)-A64)/norm(A64))")
         end
     end
     tgnrc,tblas
@@ -405,7 +415,14 @@ end
 #
 # Run tests for selected types
 #
-function test_all()
+function test_all(; seed=9876)
+
+    # Julia manual:
+    # Reseed the random number generator: 
+    # rng will give a reproducible sequence of numbers 
+    # if and only if a seed is provided.
+    Random.seed!(seed)
+
     @testset "setup" begin
         @test tf64()
     end
