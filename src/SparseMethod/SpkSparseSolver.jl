@@ -104,7 +104,7 @@ function findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
 end
 
 """
-    findorder!(s::SparseSolver{IT}) where {IT, F}
+    findorder!(s::SparseSolver{IT}) where {IT}
 
 Find reordering of the coefficient matrix using the default method.
 
@@ -113,7 +113,7 @@ the order function is applied.
 
 Finding the ordering invalidates symbolic factorization.
 """
-function findorder!(s::SparseSolver{IT}) where {IT, F}
+function findorder!(s::SparseSolver{IT}) where {IT}
     if (s._orderdone)
         return true
     end
