@@ -229,7 +229,10 @@ Calculate numerical LU factorization, reusing sparspak LU factorization `lu`,
 reusing ordering and symbolic factorization.
 """
 function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
-    #JF: check if structure is the same
+    lu.slvr.n == size(m,1) || error("sparspaklu!: wrong size, cannot reuse symbolic")
+    lu.slvr.n == size(m,2) || error("sparspaklu!: wrong matrix size, cannot reuse symbolic")
+    lu.slvr.nnz == nnz(m) || error("sparspaklu!: pattern change detected, cannot reuse symbolic")
+    # jf: Do we need a better test here ? Not sure as that may be expensive.
     lu.p=m
     lu._inmatrixdone = false
     lu._factordone = false
