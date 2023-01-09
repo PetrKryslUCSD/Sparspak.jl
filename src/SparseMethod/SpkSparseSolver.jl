@@ -256,7 +256,7 @@ Forward and backward substitution (triangular solution).
 Variant where the right-hand side vector is passed in. This always triggers a
 triangular solve.
 """
-function triangularsolve!(s::SparseSolver{IT, FT}, rhs::Vector{FT}) where {IT, FT}
+function triangularsolve!(s::SparseSolver{IT, FT}, rhs::AbstractVector{FT}) where {IT, FT}
     if ( ! s._factordone)
         error("Sequence error. Factorization not done yet.")
         return false
