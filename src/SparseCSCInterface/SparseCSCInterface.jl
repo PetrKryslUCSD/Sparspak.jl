@@ -206,11 +206,11 @@ end
 """
     sparspaklu(m)
 
-Calculate LU factorization using sparspak. Steps are
+Calculate LU factorization using Sparspak. Steps are
 `findorder`, `symbolicfactor`, `factor`.
 
-Returns  a  Sparspak.SpkSparseSolver.SparseSolver instance, 
-which has methods for `LinearAlgebra.ldiv!` and `Base.:\`  .
+Returns  a  Sparspak.SpkSparseSolver.SparseSolver instance in the correspondig state,
+which has methods for `LinearAlgebra.ldiv!` and "backslash"
 """
 function sparspaklu(m::SparseMatrixCSC)
     lu=SparseSolver(m)
@@ -226,7 +226,9 @@ end
     sparspaklu!(lu,m)
 
 Calculate numerical LU factorization, reusing sparspak LU factorization `lu`,
-reusing ordering and symbolic factorization.
+reusing ordering and symbolic factorization. 
+Currently the new sparsity pattern is accepted if size and number of nonzeros didn't change, 
+probably leading to errors elsewhere if the patterns nevertheless differ.
 """
 function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
     lu.slvr.n == size(m,1) || error("sparspaklu!: wrong size, cannot reuse symbolic")
@@ -242,6 +244,12 @@ function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
     lu
 end
 
+
+"""
+    ldiv(u,lu::SparseSolver,v)
+
+Left division for SparseSolver
+"""
 function LinearAlgebra.ldiv!(u, lu::SparseSolver, v)
     u.=v
     triangularsolve!(lu,u) || ErrorException("Triangular Solve.")
@@ -249,12 +257,22 @@ function LinearAlgebra.ldiv!(u, lu::SparseSolver, v)
     u
 end
 
+"""
+    ldiv(lu::SparseSolver,v)
+
+Overwriting left division for SparseSolver
+"""
 function LinearAlgebra.ldiv!(lu::SparseSolver, v)
     triangularsolve!(lu,v) || ErrorException("Triangular Solve.")
     lu._trisolvedone = false
     v
 end
 
+"""
+    \(lu::SparseSolver,v)
+
+"Backslash" operator for sparse solver
+"""
 Base.:\(lu::SparseSolver, v)=ldiv!(lu,copy(v))
 
 end
