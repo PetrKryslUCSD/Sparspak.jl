@@ -204,20 +204,25 @@ end
 # SparspakLU
 
 """
-    sparspaklu(m)
+    sparspaklu(m; factorize=true)
 
-Calculate LU factorization using Sparspak. Steps are
-`findorder`, `symbolicfactor`, `factor`.
+If `factorize==true`, calculate LU factorization using Sparspak. Steps
+are `findorder`, `symbolicfactor`, `factor`.
 
-Returns  a  Sparspak.SpkSparseSolver.SparseSolver instance in the correspondig state,
-which has methods for `LinearAlgebra.ldiv!` and "backslash"
+If   `factorize==false`,   ordering,    symbolic   factorization   and
+factorization are delayed to a subsequent call to `sparspaklu!`.
+
+Returns  a  `SparseSolver` instance in the respective state, 
+which has methods for `LinearAlgebra.ldiv!` and "backslash".
 """
-function sparspaklu(m::SparseMatrixCSC)
+function sparspaklu(m::SparseMatrixCSC;factorize=true)
     lu=SparseSolver(m)
-    findorder!(lu) || ErrorException("Finding Order.")
-    symbolicfactor!(lu) || ErrorException("Symbolic Factorization.")
-    inmatrix!(lu) || ErrorException("Matrix input.")
-    factor!(lu) || ErrorException("Numerical Factorization.")
+    if factorize
+        findorder!(lu) || ErrorException("Finding Order.")
+        symbolicfactor!(lu) || ErrorException("Symbolic Factorization.")
+        inmatrix!(lu) || ErrorException("Matrix input.")
+        factor!(lu) || ErrorException("Numerical Factorization.")
+    end
     lu
 end
 
@@ -225,17 +230,24 @@ end
 """
     sparspaklu!(lu,m)
 
-Calculate numerical LU factorization, reusing sparspak LU factorization `lu`,
-reusing ordering and symbolic factorization. 
-Currently the new sparsity pattern is accepted if size and number of nonzeros didn't change, 
-probably leading to errors elsewhere if the patterns nevertheless differ.
+Calculate   LU   factorization,    reusing   ordering   and   symbolic
+factorization from lu, if that was previously calculated.
+
+Currently, it is  assumed that, if size and number  of nonzeros didn't
+change, the  sparsity patterns of `m`  and `p` are the  same, probably
+leading to errors elsewhere if the patterns nevertheless differ.
+
 """
 function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
-    lu.slvr.n == size(m,1) || error("sparspaklu!: wrong size, cannot reuse symbolic")
-    lu.slvr.n == size(m,2) || error("sparspaklu!: wrong matrix size, cannot reuse symbolic")
-    lu.slvr.nnz == nnz(m) || error("sparspaklu!: pattern change detected, cannot reuse symbolic")
     # jf: Do we need a better test here ? Not sure as that may be expensive.
+    if lu.slvr.n != size(m,1) ||   lu.slvr.n != size(m,2) ||     lu.slvr.nnz != nnz(m)
+        lu=SparseSolver(m)
+    end        
     lu.p=m
+    lu._orderdone    || ( findorder!(lu)      || ErrorException("Finding Order.") )
+    lu._symbolicdone || ( symbolicfactor!(lu) || ErrorException("Symbolic Factorization.") )
+    lu._symbolicdone::Bool
+    lu._factordone::Bool
     lu._inmatrixdone = false
     lu._factordone = false
     lu._trisolvedone = false
@@ -260,7 +272,7 @@ end
 """
     ldiv(lu::SparseSolver,v)
 
-Overwriting left division for SparseSolver
+Overwriting left division for SparseSolver.
 """
 function LinearAlgebra.ldiv!(lu::SparseSolver, v)
     triangularsolve!(lu,v) || ErrorException("Triangular Solve.")
@@ -269,7 +281,7 @@ function LinearAlgebra.ldiv!(lu::SparseSolver, v)
 end
 
 """
-    \(lu::SparseSolver,v)
+    \\(lu::SparseSolver,v)
 
 "Backslash" operator for sparse solver
 """
