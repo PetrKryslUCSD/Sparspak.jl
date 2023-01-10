@@ -139,7 +139,7 @@ function _testT(;T=Float64, n=20)
     x=ones(T,n)
     b=spm*x
     @test solve(spm,b)≈x
-    @btime solve($spm,$b)
+    @btime solve($spm,$b) seconds=0.1
     nothing
 end
 

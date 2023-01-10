@@ -400,7 +400,7 @@ end
 # the problem, and it is assumed that the user provides the rhs in
 # the original order. Thus, the permutation "hidden" in the solver
 #  object is applied as appropriate.
-function _triangularsolve!(s::_SparseBase{IT, FT}, solution::Vector{FT}) where {IT, FT}
+function _triangularsolve!(s::_SparseBase{IT, FT}, solution::AbstractVector{FT}) where {IT, FT}
     if (s.n == 0)
         @error "$(@__FILE__): An empty problem. No solution."
         return false
