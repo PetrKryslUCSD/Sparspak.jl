@@ -246,8 +246,6 @@ function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
     lu.p=m
     lu._orderdone    || ( findorder!(lu)      || ErrorException("Finding Order.") )
     lu._symbolicdone || ( symbolicfactor!(lu) || ErrorException("Symbolic Factorization.") )
-    lu._symbolicdone::Bool
-    lu._factordone::Bool
     lu._inmatrixdone = false
     lu._factordone = false
     lu._trisolvedone = false
