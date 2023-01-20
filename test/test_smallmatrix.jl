@@ -31,7 +31,10 @@ function ttsparspak(;n=4,p=0.3)
         println(i)
         A = sprand(n, n, p) + I
         b = rand(n)
-
+        @show A.colptr
+        @show A.rowval
+        display(Matrix(A))
+        
         pr = SpkProblem.Problem(n,n)
         SpkProblem.insparse!(pr, A)
         Sparspak.SpkProblem.infullrhs!(pr, b)
@@ -47,5 +50,17 @@ function ttsparspak(;n=4,p=0.3)
     true
 end
 
-ttsparspak()
+#
+# This is so far the simplest test problem occuring
+#
+function simpletest(;n=4)
+    A = sparse(Diagonal(ones(n)))
+    A[2,1]=-0.1
+    pr = SpkProblem.Problem(n,n)
+    SpkProblem.insparse!(pr, A)
+    s = SpkSparseSolver.SparseSolver(pr)
+    @test SpkSparseSolver.findorder!(s)
+end
 
+simpletest()
+ttsparspak()
