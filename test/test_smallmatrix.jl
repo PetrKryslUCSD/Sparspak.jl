@@ -62,5 +62,16 @@ function simpletest(;n=4)
     @test SpkSparseSolver.findorder!(s)
 end
 
+function testproblem(;n=4)
+    pr = SpkProblem.Problem(n, n)
+    for i=1:n
+        SpkProblem.inaij!(pr,i,i,1.0)
+    end
+    SpkProblem.inaij!(pr,2,1,-0.1)
+    s = SpkSparseSolver.SparseSolver(pr)
+    @test SpkSparseSolver.findorder!(s)
+end
+
+testproblem()
 simpletest()
 ttsparspak()
