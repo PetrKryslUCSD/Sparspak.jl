@@ -1,0 +1,51 @@
+#using LinearSolve
+using Test
+using Sparspak
+using Random, SparseArrays, LinearAlgebra
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkSparseSolver
+
+# function ttlinsolve(;n=4,p=0.3)
+#     for i=1:1000
+#         println(i)
+#         A = sprand(n, n, p) + I
+#         b = rand(n)
+#         prob = LinearProblem(A, b)
+#         sol = solve(prob, SparspakFactorization())
+#     end
+# end
+
+function ttsparspaklu(;n=4,p=0.3)
+    for i=1:1000
+        println(i)
+        A = sprand(n, n, p) + I
+        b = rand(n)
+        x=sparspaklu(A)\b
+        @assert norm(x - A\b)<1.0e-10
+    end
+end
+
+function ttsparspak(;n=4,p=0.3)
+    for i=1:1000
+        println(i)
+        A = sprand(n, n, p) + I
+        b = rand(n)
+
+        pr = SpkProblem.Problem(n,n)
+        SpkProblem.insparse!(pr, A)
+        Sparspak.SpkProblem.infullrhs!(pr, b)
+        s = SpkSparseSolver.SparseSolver(pr)
+        SpkSparseSolver.findorder!(s)
+        SpkSparseSolver.symbolicfactor!(s)
+        SpkSparseSolver.inmatrix!(s)
+        SpkSparseSolver.factor!(s)
+        SpkSparseSolver.solve!(s)
+
+        @test norm(pr.x - A\b)<1.0e-10
+    end
+    true
+end
+
+ttsparspak()
+
