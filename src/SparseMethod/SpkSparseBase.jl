@@ -172,7 +172,7 @@ end
 
 function _findorder!(s::_SparseBase{IT}, orderfunction::F) where {IT, F}
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem, no ordering found."
+        error("An empty problem, no ordering found.")
         return false
     end
     makestructuresymmetric(s.g)     # Make it symmetric
@@ -196,7 +196,7 @@ function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
 #
 # """
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No symbolic factorization done."
+        error("An empty problem. No symbolic factorization done.")
         return false
     end
 
@@ -304,7 +304,7 @@ end
 
 function _inmatrix!(s::_SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No matrix."
+        error("An empty problem. No matrix.")
         return false
     end
 
@@ -331,7 +331,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > inew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            error("No space for matrix element ($(inew), $(jnew)).")
                             return false
                         end
                         if  (irow == inew)
@@ -354,7 +354,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT}
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > jnew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            error("No space for matrix element ($(inew), $(jnew)).")
                             return false
                         end
                         if  (irow == jnew)
@@ -380,14 +380,14 @@ end
 #  in the comments at the beginning of this module.
 function _factor!(s::_SparseBase{IT, FT}) where {IT, FT}
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No matrix."
+        error("An empty problem. No matrix.")
         return false
     end
 
     s.errflag = _lufactor!(s.n, s.nsuper, s.xsuper, s.snode, s.xlindx, s.lindx, s.xlnz, s.lnz, s.xunz, s.unz, s.ipiv)
 
     if (s.errflag != 0)
-        @error "$(@__FILE__): An empty problem. No matrix."
+        error("An empty problem. No matrix.")
         return false
     end
     return true
@@ -402,7 +402,7 @@ end
 #  object is applied as appropriate.
 function _triangularsolve!(s::_SparseBase{IT, FT}, solution::AbstractVector{FT}) where {IT, FT}
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No solution."
+        error("An empty problem. No solution.")
         return false
     end
 
