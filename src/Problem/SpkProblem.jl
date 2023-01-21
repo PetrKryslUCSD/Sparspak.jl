@@ -525,6 +525,44 @@ function zerorhs!(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
     p.rhs[:] .= zero(FT)
     return p
 end
+
+"""
+    isstructuresymmetric(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+
+Is the problem structurally symmetric?
+"""
+function isstructuresymmetric(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+    for cnum  in  1:p.ncols
+        ptr = p.head[cnum]
+        while ( ptr > 0 )
+            if ( p.rowsubs[ptr] != cnum && !ijpresent(p, cnum, p.rowSubs[ptr] ) )   
+                return false
+            end
+            ptr = p.link(ptr)
+        end 
+    end   
+    return true
+end
+
+"""
+    ijpresent(p::Problem{IT,FT} rnum, cnum) where {IT<:BlasInt, FT}
+
+Check to see if the entry (rnum, cnum) is present.
+If it is, the routine returns .true., otherwise .false. is returned.
+"""
+function ijpresent(p::Problem{IT,FT}, rnum, cnum) where {IT<:BlasInt, FT}
+    ptr = p.head[cnum]
+    while ( ptr > 0 )
+        if ( p.rowSubs[ptr] > rnum ) 
+            return false
+        end
+        if ( p.rowSubs[ptr]  ==  rnum ) 
+            return true
+        end 
+        ptr = p.link[ptr]
+    end 
+    return false
+end
     
 
 end # module 
