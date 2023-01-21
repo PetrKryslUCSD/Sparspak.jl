@@ -39,3 +39,7 @@ end
 @time @testset "SparseMatrixCSC Interface" begin
     include("test_cscinterface.jl")
 end
+
+@time @testset "Small tricky problem" begin
+    include("test_small.jl")
+end
