@@ -16,6 +16,7 @@ using Sparspak.SpkSparseSolver
 #     end
 # end
 
+
 function ttsparspaklu(;n=4,p=0.3)
     for i=1:1000
         println(i)
@@ -65,7 +66,7 @@ function simpletest1(;n=4)
 end
 
 #
-# May be another bug: fails in pkLUFactor.jl:245
+# Fails in SpkLUFactor.jl:245
 #
 function simpletest2()
     A=[1.21883    0.0  0.0      0.942235;
@@ -83,8 +84,33 @@ function simpletest2()
     @test SpkSparseSolver.factor!(s)
 end
 
+#
+# Fails in SpkSparseBase.jl:390
+#
+function simpletest3()
+    A=[   1.0       0.0       0.0      0.0;
+          0.0       1.45565   0.0      0.0;
+          0.0       0.0       1.11667  0.0;
+          0.511585  0.159678  0.0      1.0]
+    A=sparse(A)
+    pr = SpkProblem.Problem(4,4)
+    SpkProblem.insparse!(pr, A)
+    s = SpkSparseSolver.SparseSolver(pr)
+    SpkSparseSolver.findorder!(s)
+    SpkSparseSolver.symbolicfactor!(s)
+    SpkSparseSolver.inmatrix!(s)
+    @test SpkSparseSolver.factor!(s)
+end
+
+
+
+
+
+
+
 simpletest1()
 simpletest2()
+simpletest3()
 ttsparspak()
 ttsparspaklu()
 
