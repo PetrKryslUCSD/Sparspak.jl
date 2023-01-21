@@ -40,3 +40,8 @@ end
     include("test_structunsymm.jl")
 end
 
+@time @testset "Further tests of small unsymmetric matrices" begin
+    include("test_small.jl")
+end
+
+
