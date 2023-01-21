@@ -102,7 +102,7 @@ end
 
 function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT, FT}
     if (s.n == 0)
-        @error "$(@__FILE__): An empty problem. No matrix."
+        error("An empty problem. No matrix.")
         return false
     end
 
@@ -128,7 +128,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > inew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            error("No space for matrix element ($(inew), $(jnew)).")
                             return false
                         end
                         if  (irow == inew)
@@ -151,7 +151,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > jnew)
-                            @error "$(@__FILE__): No space for matrix element $(inew), $(jnew)."
+                            error("No space for matrix element ($(inew), $(jnew)).")
                             return false
                         end
                         if  (irow == jnew)

@@ -1,5 +1,17 @@
 using Test
 
+
+#
+# Error in LinearSolve - once fixed, move to the end...
+#
+# @time @testset "Smallmatrix" begin
+#     include("test_smallmatrix.jl")
+# end
+
+@time @testset "Small tricky problem" begin
+    include("test_small.jl")
+end
+
 @time @testset "Problem" begin
     include("test_problem.jl")
 end

@@ -176,7 +176,7 @@ The value is *added* to the existing contents.
 """
 function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:BlasInt, FT}
     if (rnum < 1 || cnum < 1)
-        @warn "$(@__FILE__): invalid matrix subscripts $(rnum), $(cnum): input ignored"
+        @warn "Invalid matrix subscripts $(rnum), $(cnum): input ignored"
         return false
     end
 
@@ -257,7 +257,7 @@ Input an entry of the right-hand side vector.
 """
 function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT<:BlasInt, FT}
     if (rnum < 1)
-        @error "$(@__FILE__): Invalid rhs subscript $(rnum)."
+        error("Invalid rhs subscript $(rnum).")
         return false
     end
 
@@ -401,7 +401,7 @@ Updated Parameter:
 """
 function makerhs!(p::Problem, x::Vector{FT}, mtype = "T") where {FT}
     if (p.nnz == 0)
-        @error "$(@__FILE__): Matrix is NULL. The rhs cannot be computed."
+        error("Matrix is NULL. The rhs cannot be computed.")
         return p
     end
 
@@ -462,7 +462,7 @@ function computeresidual(p::Problem, res::Vector{FT}, xin::Vector{FT} = FT[], mt
     if (lowercase(mtype) == "t" || lowercase(mtype) == "l" || lowercase(mtype) == "u")
         flag = 1
     else
-        @error "$(@__FILE__): Invalid value for mtype, $mtype."
+        error("Invalid value for mtype, $mtype.")
         return false
     end
 

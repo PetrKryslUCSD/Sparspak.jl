@@ -361,7 +361,7 @@ function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, l
             jj = jj + 1
             isub = lindx[jj]
             if (isub > n)
-                @error "$(@__FILE__): $(isub) index out of bounds in rhs"
+                error("Index $(isub) out of bounds in rhs")
                 return false
             end
             temp[j] = rhs[isub]
