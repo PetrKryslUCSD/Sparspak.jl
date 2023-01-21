@@ -1,5 +1,6 @@
 using Test
 
+
 #
 # Error in LinearSolve - once fixed, move to the end...
 #
@@ -47,6 +48,7 @@ end
     include("test_cscinterface.jl")
 end
 
-@time @testset "Small tricky problem" begin
-    include("test_small.jl")
+@time @testset "Structurally unsymmetric" begin
+    include("test_structunsymm.jl")
 end
+

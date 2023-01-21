@@ -318,25 +318,22 @@ end
 
 Determines if a graph is structurally symmetric.
 
-Important assumption:
-It is assumed that the adjacency lists are in increasing order.
- 
 Output: either true or false
 """
 function isstructuresymmetric(g::Graph{IT}) where {IT}
-    first = deepcopy(g.xadj[1:g.nv])
-    for i in 1: g.nv
-        if (first[i]  < g.xadj[i + 1])
-            if (g.adj[first[i]] < i) 
-                return false
+    function findentry(i,j)
+        for k = g.xadj[i]:g.xadj[i+1]-1
+            if g.adj[k]==j
+                return true
             end
         end
-        for j in first[i]:(g.xadj[i + 1] - 1)
-            k = g.adj[j]
-            if first[k] <= length(g.adj) && (g.adj[first[k]] != i)   
+        return false
+    end
+    for i in 1: g.nv
+        for k = g.xadj[i]:g.xadj[i+1]-1
+            j = g.adj[k]
+            if !findentry(j,i)
                 return false
-            else
-                first[k] = first[k] + 1
             end
         end
     end
