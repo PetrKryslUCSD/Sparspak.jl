@@ -67,9 +67,8 @@ end
 #                  relative to the last index in the list.  more
 #                  precisely, it gives the distance of each index
 #                  from the last index in the list.
-function ldindx(jlen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}) where {IT}
+function ldindx(jlen::IT, lindx::LT, indmap::Vector{IT}) where {IT, LT}
     # indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
-
     @assert length(lindx) >= jlen
     kk = (jlen - 1)
     @inbounds for j in 1:jlen
