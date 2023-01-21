@@ -333,7 +333,7 @@ function isstructuresymmetric(g::Graph{IT}) where {IT}
         end
         for j in first[i]:(g.xadj[i + 1] - 1)
             k = g.adj[j]
-            if (g.adj[first[k]] != i)   
+            if first[k] <= length(g.adj) && (g.adj[first[k]] != i)   
                 return false
             else
                 first[k] = first[k] + 1
