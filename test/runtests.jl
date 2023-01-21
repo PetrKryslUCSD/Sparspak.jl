@@ -1,7 +1,10 @@
 using Test
 
-@time @testset "Utilities" begin
-    include("test_utilities.jl")
+#
+# Error in LinearSolve - once fixed, move to the end...
+#
+@time @testset "Smallmatrix" begin
+    include("test_smallmatrix.jl")
 end
 
 @time @testset "Problem" begin
