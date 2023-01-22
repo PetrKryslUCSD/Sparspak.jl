@@ -1,28 +1,3 @@
-# # Graph class:
-
-# nV - the number of vertices in the graph.
-# (xadj, adj) - array pair storing the adjacency lists of the vertices.
-
-# The adjacency lists of the graph are stored in consecutive locations
-# in the array adj. The adjacency list for the i - th vertex in the graph
-# is stored in positions adj(k), k = xadj(i), .... xadj(i + 1) - 1.
-# #
-# When the graph is symmetric, if vertex i is in vertex j"s adjacency
-#  vertex j is in vertex i"s list. Using the representation above
-# each edge in the graph is stored twice.
-
-# There are no self - loops (No "diagonal elements") by default. If
-# diagonal elements are required, just type "diagonal" or "diag"
-# as an input parameter to the Construct subroutine.
-# #
-# For convenience in accessing the lists, xadj is of length nV + 1, with
-# xadj(nV + 1) = nEdges + 1.0 Thus, accessing vertex nV"s list is the
-# same as for any other of the vertices.
-
-# Graphs are created from Problem objects, which have a certain number
-# of rows (nRows) and columns (nCols). These numbers are captured
-# and stored in Graph objects as nRows and nCols as well.
-
 module SpkGraph
 
 using ..SpkUtilities: __extend
@@ -38,7 +13,7 @@ The adjacency lists of the graph are stored in consecutive locations
 in the array adj. The adjacency list for the `i` - th vertex in the graph
 is stored in positions `adj[k]`, `k = xadj[i], .... xadj[i + 1] - 1`.
 
-When the graph is symmetric, if vertex `i` is in vertex `j`'"'s adjacency
+When the graph is symmetric, if vertex `i` is in vertex `j`'s adjacency
 vertex `j` is in vertex `i`'s list. Using the representation above
 each edge in the graph is stored twice.
 
@@ -46,7 +21,7 @@ There are no self - loops (no "diagonal elements") by default. If
 diagonal elements are required, just input "diagonal" or "diag".
 
 For convenience in accessing the lists, `xadj` is of length `nv + 1`, with
-`xadj[nV + 1] = nEdges + 1`. Thus, accessing vertex `nV`'s list is the
+`xadj[nV + 1] = nEdges + 1`. Thus, accessing vertex `nv`'s list is the
 same as for any other of the vertices.
 
 Graphs are created from Problem objects, which have a certain number
@@ -321,7 +296,7 @@ Determines if a graph is structurally symmetric.
 Output: either true or false
 """
 function isstructuresymmetric(g::Graph{IT}) where {IT}
-    function findentry(i,j)
+    function findentry(i, j)
         for k = g.xadj[i]:g.xadj[i+1]-1
             if g.adj[k]==j
                 return true
@@ -332,7 +307,7 @@ function isstructuresymmetric(g::Graph{IT}) where {IT}
     for i in 1: g.nv
         for k = g.xadj[i]:g.xadj[i+1]-1
             j = g.adj[k]
-            if !findentry(j,i)
+            if !findentry(j, i)
                 return false
             end
         end
