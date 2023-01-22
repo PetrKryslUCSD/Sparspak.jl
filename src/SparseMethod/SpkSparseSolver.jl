@@ -97,7 +97,7 @@ function findorder!(s::SparseSolver{IT}, orderfunction::F) where {IT, F}
     if (s._orderdone)
         return true 
     end
-    findorder(s.slvr, orderfunction)
+    _findorder!(s.slvr, orderfunction)
     s._orderdone = true
     s._symbolicdone = false
     return true
