@@ -225,7 +225,7 @@ function _symbolicfact!(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode,
 # -  -  -  -  -  -  -  -  -  -  -
         nzbeg = nzend + 1;   nzend = nzend + knz
         if (nzend + 1 != xlindx[ksup + 1])
-            @error "$(@__FILE__): inconsistency in data structure."
+            error("Inconsistency in data structure.")
             return false
         end
         
