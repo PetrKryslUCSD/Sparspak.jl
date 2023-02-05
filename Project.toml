@@ -1,7 +1,7 @@
 name = "Sparspak"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 authors = ["Petr Krysl <pkrysl@ucsd.edu>"]
-version = "0.3.7"
+version = "0.3.8"
 
 [deps]
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
