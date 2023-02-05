@@ -172,7 +172,7 @@ end
 
 
 
-function SparseSolver(m::SparseMatrixCSC)
+function SparseSolver(m::SparseMatrixCSC{FT,IT}) where {FT,IT}
     ma = size(m,2)
     na = size(m,1)
     mc = 0
@@ -190,7 +190,7 @@ function SparseSolver(m::SparseMatrixCSC)
 end
 
 
-function solve!(s::SparseSolver{IT}, rhs) where {IT}
+function solve!(s::SparseSolver{IT,FT}, rhs) where {IT,FT}
     findorder!(s) || ErrorException("Finding Order.")
     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
     inmatrix!(s) || ErrorException("Matrix input.")
@@ -215,7 +215,7 @@ factorization are delayed to a subsequent call to `sparspaklu!`.
 Returns  a  `SparseSolver` instance in the respective state, 
 which has methods for `LinearAlgebra.ldiv!` and "backslash".
 """
-function sparspaklu(m::SparseMatrixCSC;factorize=true)
+function sparspaklu(m::SparseMatrixCSC{FT,IT};factorize=true) where {FT,IT}
     lu=SparseSolver(m)
     if factorize
         findorder!(lu) || ErrorException("Finding Order.")
@@ -238,7 +238,7 @@ change, the  sparsity patterns of `m`  and `p` are the  same, probably
 leading to errors elsewhere if the patterns nevertheless differ.
 
 """
-function sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC)
+function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}) where {FT,IT}
     # jf: Do we need a better test here ? Not sure as that may be expensive.
     if lu.slvr.n != size(m,1) ||   lu.slvr.n != size(m,2) ||     lu.slvr.nnz != nnz(m)
         lu=SparseSolver(m)
@@ -260,7 +260,7 @@ end
 
 Left division for SparseSolver
 """
-function LinearAlgebra.ldiv!(u, lu::SparseSolver, v)
+function LinearAlgebra.ldiv!(u, lu::SparseSolver{IT,FT}, v) where {IT,FT}
     u.=v
     triangularsolve!(lu,u) || ErrorException("Triangular Solve.")
     lu._trisolvedone = false
@@ -272,7 +272,7 @@ end
 
 Overwriting left division for SparseSolver.
 """
-function LinearAlgebra.ldiv!(lu::SparseSolver, v)
+function LinearAlgebra.ldiv!(lu::SparseSolver{IT,FT}, v) where {IT,FT}
     triangularsolve!(lu,v) || ErrorException("Triangular Solve.")
     lu._trisolvedone = false
     v
@@ -283,6 +283,6 @@ end
 
 "Backslash" operator for sparse solver
 """
-Base.:\(lu::SparseSolver, v)=ldiv!(lu,copy(v))
+Base.:\(lu::SparseSolver{IT,FT}, v) where {IT,FT}=ldiv!(lu,copy(v))
 
 end
