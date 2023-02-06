@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>How to · Sparspak.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/custom.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Sparspak.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li class="is-active"><a class="tocitem" href>How to</a><ul class="internal"><li><a class="tocitem" href="#How-to-install"><span>How to install</span></a></li><li><a class="tocitem" href="#How-to-solve-a-random-problem"><span>How to solve a random problem</span></a></li><li><a class="tocitem" href="#How-to-improve-performance"><span>How to improve performance</span></a></li></ul></li><li><a class="tocitem" href="../../tutorials/tutorials/">Tutorials</a></li><li><a class="tocitem" href="../../concepts/concepts/">Concepts</a></li><li><a class="tocitem" href="../../man/man/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>How to</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>How to</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/PetrKryslUCSD/Sparspak.jl/blob/main/docs/src/howto/howto.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="How-to-guide"><a class="docs-heading-anchor" href="#How-to-guide">How-to guide</a><a id="How-to-guide-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-guide" title="Permalink"></a></h1><h2 id="How-to-install"><a class="docs-heading-anchor" href="#How-to-install">How to install</a><a id="How-to-install-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-install" title="Permalink"></a></h2><p>The latest release of Sparspak can be installed from the Julia REPL prompt with</p><pre><code class="language-julia hljs">julia&gt; ]add Sparspak</code></pre><p>The closing square bracket switches to the package manager interface and the <code>add</code> commands installs Sparspak and any missing dependencies.  To return to the Julia REPL hit the <code>delete</code> key.</p><h2 id="How-to-solve-a-random-problem"><a class="docs-heading-anchor" href="#How-to-solve-a-random-problem">How to solve a random problem</a><a id="How-to-solve-a-random-problem-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-solve-a-random-problem" title="Permalink"></a></h2><p>This code makes up a random-coefficient (but diagonally dominant) sparse matrix and a simple right hand side vector. The sparse linear algebraic equation problem is then solved with the LU factorization. The solution is tested against the solution with the built-in solver.</p><pre><code class="nohighlight hljs">using LinearAlgebra
+using SparseArrays
+using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
+using Sparspak.SparseSolver: SparseSolver, solve!
+
+function _test()
+    n = 1357
+    A = sprand(n, n, 1/n)
+    A = -A - A&#39; + 20 * LinearAlgebra.I
+    
+    p = Problem(n, n)
+    insparse!(p, A);
+    infullrhs!(p, 1:n);
+    
+    s = SparseSolver(p)
+    solve!(s)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @show norm(p.x - x) / norm(x) 
+
+    return true
+end
+
+_test()</code></pre><p>For more details see the file <code>test/test_sparse_method.jl</code>, module <code>msprs016</code>.</p><h2 id="How-to-improve-performance"><a class="docs-heading-anchor" href="#How-to-improve-performance">How to improve performance</a><a id="How-to-improve-performance-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-improve-performance" title="Permalink"></a></h2><p>Use <code>MKL</code>:</p><pre><code class="nohighlight hljs">using LinearAlgebra
+using SparseArrays
+using MKL # &lt;------------- Notice we put this before referencing Sparspak
+using Sparspak.Problem: Problem, insparse!, outsparse, infullrhs!
+using Sparspak.SparseSolver: SparseSolver, solve!
+
+function _test()
+    n = 1357
+    A = sprand(n, n, 1/n)
+    A = -A - A&#39; + 20 * LinearAlgebra.I
+    
+    p = Problem(n, n)
+    insparse!(p, A);
+    infullrhs!(p, 1:n);
+    
+    s = SparseSolver(p)
+    solve!(s)
+    A = outsparse(p)
+    x = A \ p.rhs
+    @show norm(p.x - x) / norm(x) 
+
+    return true
+end
+
+_test()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../tutorials/tutorials/">Tutorials »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 6 February 2023 23:42">Monday 6 February 2023</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
