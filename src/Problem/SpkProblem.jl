@@ -167,6 +167,10 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where
         rscales, cscales, x, rhs)
 end
 
+function Problem(nrows::IT, ncols::IT, z::FT=0.0) where {IT<:BlasInt, FT}
+    return Problem(nrows, ncols, 2500, z)
+end
+
 """
     inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT,FT}
 
