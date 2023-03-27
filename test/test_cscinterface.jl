@@ -103,8 +103,8 @@ function _test(T=Float64, n=20)
     slv = SparseSolver(spm)
     exsol = ones(T,n)
     rhs = spm*exsol
-    sol = solve!(slv,rhs)
-    @test sol≈exsol
+    @test  solve!(slv,rhs)
+    @test rhs ≈ exsol
 end
 
 
@@ -147,3 +147,139 @@ _test(Float64)
 _test(Float64x2)
 _test(ForwardDiff.Dual{Float64,Float64,1})
 end
+
+
+module mcsc020
+using Test
+using Logging
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+
+function maketridiagproblem(n)
+    p = SpkProblem.Problem(n, n)
+    for i in 1:(n-1)
+        inaij!(p, i + 1, i, -1.0)
+        inaij!(p, i, i, 4.0)
+        inaij!(p, i, i + 1, -1.0)
+        inbi!(p, i, 2.0 * i)
+    end
+    inaij!(p, n, n, 4.0)
+    inbi!(p, n, 3.0 * n + 1.0)
+
+    return p
+end
+
+function _test()
+    p = maketridiagproblem(11)
+
+    s = SparseSolver(p)
+
+    A = outsparse(p)
+    rhs = copy(p.rhs)
+    xr = A \ rhs
+
+    rhs = copy(p.rhs)
+    x = s \ rhs
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    rhs = copy(p.rhs)
+    ldiv!(s, rhs)
+    x = copy(rhs)
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    rhs = copy(p.rhs)
+    x = copy(rhs)
+    ldiv!(x, s, rhs)
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+
+module mcsc021
+using Test
+using Logging
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+
+function _test()
+    n = 41
+    spm = sprand(Float64, n, n, 1/n)
+    spm = -spm - spm' + 40 * LinearAlgebra.I
+    prhs = collect(ones(n))
+
+    s = SparseSolver(spm)
+
+    A = copy(spm)
+    rhs = copy(prhs)
+    xr = A \ rhs
+
+    rhs = copy(prhs)
+    x = s \ rhs
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    rhs = copy(prhs)
+    ldiv!(s, rhs)
+    x = copy(rhs)
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    rhs = copy(prhs)
+    x = copy(rhs)
+    ldiv!(x, s, rhs)
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
+
+
+module mcsc022
+using Test
+using Logging
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkOrdering
+using Sparspak.SpkProblem
+using Sparspak.SpkProblem: inaij!, inbi!, outsparse
+using Sparspak.SpkSparseSolver: SparseSolver, findorder!, symbolicfactor!, inmatrix!, factor!, solve!,  triangularsolve!
+
+function _test()
+    # @show "===================="
+    n = 41
+    spm = sprand(Float64, n, n, 1/n)
+    spm = -spm - spm' + 40 * LinearAlgebra.I
+    prhs = collect(ones(n))
+
+    s = SparseSolver(spm)
+
+    A = copy(spm)
+    rhs = copy(prhs)
+    xr = A \ rhs
+
+    rhs = copy(prhs)
+    x = s \ rhs
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+    @test s._factordone
+
+    rhs = copy(prhs)
+    x = s \ rhs
+    @test norm(x - xr) / norm(xr) < 1.0e-6
+
+    return true
+end
+
+_test()
+end # module
