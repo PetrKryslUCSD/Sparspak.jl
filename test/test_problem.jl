@@ -51,3 +51,44 @@ end
 
 _test()
 end # module
+
+module mprob003
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkProblem
+
+function _test()
+    M, N = 15, 15
+    p = SpkProblem.Problem(M, N, 0.0)
+    spm = sprand(M, N, 0.2)
+    spm = spm + spm'
+    SpkProblem.insparse!(p, spm)
+    A = SpkProblem.outsparse(p)
+    @test spm - A == sparse(Int64[], Int64[], Float64[], M, N)
+    return true
+end
+
+_test()
+end # module
+
+module mprob004
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak.SpkProblem
+
+function _test()
+    M, N = 15, 15
+    p = SpkProblem.Problem(0, 0, 0.0)
+    p = SpkProblem.Problem(M, N, 0.0)
+    spm = sprand(M, N, 0.2)
+    spm = spm + spm'
+    SpkProblem.insparse!(p, spm)
+    A = SpkProblem.outsparse(p)
+    @test spm - A == sparse(Int64[], Int64[], Float64[], M, N)
+    return true
+end
+
+_test()
+end # module

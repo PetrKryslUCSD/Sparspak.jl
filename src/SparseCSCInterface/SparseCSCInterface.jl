@@ -195,9 +195,8 @@ function solve!(s::SparseSolver{IT,FT}, rhs) where {IT,FT}
     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
     inmatrix!(s) || ErrorException("Matrix input.")
     factor!(s) || ErrorException("Numerical Factorization.")
-    temp=copy(rhs)
-    triangularsolve!(s,temp) || ErrorException("Triangular Solve.")
-    return temp
+    triangularsolve!(s,rhs) || ErrorException("Triangular Solve.")
+    return true
 end
 
 #########################################################################
@@ -254,26 +253,27 @@ function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}) where {
     lu
 end
 
-
 """
-    ldiv(u,lu::SparseSolver,v)
+    ldiv!(u, lu::SparseSolver{IT,FT}, v) where {IT,FT}
 
-Left division for SparseSolver
+Left division for SparseSolver.
+
+The solution is returned in `u`. The right hand side vector is `v`.
 """
 function LinearAlgebra.ldiv!(u, lu::SparseSolver{IT,FT}, v) where {IT,FT}
     u.=v
-    triangularsolve!(lu,u) || ErrorException("Triangular Solve.")
-    lu._trisolvedone = false
-    u
+    return ldiv!(lu, u)
 end
 
 """
-    ldiv(lu::SparseSolver,v)
+    ldiv!(lu::SparseSolver{IT,FT}, v) where {IT,FT}
 
 Overwriting left division for SparseSolver.
+
+The solution is returned in `v`, which is also the right hand side vector.
 """
 function LinearAlgebra.ldiv!(lu::SparseSolver{IT,FT}, v) where {IT,FT}
-    triangularsolve!(lu,v) || ErrorException("Triangular Solve.")
+    solve!(lu, v) || ErrorException("Triangular Solve.")
     lu._trisolvedone = false
     v
 end
