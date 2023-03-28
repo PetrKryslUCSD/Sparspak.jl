@@ -184,17 +184,14 @@ function _findorder!(s::_SparseBase{IT}) where {IT}
     return _findorder!(s, mmd!)
 end
 
-function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
-# """
-#     This subroutine computes the storage requirements and sets up
-#     data structures for the symbolic and numerical factorization.
-##
+# #     This subroutine computes the storage requirements and sets up
+#     # data structures for the symbolic and numerical factorization.
+# #
 # Input parameters: solver object
-##
+# #
 # The "output" is the modified solver object.
-#
-#
-# """
+function _symbolicfactor!(s::_SparseBase{IT, FT}) where {IT, FT}
+
     if (s.n == 0)
         error("An empty problem. No symbolic factorization done.")
         return false
