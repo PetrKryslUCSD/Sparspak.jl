@@ -195,9 +195,8 @@ function solve!(s::SparseSolver{IT,FT}, rhs) where {IT,FT}
     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
     inmatrix!(s) || ErrorException("Matrix input.")
     factor!(s) || ErrorException("Numerical Factorization.")
-    temp=copy(rhs)
-    triangularsolve!(s,temp) || ErrorException("Triangular Solve.")
-    return temp
+    triangularsolve!(s,rhs) || ErrorException("Triangular Solve.")
+    return true
 end
 
 #########################################################################
