@@ -103,8 +103,9 @@ function _test(T=Float64, n=20)
     slv = SparseSolver(spm)
     exsol = ones(T,n)
     rhs = spm*exsol
-    sol = solve!(slv,rhs)
-    @test sol≈exsol
+    solve!(slv,rhs)
+
+    @test rhs≈exsol
 end
 
 

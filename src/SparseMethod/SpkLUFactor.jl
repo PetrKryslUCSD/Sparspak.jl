@@ -1,6 +1,6 @@
 module SpkLUFactor
 
-using ..SpkSpdMMops: mmpyi, assmb, luswap, ldindx, igathr, _gemm!, _trsm!, _getrf!, _laswp!, _gemv!
+using ..SpkSpdMMops: _mmpyi!, _assmb!, _luswap!, _ldindx!, _igathr!, _gemm!, _trsm!, _getrf!, _laswp!, _gemv!
 
 
 #      this subroutine computes an LU factorization of a sparse
@@ -65,7 +65,7 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
     @assert length(xunz) == (n + 1)
     @assert length(ipvt) == n
 
-    ONE = FT(1.0)
+    ONE = one(FT)
     
     link = fill(zero(IT), nsuper)
     lngth = fill(zero(IT), nsuper)
@@ -108,7 +108,7 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
 #       Set up map(*) to map the entries in update columns to their
 #       corresponding positions in updated columns, relative to the bottom of
 #       each updated column.
-        ldindx(jlen, view(lindx, jxpnt:length(lindx)), map)
+        _ldindx!(jlen, view(lindx, jxpnt:length(lindx)), map)
 #       For every supernode ksup in row(jsup) ...
         while (true)
 #           Wait for something to appear in the list, or stop if there can"t be
@@ -171,9 +171,9 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
                 if (nk == 1)
 #                   Updating target supernode by a trivial supernode (with one
 #                   column).
-                    mmpyi(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(unz, kupnt:length(unz)), xlnz, lnz, map)
+                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(unz, kupnt:length(unz)), xlnz, lnz, map)
 
-                    mmpyi(klen - nups, nups, view(lindx, (kxpnt + nups):length(lindx)), view(lindx, kxpnt:length(lindx)), view(unz, (kupnt + nups):length(unz)), view(lnz, klpnt:length(lnz)), xunz, unz, map)
+                    _mmpyi!(klen - nups, nups, view(lindx, (kxpnt + nups):length(lindx)), view(lindx, kxpnt:length(lindx)), view(unz, (kupnt + nups):length(unz)), view(lnz, klpnt:length(lnz)), xunz, unz, map)
                  else
 #                   kfirst ...  first index of active portion of
 #                                supernode ksup (first column to be
@@ -200,16 +200,16 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
                             iflag = - 2
                         end
 #                       Gather indices of ksup relative to jsup.
-                        igathr(klen, view(lindx, kxpnt:length(lindx)), map, relind)
+                        _igathr!(klen, view(lindx, kxpnt:length(lindx)), map, relind)
                         _gemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, view(unz, kupnt:length(unz)), ksuplen - nk, zero(FT), vtemp, klen)
 #                       Incorporate the cmod(jsup, ksup) block update into the
 #                       appropriate columns of L.
-                        assmb(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), view(xlnz, fj:length(xlnz)), lnz, jlen)
+                        _assmb!(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), view(xlnz, fj:length(xlnz)), lnz, jlen)
                         if  (klen > nups)
                             _gemm!('n', 't', klen - nups, nups, nk, -ONE, view(unz, (kupnt + nups):length(unz)), ksuplen - nk, view(lnz, klpnt:length(lnz)), ksuplen, zero(FT), vtemp, klen - nups)
 #                           incorporate the cmod(jsup, ksup) block update into
 #                           the appropriate rows of u.
-                            assmb(klen - nups, nups, temp, view(relind, 1:length(relind)), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
+                            _assmb!(klen - nups, nups, temp, view(relind, 1:length(relind)), view(relind, (nups + 1):length(relind)), view(xunz, fj:length(xunz)), unz, jlen)
                         end
                     end
                 end
@@ -235,7 +235,7 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
         _trsm!('r', 'u', 'n', 'n', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(lnz, (jlpnt + nj):length(lnz)), jlen)
 #       Apply permutation to rows.
         if  (jlen > nj)
-            luswap(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
+            _luswap!(jlen - nj, nj, view(unz, jupnt:length(unz)), jlen - nj, view(ipvt, fj:length(ipvt)))
 #           Update rows.
             _trsm!('r', 'l', 't', 'u', jlen - nj, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen, view(unz, jupnt:length(unz)), jlen - nj)
         end
@@ -278,8 +278,8 @@ function _lulsolve!(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::V
 # -  -  -  -  -  -  -  -  -  -
 #    constants.
 # -  -  -  -  -  -  -  -  -  -
-    ONE = FT(1.0)
-    ZERO = FT(0.0)
+    ONE = one(FT)
+    ZERO = zero(FT)
 
     if  (nsuper <= 0)  return false; end
 
@@ -331,8 +331,8 @@ function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, l
 # integer :: length, maxlength
 # real(double), dimension(:), allocatable :: temp
 
-    ONE = FT(1.0)
-    ZERO = FT(0.0)
+    ONE = one(FT)
+    ZERO = zero(FT)
 
     if  (nsuper <= 0)  return; end
 

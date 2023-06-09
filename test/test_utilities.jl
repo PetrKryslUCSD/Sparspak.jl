@@ -97,7 +97,7 @@ end # module
 #         4   5   6   7   8   0]
 #     m, n = size(a); lda = m; ipvt = [2, 6, 4, 3, 5, 1]
 #     b = a[:]
-#     luswap(m, n, view(b, 1:length(b)), lda, view(ipvt, 1:length(ipvt)))
+#     _luswap!(m, n, view(b, 1:length(b)), lda, view(ipvt, 1:length(ipvt)))
 #     @show reshape(b, m, n)
 #     [1.0 -7.0 3.0 4.0 5.0 2.0; 
 #     -5.0 8.0 -3.0 -2.0 -1.0 -4.0; 

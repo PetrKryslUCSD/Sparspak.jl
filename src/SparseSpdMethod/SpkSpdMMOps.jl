@@ -38,7 +38,7 @@ end
 
 # output parameters:
 # lnz - contains columns modified by the update matrix.
-function assmb(tlen::IT, nj::IT, temp::Vector{FT}, relcol::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, relind::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, xlnz::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
+function _assmb!(tlen::IT, nj::IT, temp::Vector{FT}, relcol::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, relind::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, xlnz::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
     for j in 1:nj
         lbot = xlnz[jlen - relcol[j] + 1] - 1
         @inbounds for k in 1:tlen
@@ -67,7 +67,7 @@ end
 #                  relative to the last index in the list.  more
 #                  precisely, it gives the distance of each index
 #                  from the last index in the list.
-function ldindx(jlen::IT, lindx::LT, indmap::Vector{IT}) where {IT, LT}
+function _ldindx!(jlen::IT, lindx::LT, indmap::Vector{IT}) where {IT, LT}
     # indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
     @assert length(lindx) >= jlen
     kk = (jlen - 1)
@@ -91,7 +91,7 @@ end
 #        relind - list relative indices.
 #
 # *
-function igathr(klen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
+function _igathr!(klen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
     # relind[1:klen] = indmap[lindx[1:klen]]
 
     @assert length(relind) >= klen
@@ -122,7 +122,7 @@ end
 
 # updated parameters -
 #     z       -   on output, z = z + xy.
-function mmpyi(m::IT, q::IT, 
+function _mmpyi!(m::IT, q::IT,
     zindxr::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
     zindxc::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
     x::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
@@ -165,7 +165,7 @@ end
 #    updated parameters -
 #        a - on output, a has its rows swapped according to
 #                    a[i, k] = a[ipvt[i], k] (i hope)
-function luswap(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+function _luswap!(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
     for k in 1:n
         i = ipvt[k]
         ks = (k - 1)*lda + 1
