@@ -170,8 +170,6 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT
     return doit(size(m,1), m.colptr, m.rowval, s.order.rinvp, s.order.cinvp, s.snode, s.xsuper, s.xlindx, s.lindx, m.nzval, s.xlnz, s.lnz, s.xunz, s.unz)
 end
 
-
-
 function SparseSolver(m::SparseMatrixCSC{FT,IT}) where {FT,IT}
     ma = size(m,2)
     na = size(m,1)
@@ -190,6 +188,11 @@ function SparseSolver(m::SparseMatrixCSC{FT,IT}) where {FT,IT}
 end
 
 
+"""
+    solve!(s,rhs)
+
+Solves linear system defined with sparse solver and provides the solution in rhs.
+"""
 function solve!(s::SparseSolver{IT,FT}, rhs) where {IT,FT}
     findorder!(s) || ErrorException("Finding Order.")
     symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
