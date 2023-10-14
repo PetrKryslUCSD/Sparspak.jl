@@ -137,7 +137,19 @@ function _test(T=Float64, n=20)
 
     spm.nzval.-=0.1
     rhs = spm*exsol
-    lu=sparspaklu!(lu,spm)
+    sparspaklu!(lu,spm)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    # create a matrix with different sparsity pattern
+    spm2 = spm + sprand(T, n, n, 1/n)
+    rhs = spm2*exsol
+
+    # test fails attempting to reuse factorisation lu
+    @test_throws ErrorException sparspaklu!(lu,spm2; allow_pattern_change=false)
+
+    # test with default allow_pattern_change == true
+    sparspaklu!(lu,spm2)
     sol=lu\rhs
     @test sol≈exsol
     
@@ -147,4 +159,45 @@ end
 _test(Float64)
 _test(Float64x2)
 _test(ForwardDiff.Dual{Float64,Float64,1})
+
+
+function _test_asymmetric(T=Float64, n=20)
+    spm = sprand(T, n, n, 1/n)
+    spm = -spm + 40 * LinearAlgebra.I
+
+    
+    exsol = ones(T,n)
+    rhs = spm*exsol
+    lu=sparspaklu(spm)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    spm.nzval.-=0.1
+    rhs = spm*exsol
+    sparspaklu!(lu,spm)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    # create a matrix with different sparsity pattern
+    spm2 = spm + sprand(T, n, n, 1/n)
+    rhs = spm2*exsol
+
+    # test fails attempting to reuse factorisation lu
+    @test_throws ErrorException sparspaklu!(lu,spm2; allow_pattern_change=false)
+
+    # test with default allow_pattern_change=true (will redo symbolic factorization)
+    sparspaklu!(lu,spm2)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    # test with uninitialized lu 
+    lu_nofact = sparspaklu(spzeros(1, 1); factorize=false)
+    sparspaklu!(lu_nofact,spm2; allow_pattern_change=false) # always allow update of unfactorized lu
+    sol=lu_nofact\rhs
+    @test sol≈exsol
+
+end
+
+_test_asymmetric(Float64)
+
 end

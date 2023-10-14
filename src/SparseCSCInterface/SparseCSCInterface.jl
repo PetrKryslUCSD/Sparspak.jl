@@ -1,5 +1,5 @@
 module SparseCSCInterface
-using SparseArrays, LinearAlgebra
+import SparseArrays, LinearAlgebra
 using ..SpkGraph: Graph
 using ..SpkOrdering: Ordering
 using ..SpkETree: ETree
@@ -9,7 +9,7 @@ import ..SpkSparseSolver: solve!
 import ..SpkSparseBase: _inmatrix!
 
 
-function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
+function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
     nv = size(m,1)
     nrows = size(m,2)
     ncols = size(m,1)
@@ -18,7 +18,7 @@ function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
 
 
     if (diagonal)
-        nedges = nnz(m)
+        nedges = SparseArrays.nnz(m)
     else
         dedges=0
         for i in 1:ncols
@@ -29,7 +29,7 @@ function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
                 end
             end
         end
-        nedges = nnz(m) - dedges
+        nedges = SparseArrays.nnz(m) - dedges
     end
     
     #jf if diagonal == true, we possibly can just use colptr & rowval
@@ -56,9 +56,7 @@ function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
 end
 
 
-
-
-function _SparseBase(m::SparseMatrixCSC{FT,IT}) where {IT,FT}
+function _SparseBase(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {IT,FT}
     maxblocksize = 30   # This can be set by the user
     
     tempsizeneed = zero(IT)
@@ -100,7 +98,7 @@ function _SparseBase(m::SparseMatrixCSC{FT,IT}) where {IT,FT}
 end
 
 
-function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT, FT}
+function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,IT}) where {IT, FT}
     if (s.n == 0)
         error("An empty problem. No matrix.")
         return false
@@ -170,7 +168,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseMatrixCSC{FT,IT}) where {IT
     return doit(size(m,1), m.colptr, m.rowval, s.order.rinvp, s.order.cinvp, s.snode, s.xsuper, s.xlindx, s.lindx, m.nzval, s.xlnz, s.lnz, s.xunz, s.unz)
 end
 
-function SparseSolver(m::SparseMatrixCSC{FT,IT}) where {FT,IT}
+function SparseSolver(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {FT,IT}
     ma = size(m,2)
     na = size(m,1)
     mc = 0
@@ -194,11 +192,11 @@ end
 Solves linear system defined with sparse solver and provides the solution in rhs.
 """
 function solve!(s::SparseSolver{IT,FT}, rhs) where {IT,FT}
-    findorder!(s) || ErrorException("Finding Order.")
-    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
-    inmatrix!(s) || ErrorException("Matrix input.")
-    factor!(s) || ErrorException("Numerical Factorization.")
-    triangularsolve!(s,rhs) || ErrorException("Triangular Solve.")
+    findorder!(s) || error("Finding Order.")
+    symbolicfactor!(s) || error("Symbolic Factorization.")
+    inmatrix!(s) || error("Matrix input.")
+    factor!(s) || error("Numerical Factorization.")
+    triangularsolve!(s,rhs) || error("Triangular Solve.")
     return true
 end
 
@@ -206,7 +204,7 @@ end
 # SparspakLU
 
 """
-    sparspaklu(m; factorize=true)
+    sparspaklu(m::SparseMatrixCSC; factorize=true) -> lu::SparseSolver
 
 If `factorize==true`, calculate LU factorization using Sparspak. Steps
 are `findorder`, `symbolicfactor`, `factor`.
@@ -217,42 +215,55 @@ factorization are delayed to a subsequent call to `sparspaklu!`.
 Returns  a  `SparseSolver` instance in the respective state, 
 which has methods for `LinearAlgebra.ldiv!` and "backslash".
 """
-function sparspaklu(m::SparseMatrixCSC{FT,IT};factorize=true) where {FT,IT}
+function sparspaklu(m::SparseArrays.SparseMatrixCSC{FT,IT};factorize=true) where {FT,IT}
     lu=SparseSolver(m)
     if factorize
-        findorder!(lu) || ErrorException("Finding Order.")
-        symbolicfactor!(lu) || ErrorException("Symbolic Factorization.")
-        inmatrix!(lu) || ErrorException("Matrix input.")
-        factor!(lu) || ErrorException("Numerical Factorization.")
+        findorder!(lu) || error("Finding Order.")
+        symbolicfactor!(lu) || error("Symbolic Factorization.")
+        inmatrix!(lu) || error("Matrix input.")
+        factor!(lu) || error("Numerical Factorization.")
     end
     lu
 end
 
 
 """
-    sparspaklu!(lu,m)
+    sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC; allow_pattern_change=true) -> lu::SparseSolver
 
-Calculate   LU   factorization,    reusing   ordering   and   symbolic
-factorization from lu, if that was previously calculated.
+Calculate LU factorization of a sparse matrix `m`, reusing ordering and symbolic
+factorization `lu`, if that was previously calculated.
 
-Currently, it is  assumed that, if size and number  of nonzeros didn't
-change, the  sparsity patterns of `m`  and `p` are the  same, probably
-leading to errors elsewhere if the patterns nevertheless differ.
+If `allow_pattern_change = true` (the default) the sparse matrix `m` may have a nonzero pattern
+different to that of the matrix used to create the LU factorization `lu`, in which case the ordering
+and symbolic factorization are updated.
+
+If `allow_pattern_change = false` an error is thrown if the nonzero pattern of `m` is different to that 
+of the matrix used to create the LU factorization `lu`.
+
+If `lu` has not been factorized (ie it has just been created with option `factorize = false`) then 
+`lu` is always updated from `m` and `allow_pattern_change` is ignored.
 
 """
-function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}) where {FT,IT}
-    # jf: Do we need a better test here ? Not sure as that may be expensive.
-    if lu.slvr.n != size(m,1) ||   lu.slvr.n != size(m,2) ||     lu.slvr.nnz != nnz(m)
-        lu=SparseSolver(m)
-    end        
+function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseArrays.SparseMatrixCSC{FT,IT}; allow_pattern_change=true) where {FT,IT}
+   
+    pattern_changed = (SparseArrays.getcolptr(m) != SparseArrays.getcolptr(lu.p)) || (SparseArrays.getrowval(m) != SparseArrays.getrowval(lu.p))
+
+    if pattern_changed
+        if allow_pattern_change || !lu._symbolicdone
+            copy!(lu, SparseSolver(m))
+        else
+            error("'allow_pattern_change=false', but sparsity pattern of matrix 'm' does not match that used to create 'lu'")
+        end
+    end
+   
     lu.p=m
-    lu._orderdone    || ( findorder!(lu)      || ErrorException("Finding Order.") )
-    lu._symbolicdone || ( symbolicfactor!(lu) || ErrorException("Symbolic Factorization.") )
+    lu._orderdone    || ( findorder!(lu)      || error("Finding Order.") )
+    lu._symbolicdone || ( symbolicfactor!(lu) || error("Symbolic Factorization.") )
     lu._inmatrixdone = false
     lu._factordone = false
     lu._trisolvedone = false
-    inmatrix!(lu) || ErrorException("Matrix input.")
-    factor!(lu) || ErrorException("Numerical Factorization.")
+    inmatrix!(lu) || error("Matrix input.")
+    factor!(lu) || error("Numerical Factorization.")
     lu
 end
 
@@ -276,7 +287,7 @@ Overwriting left division for SparseSolver.
 The solution is returned in `v`, which is also the right hand side vector.
 """
 function LinearAlgebra.ldiv!(lu::SparseSolver{IT,FT}, v) where {IT,FT}
-    solve!(lu, v) || ErrorException("Triangular Solve.")
+    solve!(lu, v) || error("Triangular Solve.")
     lu._trisolvedone = false
     v
 end
@@ -286,6 +297,6 @@ end
 
 "Backslash" operator for sparse solver
 """
-Base.:\(lu::SparseSolver{IT,FT}, v) where {IT,FT}=ldiv!(lu,copy(v))
+Base.:\(lu::SparseSolver{IT,FT}, v) where {IT,FT}=LinearAlgebra.ldiv!(lu,copy(v))
 
 end
