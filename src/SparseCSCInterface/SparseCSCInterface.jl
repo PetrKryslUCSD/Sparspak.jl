@@ -70,42 +70,6 @@ function Graph(m::SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
     return Graph(nv, nedges, nrows, ncols, xadj, adj)
 end
 
-"""
-    _check_graph_csc(g::Graph, g_nnz, m::SparseMatricCSC; check_sparsity_full=true) -> Bool
-
-Check that graph `g` created from matrix with nonzeros `g_nnz` has same size and sparsity pattern as matrix `m`
-
-If `check_sparsity_full` is true, a full check of sparsity is done, otherwise just the number of nonzero elements is checked.
-"""
-function _check_graph_csc(g::Graph, g_nnz, m::SparseMatrixCSC; check_sparsity_full=true)
-
-    size_same = (g.nv == size(m,1)) && (g.nrows == size(m,2)) && (g.ncols == size(m,1))
-
-    sparsity_same = (g_nnz == SparseArrays.nnz(m))
-
-    if sparsity_same && check_sparsity_full
-        diagonal = (g.nedges == g_nnz) # recreate diagonal used when g was constructed
-        colptr = SparseArrays.getcolptr(m)
-        rowval = SparseArrays.getrowval(m)
-        k = 1
-        for i in 1:g.ncols
-            sparsity_same = sparsity_same && (g.xadj[i] == k)
-            sparsity_same || break
-            for iptr in colptr[i]:colptr[i+1]-1
-                j = rowval[iptr]
-                if (i != j || diagonal)
-                    sparsity_same = (k <= length(g.adj)) && (g.adj[k] == j)
-                    sparsity_same || break
-                    k = k + 1
-                end
-            end
-        end
-    
-        sparsity_same = sparsity_same && (g.xadj[g.ncols+1] == k)
-    end
-
-    return (size_same && sparsity_same)
-end
 
 function _SparseBase(m::SparseMatrixCSC{FT,IT}) where {IT,FT}
     maxblocksize = 30   # This can be set by the user
@@ -293,7 +257,8 @@ the `factorize=false` option to defer symbolic factorization)
 function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}; reuse_symbolic=true) where {FT,IT}
    
     if reuse_symbolic
-        _check_graph_csc(lu.slvr.g, lu.slvr.nnz,  m) || 
+        (SparseArrays.getcolptr(m) == SparseArrays.getcolptr(lu.p)) && 
+        (SparseArrays.getrowval(m) == SparseArrays.getrowval(lu.p)) || 
             error("'reuse_symbolic=true', but sparsity pattern of matrix 'm' does not match that used to create 'lu'")
     else
         copy!(lu, SparseSolver(m))
