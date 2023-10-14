@@ -137,7 +137,19 @@ function _test(T=Float64, n=20)
 
     spm.nzval.-=0.1
     rhs = spm*exsol
-    lu=sparspaklu!(lu,spm)
+    sparspaklu!(lu,spm)
+    sol=lu\rhs
+    @test sol≈exsol
+
+    # create a matrix with different sparsity pattern
+    spm2 = spm + sprand(T, n, n, 1/n)
+    rhs = spm2*exsol
+
+    # test fails attempting to reuse factorisation lu
+    @test_throws ErrorException sparspaklu!(lu,spm2)
+
+    # test without reusing factorisation lu
+    sparspaklu!(lu,spm2; reuse_symbolic=false)
     sol=lu\rhs
     @test sol≈exsol
     

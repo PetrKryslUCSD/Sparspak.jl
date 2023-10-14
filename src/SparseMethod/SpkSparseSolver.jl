@@ -31,6 +31,13 @@ mutable struct SparseSolver{IT, FT}
     _condestdone::Bool
 end
 
+function Base.copy!(dst::SparseSolver, src::SparseSolver)
+    for f in fieldnames(SparseSolver)
+        setfield!(dst, f,  getfield(src, f))
+    end
+    return dst
+end
+
 """
     SparseSolver(p::Problem)
 
