@@ -243,25 +243,31 @@ end
 
 
 """
-    sparspaklu!(lu::SparseSolver, m::SparseMatricCSC; reuse_symbolic=true) -> lu::SparseSolver
+    sparspaklu!(lu::SparseSolver, m::SparseMatrixCSC; allow_pattern_change=true) -> lu::SparseSolver
 
 Calculate LU factorization of a sparse matrix `m`, reusing ordering and symbolic
-factorization `lu` from `sparspaklu`, if that was previously calculated.
+factorization `lu`, if that was previously calculated.
 
-Unless `reuse_symbolic` is set to false, the sparse matrix `m` must have an
-identical nonzero pattern to the matrix used to create the LU factorization `lu`,
-otherwise an error is thrown (NB: this is required even if `lu` was created with 
-the `factorize=false` option to defer symbolic factorization)
+If `allow_pattern_change = true` (the default) the sparse matrix `m` may have a nonzero pattern
+different to that of the matrix used to create the LU factorization `lu`, in which case the ordering
+and symbolic factorization are updated.
+
+If `allow_pattern_change = false` an error is thrown if the nonzero pattern of `m` is different to that 
+of the matrix used to create the LU factorization `lu`.
+
+If `lu` was created with option `factorize = false` then `lu` is always updated from `m` and `allow_pattern_change` is ignored.
 
 """
-function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}; reuse_symbolic=true) where {FT,IT}
+function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}; allow_pattern_change=true) where {FT,IT}
    
-    if reuse_symbolic
-        (SparseArrays.getcolptr(m) == SparseArrays.getcolptr(lu.p)) && 
-        (SparseArrays.getrowval(m) == SparseArrays.getrowval(lu.p)) || 
-            error("'reuse_symbolic=true', but sparsity pattern of matrix 'm' does not match that used to create 'lu'")
-    else
-        copy!(lu, SparseSolver(m))
+    pattern_changed = (SparseArrays.getcolptr(m) != SparseArrays.getcolptr(lu.p)) || (SparseArrays.getrowval(m) != SparseArrays.getrowval(lu.p))
+
+    if pattern_changed
+        if allow_pattern_change || !lu._symbolicdone
+            copy!(lu, SparseSolver(m))
+        else
+            error("'allow_pattern_change=false', but sparsity pattern of matrix 'm' does not match that used to create 'lu'")
+        end
     end
    
     lu.p=m

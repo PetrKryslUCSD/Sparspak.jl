@@ -146,10 +146,10 @@ function _test(T=Float64, n=20)
     rhs = spm2*exsol
 
     # test fails attempting to reuse factorisation lu
-    @test_throws ErrorException sparspaklu!(lu,spm2)
+    @test_throws ErrorException sparspaklu!(lu,spm2; allow_pattern_change=false)
 
-    # test without reusing factorisation lu
-    sparspaklu!(lu,spm2; reuse_symbolic=false)
+    # test with default allow_pattern_change == true
+    sparspaklu!(lu,spm2)
     sol=lu\rhs
     @test sol≈exsol
     
@@ -183,13 +183,19 @@ function _test_asymmetric(T=Float64, n=20)
     rhs = spm2*exsol
 
     # test fails attempting to reuse factorisation lu
-    @test_throws ErrorException sparspaklu!(lu,spm2)
+    @test_throws ErrorException sparspaklu!(lu,spm2; allow_pattern_change=false)
 
-    # test without reusing factorisation lu
-    sparspaklu!(lu,spm2; reuse_symbolic=false)
+    # test with default allow_pattern_change=true (will redo symbolic factorization)
+    sparspaklu!(lu,spm2)
     sol=lu\rhs
     @test sol≈exsol
-    
+
+    # test with uninitialized lu 
+    lu_nofact = sparspaklu(spzeros(1, 1); factorize=false)
+    sparspaklu!(lu_nofact,spm2; allow_pattern_change=false) # always allow update of unfactorized lu
+    sol=lu_nofact\rhs
+    @test sol≈exsol
+
 end
 
 _test_asymmetric(Float64)
