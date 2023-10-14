@@ -255,7 +255,8 @@ and symbolic factorization are updated.
 If `allow_pattern_change = false` an error is thrown if the nonzero pattern of `m` is different to that 
 of the matrix used to create the LU factorization `lu`.
 
-If `lu` was created with option `factorize = false` then `lu` is always updated from `m` and `allow_pattern_change` is ignored.
+If `lu` has not been factorized (ie it has just been created with option `factorize = false`) then 
+`lu` is always updated from `m` and `allow_pattern_change` is ignored.
 
 """
 function sparspaklu!(lu::SparseSolver{IT,FT}, m::SparseMatrixCSC{FT,IT}; allow_pattern_change=true) where {FT,IT}
