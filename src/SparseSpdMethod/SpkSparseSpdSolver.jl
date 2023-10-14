@@ -205,11 +205,11 @@ Given a symmetric matrix `A`, the steps are:
 The solution can be retrieved as `p.x`.
 """
 function solve!(s::SparseSpdSolver{IT}) where {IT}
-    findorder!(s) || ErrorException("Finding Order.")
-    symbolicfactor!(s) || ErrorException("Symbolic Factorization.")
-    inmatrix!(s) || ErrorException("Matrix input.")
-    factor!(s) || ErrorException("Numerical Factorization.")
-    triangularsolve!(s) || ErrorException("Triangular Solve.")
+    findorder!(s) || error("Finding Order.")
+    symbolicfactor!(s) || error("Symbolic Factorization.")
+    inmatrix!(s) || error("Matrix input.")
+    factor!(s) || error("Numerical Factorization.")
+    triangularsolve!(s) || error("Triangular Solve.")
     return true
 end
 
