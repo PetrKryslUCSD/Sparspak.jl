@@ -276,7 +276,7 @@ The solution is returned in `u`. The right hand side vector is `v`.
 """
 function LinearAlgebra.ldiv!(u, lu::SparseSolver{IT,FT}, v) where {IT,FT}
     u.=v
-    return ldiv!(lu, u)
+    return LinearAlgebra.ldiv!(lu, u)
 end
 
 """
