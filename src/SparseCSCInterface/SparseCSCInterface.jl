@@ -35,8 +35,8 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
     #jf if diagonal == true, we possibly can just use colptr & rowval
     #jf and skip the loop
    
-    xadj = fill(zero(IT), nv + 1)
-    adj = fill(zero(IT), nedges)
+    xadj = zeros(IT, nv + 1)
+    adj = zeros(IT, nedges)
 
     k = 1
     for i in 1:ncols

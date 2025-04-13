@@ -18,7 +18,7 @@ Construct a grid with a given number of spacings.
 """
 function Grid(h::IT, k::IT) where {IT}
     n = h * k; 
-    v = fill(zero(IT), h, k)
+    v = zeros(IT, h, k)
     for i in 1:h
         for j in 1:k
             v[i, j] = k * (i - 1) + j

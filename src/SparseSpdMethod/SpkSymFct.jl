@@ -36,7 +36,7 @@ using OffsetArrays
 #                          vertices visited in each row subtree.
 function _findcolumncounts!(n, xadj, adj, perm, invp, parent, colcnt, nlnz)
 #
-    marker = fill(zero(eltype(xadj)), n)
+    marker = zeros(eltype(xadj), n)
     nlnz = n
 #-  -  -
 #       for each row subtree ...
@@ -116,9 +116,9 @@ function _symbolicfact!(n, xadj, adj, perm, invp, colcnt, nsuper, xsuper, snode,
 #       tail   : end of list indicator (in rchlnk(*), not mrglnk(*)).
 #       mrglnk : create empty lists.
 #       marker : "unmark" the indices.
-    marker = fill(zero(eltype(xadj)), n)
-    mrglnk = fill(zero(eltype(xadj)), nsuper)
-    rchlnk1 = fill(zero(eltype(xadj)), n+1)
+    marker = zeros(eltype(xadj), n)
+    mrglnk = zeros(eltype(xadj), nsuper)
+    rchlnk1 = zeros(eltype(xadj), n+1)
     rchlnk = OffsetArray(rchlnk1, 0:n)
 # 
     nzend = 0;   head = 0;   tail = n + 1;   point = 1;
@@ -316,8 +316,8 @@ end
         # integer k, par, current, col
 
 function _findschedule!(nsuper, xsuper, snode, xlindx, lindx, schedule)
-    count = fill(zero(IT), nsuper)
-    parent = fill(zero(IT), nsuper)
+    count = zeros(IT, nsuper)
+    parent = zeros(IT, nsuper)
 
     _findsupernodetree!(nsuper, xsuper, snode, xlindx, lindx, parent)
 
@@ -417,7 +417,7 @@ function _findsupernodes!(n, parent, colcnt, nofsub, nsuper, xsuper, snode, maxs
         # integer :: parent(*), colcnt(*), xsuper(*), snode(*)
         # integer :: limit, index
         # real    :: delta, supsize
-    marker = fill(zero(eltype(parent)), n)
+    marker = zeros(eltype(parent), n)
 #
 #       compute the fundamental supernode partition.
 #-  -  -  -  -  -  -  -  -  -  -

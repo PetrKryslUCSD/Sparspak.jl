@@ -28,7 +28,7 @@ end
 #     __extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
 # Change the size of a matrix (smaller or larger).
 function __extend(v::Matrix, newrow::Integer, newcol::Integer, flagval=zero(eltype(v)))
-    tempv = fill(zero(eltype(v)), newrow, newcol)
+    tempv = zeros(eltype(v), newrow, newcol)
     lencol = size(v, 2)
     lenrow = size(v, 1); 
 

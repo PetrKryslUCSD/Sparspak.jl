@@ -67,8 +67,8 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
 
     ONE = one(FT)
     
-    link = fill(zero(IT), nsuper)
-    lngth = fill(zero(IT), nsuper)
+    link = zeros(IT, nsuper)
+    lngth = zeros(IT, nsuper)
 #
     iflag = zero(IT);   tmpsiz = zero(IT)
 #   Initialization
@@ -80,9 +80,9 @@ function _lufactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, xl
         if (need > tmpsiz) tmpsiz = need; end
     end
 
-    map = fill(zero(IT), n)
-    relind = fill(zero(IT), n)
-    temp = fill(zero(FT), tmpsiz)
+    map = zeros(IT, n)
+    relind = zeros(IT, n)
+    temp = zeros(FT, tmpsiz)
     vtemp = view(temp, 1:length(temp))
 
 #   For each supernode jsup ...
@@ -289,7 +289,7 @@ function _lulsolve!(nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, lindx::V
         maxlngth = max(lngth, maxlngth)
     end
 
-    temp = fill(zero(FT), maxlngth)
+    temp = zeros(FT,maxlngth)
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #    forward substitution ...
@@ -342,7 +342,7 @@ function _luusolve!(n::IT, nsuper::IT, xsuper::Vector{IT}, xlindx::Vector{IT}, l
         maxlngth = max(lngth, maxlngth)
     end
 
-    temp = fill(zero(FT), maxlngth)
+    temp = zeros(FT, maxlngth)
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #    backward substitution ...

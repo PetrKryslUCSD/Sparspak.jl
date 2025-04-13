@@ -83,16 +83,16 @@ function _generalmmd(n::IT, xadj::Vector{IT}, adj::Vector{IT}, perm::Vector{IT},
     #
     adjncy = deepcopy(adj[1:(xadj[n+1]-1)])
 
-    deghead1 = fill(zero(IT), n)
+    deghead1 = zeros(IT, n)
     deghead = OffsetArray(deghead1, 0:(n-1))
 
-    marker = fill(zero(IT), n)
-    mergeparent = fill(zero(IT), n)
-    needsupdate = fill(zero(IT), n)
-    degnext = fill(zero(IT), n)
-    degprev = fill(zero(IT), n)
-    supersize = fill(zero(IT), n)
-    elimnext = fill(zero(IT), n)
+    marker = zeros(IT, n)
+    mergeparent = zeros(IT, n)
+    needsupdate = zeros(IT, n)
+    degnext = zeros(IT, n)
+    degprev = zeros(IT, n)
+    supersize = zeros(IT, n)
+    elimnext = zeros(IT, n)
     #
     #       Initialization for the minimum degree algorithm.
     #
@@ -591,7 +591,7 @@ function _mmdnumber(neqns, perm, invp, mergeparent)
 #           Initially, no nodes except roots in the
 #           merged forest have been numbered.
 # ----------------------------------------
-    mergelastnum = fill(zero(eltype(perm)), neqns)
+    mergelastnum = zeros(eltype(perm), neqns)
     ix = findall(mergeparent .== 0)
     mergelastnum[ix] = invp[ix]
 # -------------------------------------------------------
