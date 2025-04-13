@@ -109,10 +109,10 @@ function Ordering(nrows::IT, ncols::IT) where {IT}
     nrowblks = 0
     ncolblks = 0
 
-    rperm = fill(zero(IT), nrows)
-    rinvp = fill(zero(IT), nrows)
-    cperm = fill(zero(IT), ncols)
-    cinvp = fill(zero(IT), ncols)
+    rperm = zeros(IT, nrows)
+    rinvp = zeros(IT, nrows)
+    cperm = zeros(IT, ncols)
+    cinvp = zeros(IT, ncols)
 
     rperm .= 1:nrows
     rinvp .= rperm

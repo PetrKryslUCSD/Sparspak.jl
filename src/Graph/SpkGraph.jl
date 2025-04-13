@@ -64,8 +64,8 @@ function Graph(p::Problem{IT}, diagonal=false) where {IT}
     else
         nedges = p.nedges - p.dedges
     end
-    xadj = fill(zero(IT), nv + 1)
-    adj = fill(zero(IT), nedges)
+    xadj = zeros(IT, nv + 1)
+    adj = zeros(IT, nedges)
     
     k = 1
     for i in 1:p.ncols
@@ -111,8 +111,8 @@ function makestructuresymmetric(g::Graph{IT}) where {IT}
     #       looking at each element only once. The complexity of this
     #       code is O(nEdges).
     # 
-    c = fill(zero(IT), g.nv)
-    first = fill(zero(IT), g.nv)
+    c = zeros(IT, g.nv)
+    first = zeros(IT, g.nv)
     c .= 0
     first .= g.xadj[1:g.nv]
 
@@ -277,7 +277,7 @@ This works only for graphs that are symmetric.
 """
 function sortgraph!(g::Graph{IT}) where {IT}
     xadj = deepcopy(g.xadj)
-    adj = fill(zero(IT), g.nedges)   
+    adj = zeros(IT, g.nedges)   
     for i in 1: g.nv
         for j in g.xadj[i]:(g.xadj[i + 1] - 1)
             k = g.adj[j];   adj[xadj[k]] = i

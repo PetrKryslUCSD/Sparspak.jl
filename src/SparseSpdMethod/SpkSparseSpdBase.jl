@@ -181,9 +181,9 @@ function _symbolicfactor!(s::_SparseSpdBase{IT, FT}) where {IT, FT}
         return false
     end
 
-    s.colcnt = fill(zero(IT), s.n)
-    s.snode = fill(zero(IT), s.n)
-    s.xsuper = fill(zero(IT), s.n + 1)
+    s.colcnt = zeros(IT, s.n)
+    s.snode = zeros(IT, s.n)
+    s.xsuper = zeros(IT, s.n + 1)
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 #       Compute elimination tree
@@ -203,14 +203,14 @@ function _symbolicfactor!(s::_SparseSpdBase{IT, FT}) where {IT, FT}
     s.nsub, s.nsuper = _findsupernodes!(s.g.nv, s.t.parent, s.colcnt, s.nsub, s.nsuper, s.xsuper, s.snode, s.maxblocksize)
     s.xsuper = __extend(s.xsuper, s.nsuper + 1)
 
-    s.lindx = fill(zero(IT), s.nsub)
-    s.xlindx = fill(zero(IT), s.nsuper + 1)
+    s.lindx = zeros(IT, s.nsub)
+    s.xlindx = zeros(IT, s.nsuper + 1)
 
 #-
 #       NEXT LINE CHANGED SINCE LNZ NOW CONTAINS RECTANGULAR SUPERNODES,
 #       NOT TRAPEZOIDAL, ie. some 0 elements are going to be stored
 #-
-    s.xlnz = fill(zero(IT), s.n + 1)
+    s.xlnz = zeros(IT, s.n + 1)
 
 # -  -  -  -  -  -  -
 #       Set up the data structure for the Cholesky factor.
@@ -222,7 +222,7 @@ function _symbolicfactor!(s::_SparseSpdBase{IT, FT}) where {IT, FT}
 # -  -  -  -  -  - -
 #       We now know how many elements we need, so allocate for it.
 #-
-    s.lnz = fill(zero(FT), s.xlnz[s.n + 1])
+    s.lnz = zeros(FT, s.xlnz[s.n + 1])
 
 
     s.lnz[1:s.xlnz[s.n + 1]] .= zero(FT)

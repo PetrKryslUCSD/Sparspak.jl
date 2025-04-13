@@ -71,11 +71,11 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
         maxwidth = max(maxwidth, width)
     end
 
-    map = fill(zero(IT), n)
-    relind = fill(zero(IT), n)
-    diag = fill(zero(IT), nmaxwidth)
-    temp = fill(zero(FT), tmpsiz)
-    temp2 = fill(zero(FT), maxwidth * maxwidth)
+    map = zeros(IT, n)
+    relind = zeros(IT, n)
+    diag = zeros(IT, nmaxwidth)
+    temp = zeros(FT, tmpsiz)
+    temp2 = zeros(FT, maxwidth * maxwidth)
 
 #      for each supernode jsup ...
        for jj  in  1: nsuper

@@ -153,12 +153,12 @@ function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where
     dnz = zero(IT)
     dedges = zero(IT)
     
-    head = fill(zero(IT), lenhead)
-    rhs = fill(zero(FT), lenrhs)
-    x = fill(zero(FT), lenhead)
-    link = fill(zero(IT), lenlink)
-    rowsubs = fill(zero(IT), lenlink)
-    values = fill(_BIGGY(), lenlink)
+    head = zeros(IT, lenhead)
+    rhs = zeros(FT, lenrhs)
+    x = zeros(FT, lenhead)
+    link = zeros(IT, lenlink)
+    rowsubs = zeros(IT, lenlink)
+    values = fill!(Vector{FT}(undef, lenlink), _BIGGY())
     rscales = FT[]
     cscales = FT[]
     

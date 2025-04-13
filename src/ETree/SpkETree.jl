@@ -28,7 +28,7 @@ end
 Construct elimination tree.
 """
 function ETree(nv::IT) where {IT}
-    parent = fill(zero(IT), nv)
+    parent = zeros(IT, nv)
     return ETree(nv, parent)
 end
 
@@ -61,7 +61,7 @@ end
 #    ancestor - the ancestor vector.
 function _findetree!(n, xadj, adj, rperm, rinvp, parent)
 #
-    ancestor = fill(zero(eltype(xadj)), n)
+    ancestor = zeros(eltype(xadj), n)
     for i in 1:n
         parent[i] = 0; ancestor[i] = 0; vertex = rperm[i]
         for j = xadj[vertex]:(xadj[vertex + 1] - 1)
@@ -104,10 +104,10 @@ Updated Parameters:
 - `order` - the required ordering
 """
 function _getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
-    firstson = fill(zero(IT), t.nv)
-    brother = fill(zero(IT), t.nv)
-    stack = fill(zero(IT), t.nv)
-    invpos = fill(zero(IT), t.nv)
+    firstson = zeros(IT, t.nv)
+    brother = zeros(IT, t.nv)
+    stack = zeros(IT, t.nv)
+    invpos = zeros(IT, t.nv)
 
     _weightedbinarytree!(t.nv, t.parent, weight, firstson, brother)
 
@@ -123,10 +123,10 @@ function _getpostorder!(t::ETree{IT}, order::Ordering, weight) where {IT}
 end
 
 function _getpostorder!(t::ETree{IT}, order::Ordering) where {IT}
-    firstson = fill(zero(IT), t.nv)
-    brother = fill(zero(IT), t.nv)
-    stack = fill(zero(IT), t.nv)
-    invpos = fill(zero(IT), t.nv)
+    firstson = zeros(IT, t.nv)
+    brother = zeros(IT, t.nv)
+    stack = zeros(IT, t.nv)
+    invpos = zeros(IT, t.nv)
 
     _binarytree!(t.nv, t.parent, firstson, brother)
 
@@ -238,7 +238,7 @@ end
 #    lson - last son vector.
 function _weightedbinarytree!(n, parent, weight, fson, brother)
 #
-    lson = fill(zero(eltype(fson)), n)
+    lson = zeros(eltype(fson), n)
     fson .= zero(eltype(fson)); brother .= zero(eltype(fson)); 
     lson .= zero(eltype(fson)); lroot = n
 # --
