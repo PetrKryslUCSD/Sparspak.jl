@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # the lowest supported version
+          - '1.9' # the lowest supported version
           - '1' # the current stable version
           - 'nightly' # the last nightly buildx
         os:
