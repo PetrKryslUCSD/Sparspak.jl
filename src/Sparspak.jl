@@ -11,10 +11,10 @@ include("SparseSpdMethod/SpkMMD.jl")
 include("SparseSpdMethod/SpkSymFct.jl")
 include("SparseSpdMethod/SpkSpdMMOps.jl")
 include("SparseSpdMethod/SpkLDLtFactor.jl")
-include("SparseSpdMethod/SpkSparseSpdBase.jl")
-include("SparseSpdMethod/SpkSparseSpdSolver.jl")
 include("SparseMethod/SpkLUFactor.jl")
 include("SparseMethod/SpkSparseBase.jl")
+include("SparseSpdMethod/SpkSparseSpdBase.jl")
+include("SparseSpdMethod/SpkSparseSpdSolver.jl")
 include("SparseMethod/SpkSparseSolver.jl")
 
 using .SpkProblem

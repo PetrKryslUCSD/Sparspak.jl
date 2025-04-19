@@ -13,7 +13,8 @@ module SpkSparseSpdSolver
 
 using ..SpkProblem: Problem
 using ..SpkSparseSpdBase: _SparseSpdBase
-import ..SpkSparseSpdBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!, _triangularsolve!
+import ..SpkSparseBase: _triangularsolve!
+import ..SpkSparseSpdBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!
 using SparseArrays
 
 

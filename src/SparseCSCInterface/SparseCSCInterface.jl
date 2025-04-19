@@ -1,11 +1,11 @@
 module SparseCSCInterface
 import SparseArrays, LinearAlgebra
-using ..SpkGraph: Graph
+import ..SpkGraph: Graph
 using ..SpkOrdering: Ordering
 using ..SpkETree: ETree
-using ..SpkSparseBase: _SparseBase
-using ..SpkSparseSolver: SparseSolver, findorder!,symbolicfactor!,inmatrix!,factor!,triangularsolve!
-import ..SpkSparseSolver: solve!
+import ..SpkSparseBase: _SparseBase
+using ..SpkSparseSolver: findorder!,symbolicfactor!,inmatrix!,factor!,triangularsolve!
+import ..SpkSparseSolver: SparseSolver, solve!
 import ..SpkSparseBase: _inmatrix!
 
 
