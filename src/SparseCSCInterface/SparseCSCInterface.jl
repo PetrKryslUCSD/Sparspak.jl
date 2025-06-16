@@ -22,9 +22,9 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
     else
         dedges=0
         for i in 1:ncols
-            for iptr in colptr[i]:colptr[i+1]-1
+            for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
                 if  rowval[iptr]==i
-                    dedges+=1
+                    dedges+=one(Ti)
                     continue
                 end
             end
@@ -35,17 +35,17 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
     #jf if diagonal == true, we possibly can just use colptr & rowval
     #jf and skip the loop
    
-    xadj = zeros(IT, nv + 1)
+    xadj = zeros(IT, nv + one(Ti))
     adj = zeros(IT, nedges)
 
-    k = 1
+    k = one(Ti)
     for i in 1:ncols
         xadj[i] = k
-        for iptr in colptr[i]:colptr[i+1]-1
+        for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
             j = rowval[iptr]
             if (i != j || diagonal)
                 adj[k] = j
-                k = k + 1
+                k = k + one(Ti)
             end
         end
     end
@@ -57,7 +57,7 @@ end
 
 
 function _SparseBase(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {IT,FT}
-    maxblocksize = 30   # This can be set by the user
+    maxblocksize = convert(Ti,30)   # This can be set by the user
     
     tempsizeneed = zero(IT)
     n = size(m,2)
@@ -110,7 +110,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
 
     function doit(ncols, colptr, rowval, cinvp, rinvp, snode, xsuper, xlindx, lindx, nzval, xlnz, lnz, xunz, unz)
         for i in 1:ncols
-            for iptr in colptr[i]:colptr[i+1]-1
+            for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
                 inew = rinvp[rowval[iptr]];
                 jnew = cinvp[i]
                 value = nzval[iptr]
@@ -121,8 +121,8 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                     jsup = snode[jnew];
                     fstcol = xsuper[jsup]
                     fstsub = xlindx[jsup]
-                    lstsub = xlindx[jsup + 1] - 1
-                    nnzloc = 0;
+                    lstsub = xlindx[jsup + one(Ti)] - one(Ti)
+                    nnzloc = zero(Ti);
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > inew)
@@ -135,17 +135,17 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                             lnz[_p] += value
                             break
                         end
-                        nnzloc = nnzloc + 1
+                        nnzloc = nnzloc + one(Ti)
                     end
                 else
 #               Lies in U
                     jsup = snode[inew]
                     fstcol = xsuper[jsup]
-                    lstcol = xsuper[jsup + 1] - 1
-                    width = lstcol - fstcol + 1
-                    lstsub = xlindx[jsup + 1] - 1
+                    lstcol = xsuper[jsup + one(Ti)] - one(Ti)
+                    width = lstcol - fstcol + one(Ti)
+                    lstsub = xlindx[jsup + one(Ti)] - one(Ti)
                     fstsub = xlindx[jsup] + width
-                    nnzloc = 0;
+                    nnzloc = zero(Ti);
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > jnew)
@@ -158,7 +158,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                             unz[_p] += value
                             break
                         end
-                        nnzloc = nnzloc + 1
+                        nnzloc = nnzloc + one(Ti)
                     end
                 end
             end
@@ -171,8 +171,8 @@ end
 function SparseSolver(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {FT,IT}
     ma = size(m,2)
     na = size(m,1)
-    mc = 0
-    nc = 0
+    mc = zero(IT)
+    nc = zero(IT)
     n = ma
     slvr = _SparseBase(m)
     _orderdone = false
