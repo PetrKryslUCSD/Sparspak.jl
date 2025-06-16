@@ -22,9 +22,9 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
     else
         dedges=0
         for i in 1:ncols
-            for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
+            for iptr in colptr[i]:colptr[i+one(IT)]-one(IT)
                 if  rowval[iptr]==i
-                    dedges+=one(Ti)
+                    dedges+=one(IT)
                     continue
                 end
             end
@@ -35,17 +35,17 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
     #jf if diagonal == true, we possibly can just use colptr & rowval
     #jf and skip the loop
    
-    xadj = zeros(IT, nv + one(Ti))
+    xadj = zeros(IT, nv + one(IT))
     adj = zeros(IT, nedges)
 
-    k = one(Ti)
+    k = one(IT)
     for i in 1:ncols
         xadj[i] = k
-        for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
+        for iptr in colptr[i]:colptr[i+one(IT)]-one(IT)
             j = rowval[iptr]
             if (i != j || diagonal)
                 adj[k] = j
-                k = k + one(Ti)
+                k = k + one(IT)
             end
         end
     end
@@ -57,7 +57,7 @@ end
 
 
 function _SparseBase(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {IT,FT}
-    maxblocksize = convert(Ti,30)   # This can be set by the user
+    maxblocksize = convert(IT,30)   # This can be set by the user
     
     tempsizeneed = zero(IT)
     n = size(m,2)
@@ -110,7 +110,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
 
     function doit(ncols, colptr, rowval, cinvp, rinvp, snode, xsuper, xlindx, lindx, nzval, xlnz, lnz, xunz, unz)
         for i in 1:ncols
-            for iptr in colptr[i]:colptr[i+one(Ti)]-one(Ti)
+            for iptr in colptr[i]:colptr[i+one(IT)]-one(IT)
                 inew = rinvp[rowval[iptr]];
                 jnew = cinvp[i]
                 value = nzval[iptr]
@@ -121,8 +121,8 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                     jsup = snode[jnew];
                     fstcol = xsuper[jsup]
                     fstsub = xlindx[jsup]
-                    lstsub = xlindx[jsup + one(Ti)] - one(Ti)
-                    nnzloc = zero(Ti);
+                    lstsub = xlindx[jsup + one(IT)] - one(IT)
+                    nnzloc = zero(IT);
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > inew)
@@ -135,17 +135,17 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                             lnz[_p] += value
                             break
                         end
-                        nnzloc = nnzloc + one(Ti)
+                        nnzloc = nnzloc + one(IT)
                     end
                 else
 #               Lies in U
                     jsup = snode[inew]
                     fstcol = xsuper[jsup]
-                    lstcol = xsuper[jsup + one(Ti)] - one(Ti)
-                    width = lstcol - fstcol + one(Ti)
-                    lstsub = xlindx[jsup + one(Ti)] - one(Ti)
+                    lstcol = xsuper[jsup + one(IT)] - one(IT)
+                    width = lstcol - fstcol + one(IT)
+                    lstsub = xlindx[jsup + one(IT)] - one(IT)
                     fstsub = xlindx[jsup] + width
-                    nnzloc = zero(Ti);
+                    nnzloc = zero(IT);
                     for nxtsub in fstsub:lstsub
                         irow = lindx[nxtsub]
                         if  (irow > jnew)
@@ -158,7 +158,7 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
                             unz[_p] += value
                             break
                         end
-                        nnzloc = nnzloc + one(Ti)
+                        nnzloc = nnzloc + one(IT)
                     end
                 end
             end

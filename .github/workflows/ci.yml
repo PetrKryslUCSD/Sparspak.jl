@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.9' # the lowest supported version
+          - '1.10' # the lowest supported version
           - '1' # the current stable version
-          - 'nightly' # the last nightly buildx
+          - 'nightly' # the last nightly build
         os:
           - ubuntu-latest
           - windows-latest
