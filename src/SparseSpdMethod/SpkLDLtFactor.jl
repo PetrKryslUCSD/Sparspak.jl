@@ -1,4 +1,6 @@
 module SpkLDLtFactor
+
+using ..SpkSpdMMops:  _ldindx!, _trsm!, _mmpyi!
 #
 #  LDLtFactor ..... BLOCK GENERAL SPARSE CHOL   ^^^^^^
 # *
@@ -52,19 +54,21 @@ module SpkLDLtFactor
 #
 # *
 # """
-function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
+function _ldltfactor!(n, nsuper, xsuper, snode, xlindx, lindx, xlnz, lnz)
+    IT = eltype(lindx)
+    FT = eltype(lnz)
     @assert length(xsuper) == (nsuper + 1)
-    @assert length(lngth) == (nsuper)
+    lngth = zeros(IT, nsuper)
+    link = zeros(IT, nsuper)
     @assert length(snode) == n
     @assert length(xlindx) == (nsuper + 1)
-    @assert length(link) == (nsuper)
     @assert length(xlnz) == (n + 1)
 
     iflag = 0;   width = 0;   maxwidth = 0; tmpsiz = 0
 
 #       initialize empty row lists in link(*).
     for i  in  1: nsuper
-        link[i] = 0;   length[i] = xlindx[i + 1] - xlindx[i]
+        link[i] = 0;   lngth[i] = xlindx[i + 1] - xlindx[i]
         width = xsuper[i + 1] - xsuper[i]
         need = width * (xlnz[xsuper[i] + 1] - xlnz[xsuper[i]])
         if (need > tmpsiz) tmpsiz = need; end
@@ -73,7 +77,7 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
 
     map = zeros(IT, n)
     relind = zeros(IT, n)
-    diag = zeros(IT, nmaxwidth)
+    diag = zeros(IT, maxwidth)
     temp = zeros(FT, tmpsiz)
     temp2 = zeros(FT, maxwidth * maxwidth)
 
@@ -153,7 +157,15 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
                 if (nk == 1)
 #                  updating target supernode by a trivial
 #                  supernode (with one column).
-                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(lnz, klpnt:length(lnz)), xlnz, lnz, map, view(lnz, xlnz[fk]:length(lnz)))
+                    @show lnz
+                    _mmpyi!(klen, nups, 
+                        view(lindx, kxpnt:length(lindx)), 
+                        view(lindx, kxpnt:length(lindx)), 
+                        view(lnz, klpnt:length(lnz)), 
+                        view(lnz, klpnt:length(lnz)), 
+                        xlnz, lnz, 
+                        map, 
+                        lnz[xlnz[fk]])
 
                 else
 #                  kfirst ...  first index of active portion of
@@ -202,9 +214,9 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
                 nxtsup = snode[nxt]
                 link[ksup] = link[nxtsup]
                 link[nxtsup] = ksup
-                length[ksup] = klen - nups
+                lngth[ksup] = klen - nups
             else
-                length[ksup] = 0
+                lngth[ksup] = 0
             end
         end
 #         Apply partial LDLt to the supernode
@@ -328,6 +340,7 @@ end
 # !        lda    - the number of rows in the supernode
 # !
 function _pchole!(lnz, nj, lda)
+    ONE = one(typeof(nj))
 # real(double) :: lnz(lda, *) the 2d access needs to be faked
     for colnum  in  1: nj
 #       factor the diagonal block.
@@ -346,7 +359,7 @@ function _pchole!(lnz, nj, lda)
 #    factor the lower block.
 #
     _trsm!('r', 'l', 't', 'u', lda - nj, nj, ONE, lnz, lda, view(lnz, nj + 1:length(lnz)), lda)
-
+ 
 # -
 #    scale back each column by the diagonal.
 # -
