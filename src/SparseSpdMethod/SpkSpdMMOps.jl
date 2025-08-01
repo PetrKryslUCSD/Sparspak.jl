@@ -129,7 +129,7 @@ function _mmpyi!(m::IT, q::IT,
     y::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
     iz::Vector{IT},
     z::Vector{FT},
-    relind::Vector{IT}, diag = one(eltype(x))) where {IT, FT}
+    relind::Vector{IT}, diag = one(FT)) where {IT, FT}
     @assert length(x) >= m
     @assert length(y) >= q
     for k in 1:q
@@ -206,8 +206,8 @@ function _getrf!(m::IT, n::IT, A::AbstractVector{FT}, lda::IT, ipiv::AbstractVec
 end
 
 function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT,
-    A::AbstractVector{FT}, lda::IT,
-    B::AbstractVector{FT}, ldb::IT) where {IT,FT}
+    A::AT, lda::IT,
+    B::BT, ldb::IT) where {IT,FT, AT, BT}
     gtrsm!(side,uplo,transa,diag, m,n,alpha,A, lda, B, ldb)
 end
 
