@@ -79,6 +79,8 @@ using ..SpkMmd: mmd!
 using ..SpkProblem: Problem
 using ..SpkSymfct: _findcolumncounts!, _symbolicfact!, _findsupernodes!
 using ..SpkUtilities: __extend
+using ..SpkLDLtFactor: ldltfactor! as _ldltfactor!
+using ..SpkLDLtFactor: _ldltsolve!
 
 mutable struct _SparseSpdBase{IT, FT}
     order::Ordering
@@ -267,7 +269,7 @@ function _inmatrix!(s::_SparseSpdBase{IT, FT}, p::Problem{IT, FT}) where {IT, FT
         return false
     end
 
-    s.lnz[1:s.xlnz(s.n + 1) - 1] .= zero(FT)
+    s.lnz[1:s.xlnz[s.n + 1] - 1] .= zero(FT)
 
 
     for i  in 1: p.ncols           #   Only the lower triangle of p is used.

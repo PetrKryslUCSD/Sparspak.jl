@@ -19,6 +19,7 @@ using SparseArrays
 
 
 mutable struct SparseSpdSolver{IT, FT}
+    p::Union{Problem{IT, FT},SparseMatrixCSC{FT,IT}}
     slvr::_SparseSpdBase{IT, FT}
     n::IT
     ma::IT
@@ -50,7 +51,7 @@ function SparseSpdSolver(p::Problem)
     _trisolvedone = false
     _refinedone = false
     _condestdone = false
-    return SparseSpdSolver(slvr, n, ma, na, mc, nc, _inmatrixdone, _orderdone, _symbolicdone, _factordone, _trisolvedone, _refinedone, _condestdone)
+    return SparseSpdSolver(p, slvr, n, ma, na, mc, nc, _inmatrixdone, _orderdone, _symbolicdone, _factordone, _trisolvedone, _refinedone, _condestdone)
 end
 
 """
@@ -210,7 +211,7 @@ function solve!(s::SparseSpdSolver{IT}) where {IT}
     symbolicfactor!(s) || error("Symbolic Factorization.")
     inmatrix!(s) || error("Matrix input.")
     factor!(s) || error("Numerical Factorization.")
-    triangularsolve!(s) || error("Triangular Solve.")
+    #triangularsolve!(s) || error("Triangular Solve.")
     return true
 end
 

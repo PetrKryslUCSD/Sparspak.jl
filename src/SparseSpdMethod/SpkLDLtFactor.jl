@@ -1,4 +1,7 @@
 module SpkLDLtFactor
+
+using ..SpkSpdMMops: _ldindx!, _trsm!, _igathr!, _gemm!, _assmb!, _mmpyi!
+
 #
 #  LDLtFactor ..... BLOCK GENERAL SPARSE CHOL   ^^^^^^
 # *
@@ -52,19 +55,22 @@ module SpkLDLtFactor
 #
 # *
 # """
-function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
+function ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} , xlindx::Vector{IT} , lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}) where {FT, IT}
     @assert length(xsuper) == (nsuper + 1)
-    @assert length(lngth) == (nsuper)
     @assert length(snode) == n
     @assert length(xlindx) == (nsuper + 1)
-    @assert length(link) == (nsuper)
     @assert length(xlnz) == (n + 1)
+
+    ONE = one(FT)
+
+    link = zeros(IT, nsuper)
+    lngth = zeros(IT, nsuper)
 
     iflag = 0;   width = 0;   maxwidth = 0; tmpsiz = 0
 
 #       initialize empty row lists in link(*).
     for i  in  1: nsuper
-        link[i] = 0;   length[i] = xlindx[i + 1] - xlindx[i]
+        link[i] = 0;   lngth[i] = xlindx[i + 1] - xlindx[i]
         width = xsuper[i + 1] - xsuper[i]
         need = width * (xlnz[xsuper[i] + 1] - xlnz[xsuper[i]])
         if (need > tmpsiz) tmpsiz = need; end
@@ -73,9 +79,10 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
 
     map = zeros(IT, n)
     relind = zeros(IT, n)
-    diag = zeros(IT, nmaxwidth)
+    diag = zeros(FT, maxwidth)
     temp = zeros(FT, tmpsiz)
     temp2 = zeros(FT, maxwidth * maxwidth)
+
 
 #      for each supernode jsup ...
        for jj  in  1: nsuper
@@ -133,7 +140,7 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
 #               dense cmod(jsup, ksup).
 #               jsup and ksup have identical structure.
                 _matrixdiagmm!(view(lnz, klpnt:length(lnz)), nj, nk, ksuplen, diag, temp2)
-                _gemm!('n', 't', jlen, nj, nk, - ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, nj, one, view(lnz, jlpnt:length(lnz)), jlen)
+                _gemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen)
                 nups = nj
                 if  (klen > nj)
                     nxt = lindx[jxpnt + nj]
@@ -153,7 +160,7 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
                 if (nk == 1)
 #                  updating target supernode by a trivial
 #                  supernode (with one column).
-                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(lnz, klpnt:length(lnz)), xlnz, lnz, map, view(lnz, xlnz[fk]:length(lnz)))
+                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(lnz, klpnt:length(lnz)), xlnz, lnz, map, lnz[xlnz[fk]])
 
                 else
 #                  kfirst ...  first index of active portion of
@@ -183,7 +190,7 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
                             iflag = - 2
                         end
 #                     gather indices of ksup relative to jsup.
-                        __igathr!(klen, lindx(kxpnt), map, relind)
+                        _igathr!(klen, view(lindx, kxpnt:length(lindx)), map, relind)
                         width = nups
                         _matrixdiagmm!(view(lnz, klpnt:length(lnz)), width, nk, ksuplen, diag, temp2)
 
@@ -202,9 +209,9 @@ function ldltfactor!(n, nsuper, xsuper, snode , xlindx , lindx, xlnz, lnz)
                 nxtsup = snode[nxt]
                 link[ksup] = link[nxtsup]
                 link[nxtsup] = ksup
-                length[ksup] = klen - nups
+                lngth[ksup] = klen - nups
             else
-                length[ksup] = 0
+                lngth[ksup] = 0
             end
         end
 #         Apply partial LDLt to the supernode
@@ -308,7 +315,7 @@ function _matrixdiagmm!(lnz, klen, nk, ksuplen, diag, temp)
 end
 
 
-function _loaddiag!(lnz, ksuplen, nk, diag)
+function _loaddiag!(lnz::AbstractVector{FT}, ksuplen::IT, nk::IT, diag::AbstractVector{FT}) where {FT, IT}
     # real(double) :: lnz(ksuplen,nk), diag(*)
     for j in 1:nk
         diag[j] = lnz[_twod_access(ksuplen, j, j)]
@@ -327,7 +334,9 @@ end
 # !        nj     - number of column in this supernode
 # !        lda    - the number of rows in the supernode
 # !
-function _pchole!(lnz, nj, lda)
+function _pchole!(lnz::AbstractVector{FT}, nj, lda) where {FT}
+    ONE = one(FT)
+
 # real(double) :: lnz(lda, *) the 2d access needs to be faked
     for colnum  in  1: nj
 #       factor the diagonal block.
