@@ -331,7 +331,7 @@ function _factor!(s::_SparseSpdBase{IT, FT}) where {IT, FT}
     return true
 end
 
-function solve!(s::_SparseSpdBase{IT, FT}, solution::AbstractVector{FT}) where {IT, FT}
+function _triangularsolve!(s::_SparseSpdBase{IT, FT}, solution::AbstractVector{FT}) where {IT, FT}
 
 # This routine calls the lower - level routine LDLtSolve which
 # solves L D L^T x = rhs, given L, D and rhs. The solution is placed in
@@ -345,6 +345,7 @@ function solve!(s::_SparseSpdBase{IT, FT}, solution::AbstractVector{FT}) where {
         return false
     end
 
+    rhs = deepcopy(solution)
     rhs .= solution[s.order.rperm]
 
     _ldltsolve!(s.nsuper, s.xsuper, s.xlindx, s.lindx, s.xlnz, s.lnz, rhs)
