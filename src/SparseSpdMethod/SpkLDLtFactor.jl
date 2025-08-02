@@ -160,6 +160,7 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
                 if (nk == 1)
 #                  updating target supernode by a trivial
 #                  supernode (with one column).
+                    @show lnz
                     _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(lnz, klpnt:length(lnz)), xlnz, lnz, map, lnz[xlnz[fk]])
 
                 else
