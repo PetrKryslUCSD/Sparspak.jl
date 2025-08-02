@@ -79,7 +79,7 @@ using ..SpkMmd: mmd!
 using ..SpkProblem: Problem
 using ..SpkSymfct: _findcolumncounts!, _symbolicfact!, _findsupernodes!
 using ..SpkUtilities: __extend
-using ..SpkLDLtFactor: _ldltfactor!
+using ..SpkLDLtFactor: _ldltfactor!, _ldltsolve!
 
 mutable struct _SparseSpdBase{IT, FT}
     order::Ordering
