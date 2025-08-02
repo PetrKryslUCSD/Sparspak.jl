@@ -84,7 +84,7 @@ _test()
 end # module
 
 
-module mspdsprs003
+module mspdsprs004
 using Test
 using LinearAlgebra
 using SparseArrays
@@ -106,7 +106,7 @@ function _test()
     symbolicfactor!(s)
     inmatrix!(s)
     solve!(s)
-    @show p
+    
     A = Float64.(outsparse(p)) # no generic method for sparse...
     x = A \ p.rhs
     @test norm(p.x - x) / norm(x) < 1.0e-6

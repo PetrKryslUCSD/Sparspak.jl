@@ -13,7 +13,7 @@ module SpkSparseSpdSolver
 
 using ..SpkProblem: Problem
 using ..SpkSparseSpdBase: _SparseSpdBase
-import ..SpkSparseBase: _triangularsolve!
+import ..SpkSparseSpdBase: _triangularsolve!
 import ..SpkSparseSpdBase: _findorder!, _symbolicfactor!, _inmatrix!, _factor!
 using SparseArrays
 
@@ -211,7 +211,7 @@ function solve!(s::SparseSpdSolver{IT}) where {IT}
     symbolicfactor!(s) || error("Symbolic Factorization.")
     inmatrix!(s) || error("Matrix input.")
     factor!(s) || error("Numerical Factorization.")
-    #triangularsolve!(s) || error("Triangular Solve.")
+    triangularsolve!(s) || error("Triangular Solve.")
     return true
 end
 
