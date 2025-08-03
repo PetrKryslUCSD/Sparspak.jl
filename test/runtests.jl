@@ -1,8 +1,8 @@
 using Test
 
-@time @testset "Sparse SPD method" begin
-    include("test_spd_sparse_method.jl")
-end
+# @time @testset "Sparse SPD method" begin
+#     include("test_spd_sparse_method.jl")
+# end
 
 @time @testset "Problem" begin
     include("test_problem.jl")

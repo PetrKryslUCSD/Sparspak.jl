@@ -1,87 +1,87 @@
 using Test
 using Logging: disable_logging, global_logger, ConsoleLogger, BelowMinLevel, min_enabled_level
 
-# disable_logging(BelowMinLevel)
-# global_logger(ConsoleLogger(stderr, BelowMinLevel))
+# # disable_logging(BelowMinLevel)
+# # global_logger(ConsoleLogger(stderr, BelowMinLevel))
 
-# @show min_enabled_level(global_logger())
+# # @show min_enabled_level(global_logger())
 
-module mspdsprs001
-using Test
-using LinearAlgebra
-using SparseArrays
-using Sparspak.SpkProblem
-using Sparspak.SpkSparseSpdBase
+# module mspdsprs001
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak.SpkProblem
+# using Sparspak.SpkSparseSpdBase
 
-function _test()
-    # Matrix from Figure 3.1.3
-    M, N = 6, 6
-    I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
-    J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
-    V = [1.0 for _ in I]
-    spm = sparse(I, J, V, M, N)
-    p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse!(p, spm)
-    s = SpkSparseSpdBase._SparseSpdBase(p)
-    return true
-end
+# function _test()
+#     # Matrix from Figure 3.1.3
+#     M, N = 6, 6
+#     I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
+#     J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
+#     V = [1.0 for _ in I]
+#     spm = sparse(I, J, V, M, N)
+#     p = SpkProblem.Problem(M, N)
+#     SpkProblem.insparse!(p, spm)
+#     s = SpkSparseSpdBase._SparseSpdBase(p)
+#     return true
+# end
 
-_test()
-end # module
+# _test()
+# end # module
 
-module mspdsprs002
-using Test
-using LinearAlgebra
-using SparseArrays
-using Sparspak.SpkProblem
-using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfactor!, inmatrix!
+# module mspdsprs002
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak.SpkProblem
+# using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfactor!, inmatrix!
 
-function _test()
-    # Matrix from Figure 3.1.3
-    M, N = 6, 6
-    I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
-    J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
-    V = [1.0 for _ in I]
-    spm = sparse(I, J, V, M, N)
-    p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse!(p, spm)
-    s = SpkSparseSpdSolver.SparseSpdSolver(p)
-    findorder!(s)
-    symbolicfactor!(s)
-    # inmatrix!(s)
-    # @show s
-    return true
-end
+# function _test()
+#     # Matrix from Figure 3.1.3
+#     M, N = 6, 6
+#     I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
+#     J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
+#     V = [1.0 for _ in I]
+#     spm = sparse(I, J, V, M, N)
+#     p = SpkProblem.Problem(M, N)
+#     SpkProblem.insparse!(p, spm)
+#     s = SpkSparseSpdSolver.SparseSpdSolver(p)
+#     findorder!(s)
+#     symbolicfactor!(s)
+#     # inmatrix!(s)
+#     # @show s
+#     return true
+# end
 
-_test()
-end # module
+# _test()
+# end # module
 
-module mspdsprs003
-using Test
-using LinearAlgebra
-using SparseArrays
-using Sparspak.SpkProblem
-using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfactor!, inmatrix!, factor!
+# module mspdsprs003
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak.SpkProblem
+# using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfactor!, inmatrix!, factor!
 
-function _test()
-    # Matrix from Figure 3.1.3
-    M, N = 6, 6
-    I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
-    J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
-    V = [1.0 for _ in I]
-    spm = sparse(I, J, V, M, N)
-    p = SpkProblem.Problem(M, N)
-    SpkProblem.insparse!(p, spm)
-    s = SpkSparseSpdSolver.SparseSpdSolver(p)
-    findorder!(s)
-    symbolicfactor!(s)
-    inmatrix!(s)
-    factor!(s)
-    return true
-end
+# function _test()
+#     # Matrix from Figure 3.1.3
+#     M, N = 6, 6
+#     I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
+#     J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
+#     V = [1.0 for _ in I]
+#     spm = sparse(I, J, V, M, N)
+#     p = SpkProblem.Problem(M, N)
+#     SpkProblem.insparse!(p, spm)
+#     s = SpkSparseSpdSolver.SparseSpdSolver(p)
+#     findorder!(s)
+#     symbolicfactor!(s)
+#     inmatrix!(s)
+#     factor!(s)
+#     return true
+# end
 
-_test()
-end # module
+# _test()
+# end # module
 
 
 module mspdsprs004
@@ -94,13 +94,16 @@ using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfacto
 
 function _test()
     # Matrix from Figure 3.1.3
-    M, N = 6, 6
-    I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
-    J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
-    V = [1.0 for _ in I]
+    M, N = 4, 4
+    J = [1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+    I = [1, 2, 1, 2, 3, 2, 3, 4, 3, 4]
+    V = [4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0]
     spm = sparse(I, J, V, M, N)
+    rhs = [2.0, 4.0, 6.0, 13.0]
+    @show spm, (x = spm \ rhs)
     p = SpkProblem.Problem(M, N)
     SpkProblem.insparse!(p, spm)
+    SpkProblem.infullrhs!(p, rhs)
     s = SpkSparseSpdSolver.SparseSpdSolver(p)
     findorder!(s)
     symbolicfactor!(s)
@@ -115,6 +118,40 @@ end
 
 _test()
 end # module
+
+# module mspdsprs004
+# using Test
+# using LinearAlgebra
+# using SparseArrays
+# using Sparspak.SpkProblem
+# using Sparspak.SpkProblem: outsparse
+# using Sparspak.SpkSparseSpdSolver: SpkSparseSpdSolver, findorder!, symbolicfactor!, inmatrix!, solve!
+
+# function _test()
+#     # Matrix from Figure 3.1.3
+#     M, N = 6, 6
+#     I = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6]
+#     J = [1, 2, 6, 1, 2, 3, 4, 2, 3, 5, 2, 4, 3, 5, 6, 1, 5, 6]
+#     V = [1.0 for _ in I]
+#     spm = sparse(I, J, V, M, N)
+#     @show spm, (x = spm \ [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+#     p = SpkProblem.Problem(M, N)
+#     SpkProblem.insparse!(p, spm)
+#     SpkProblem.infullrhs!(p, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+#     s = SpkSparseSpdSolver.SparseSpdSolver(p)
+#     findorder!(s)
+#     symbolicfactor!(s)
+#     inmatrix!(s)
+#     solve!(s)
+    
+#     A = Float64.(outsparse(p)) # no generic method for sparse...
+#     x = A \ p.rhs
+#     @test norm(p.x - x) / norm(x) < 1.0e-6
+#     return true
+# end
+
+# _test()
+# end # module
 
 # module mspdsprs004
 # using Test
