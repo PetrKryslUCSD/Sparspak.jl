@@ -55,13 +55,15 @@ using ..SpkSpdMMops: _ldindx!, _trsm!, _igathr!, _gemm!, _assmb!, _mmpyi!
 #
 # *
 # """
-function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} , xlindx::Vector{IT} , lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}) where {FT, IT}
+function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT}, 
+    xlindx::Vector{IT}, lindx::Vector{IT}, xlnz::Vector{IT}, lnz::Vector{FT}) where {FT, IT}
     @assert length(xsuper) == (nsuper + 1)
     @assert length(snode) == n
     @assert length(xlindx) == (nsuper + 1)
     @assert length(xlnz) == (n + 1)
 
     ONE = one(FT)
+    ZERO = zero(FT)
 
     link = zeros(IT, nsuper)
     lngth = zeros(IT, nsuper)
@@ -140,7 +142,8 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
 #               dense cmod(jsup, ksup).
 #               jsup and ksup have identical structure.
                 _matrixdiagmm!(view(lnz, klpnt:length(lnz)), nj, nk, ksuplen, diag, temp2)
-                _gemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, nj, ONE, view(lnz, jlpnt:length(lnz)), jlen)
+                _gemm!('n', 't', jlen, nj, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, nj, 
+                    ONE, view(lnz, jlpnt:length(lnz)), jlen)
                 nups = nj
                 if  (klen > nj)
                     nxt = lindx[jxpnt + nj]
@@ -150,7 +153,7 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
 #               determine the number of rows / columns
 #               to be updated.
                 nups = klen
-                for i  in  0: (klen - 1)
+                for i  in  0:1:(klen - 1)
                     nxt = lindx[kxpnt + i]
                     if  (nxt > lj)
                         nups = i
@@ -160,8 +163,9 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
                 if (nk == 1)
 #                  updating target supernode by a trivial
 #                  supernode (with one column).
-                    @show lnz
-                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), view(lnz, klpnt:length(lnz)), xlnz, lnz, map, lnz[xlnz[fk]])
+                    _mmpyi!(klen, nups, view(lindx, kxpnt:length(lindx)), 
+                        view(lindx, kxpnt:length(lindx)), view(lnz, klpnt:length(lnz)), 
+                        view(lnz, klpnt:length(lnz)), xlnz, lnz, map, lnz[xlnz[fk]])
 
                 else
 #                  kfirst ...  first index of active portion of
@@ -181,7 +185,8 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
                         width = nups
                         _matrixdiagmm!(view(lnz, klpnt:length(lnz)), width, nk, ksuplen, diag, temp2)
 
-                        _gemm!('n', 't', klen, nups, nk, - ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, width, ONE, view(lnz, ilpnt:length(lnz)), jlen)
+                        _gemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen, 
+                            temp2, width, ONE, view(lnz, ilpnt:length(lnz)), jlen)
                     else
 #                     general sparse cmod(Jsup, Ksup).
 #                     compute cmod(Jsup, Ksup) update
@@ -189,16 +194,20 @@ function _ldltfactor!(n::IT, nsuper::IT, xsuper::Vector{IT}, snode::Vector{IT} ,
                         store = klen * nups
                         if  (store > tmpsiz)
                             iflag = - 2
+                            error("Insufficient storage: $store > $tmpsiz")
                         end
 #                     gather indices of ksup relative to jsup.
                         _igathr!(klen, view(lindx, kxpnt:length(lindx)), map, relind)
                         width = nups
-                        _matrixdiagmm!(view(lnz, klpnt:length(lnz)), width, nk, ksuplen, diag, temp2)
+                        _matrixdiagmm!(view(lnz, klpnt:length(lnz)), width, nk, ksuplen, 
+                            diag, temp2)
 
-                        _gemm!('n', 't', klen, nups, nk, - ONE, view(lnz, klpnt:length(lnz)), ksuplen, temp2, width, 0.0, temp, klen)
+                        _gemm!('n', 't', klen, nups, nk, -ONE, view(lnz, klpnt:length(lnz)), ksuplen,
+                             temp2, width, ZERO, temp, klen)
 #                     incorporate the cmod(Jsup, Ksup) block
 #                     update into the appropriate columns of l.
-                        _assmb!(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), view(xlnz, fj:length(xlnz)), lnz, jlen)
+                        _assmb!(klen, nups, temp, view(relind, 1:length(relind)), view(relind, 1:length(relind)), 
+                            view(xlnz, fj:length(xlnz)), lnz, jlen)
                     end
                 end
             end
@@ -369,5 +378,3 @@ function _pchole!(lnz::AbstractVector{FT}, nj, lda) where {FT}
 end
 #
 end # module spkldltfactor
-
-
