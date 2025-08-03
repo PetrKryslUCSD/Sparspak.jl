@@ -266,15 +266,41 @@ function gtrsm!(side,uplo,transA,diag, m,n,alpha,a::AbstractVector{T}, lda, b::A
     if m==0 || n==0
         return
     end
+    
+    lside = (side=='l')
+    nounit = (diag=='n')
+    upper = (uplo=='u')
+    
+    # dimsA = (lda, lside ? m : n)
+    # A=StridedReshape(view(a, 1:prod(dimsA)), lda)
+    # dimsB = (ldb, n)
+    # B=StridedReshape(view(b, 1:prod(dimsB)), ldb)
+
     A=StridedReshape(a,lda)
     B=StridedReshape(b,ldb)
 
     oneT=one(T)
     zeroT=zero(T)
+
     
-    lside = (side=='l')
-    nounit = (diag=='n')
-    upper = (uplo=='u')
+    # println("A[1:$(dimsA[1]), 1:$(dimsA[2])] = ")
+    # for r in 1:(dimsA[1])
+    #     for c in 1:(dimsA[2])
+    #         print(A[r,c], ", ")  
+    #     end
+    #     println()
+    # end
+
+    # println("B[1:$(dimsB[1]), 1:$(dimsB[2])] = ")
+    # for r in 1:(dimsB[1])
+    #     for c in 1:(dimsB[2])
+    #         print(B[r,c], ", ")  
+    #     end
+    #     println()
+    # end
+
+    oneT=one(T)
+    zeroT=zero(T)
     
     # skip input check
     
