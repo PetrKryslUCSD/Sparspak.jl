@@ -177,7 +177,7 @@ function SparseSolver(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {FT,IT}
     slvr = _SparseBase(m)
     _orderdone = false
     _symbolicdone = false
-    _inmatrixdone = false
+    _inmatrixdone = true
     _factordone = false
     _trisolvedone = false
     _refinedone = false
