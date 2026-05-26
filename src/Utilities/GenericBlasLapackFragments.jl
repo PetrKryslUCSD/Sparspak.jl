@@ -29,8 +29,15 @@ using LinearAlgebra
 # The @inbounds macros in the accessor methods are the only ones in this
 # package (besides of glawsp)
 
-struct StridedReshape{Tv,Ti}
-    v::Union{Vector{Tv},SubArray{Tv, 1, Vector{Tv}, Tuple{UnitRange{Ti}}, true}}
+# Previously `StridedReshape{Tv,Ti}` constrained the underlying buffer to be a
+# `Vector{Tv}` or a `SubArray` over a `UnitRange{Ti}`, which forced the index
+# integer type of the slice to match the `lda` integer type. That fails when
+# `lda` is `Int32` (derived from a `SparseMatrixCSC{Float64,Int32}`) but the
+# slice was materialized with `Int` ranges. The buffer and the `lda` integer
+# type are now independent type parameters so the wrapper accepts mixed-index
+# views without copying.
+struct StridedReshape{Tv,Ti<:Integer,V<:AbstractVector{Tv}}
+    v::V
     lda::Ti
 end
 

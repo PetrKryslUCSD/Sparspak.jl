@@ -49,7 +49,6 @@
 module SpkProblem
 
 using SparseArrays
-using LinearAlgebra.BLAS: BlasInt
 using ..SpkUtilities: _BIGGY, __extend
 using ..SpkGrid: Grid
 
@@ -102,7 +101,7 @@ Similarly, the user can improve efficiency by providing estimates for the number
 of rows and columns in the matrix via the optional keyword parameters `nrows`
 and `ncols`.
 """
-mutable struct Problem{IT<:BlasInt, FT}
+mutable struct Problem{IT<:Integer, FT}
     info::String
     # `lenhead` is the current length of the arrays `head` and `x`.
     lenhead::IT
@@ -143,7 +142,7 @@ end
 
 Construct a problem.
 """
-function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT<:BlasInt, FT}
+function Problem(nrows::IT, ncols::IT, nnz::IT=2500, z::FT=0.0, info = "") where {IT<:Integer, FT}
     lenlink = nnz
     lenhead = ncols
     lenrhs = nrows
@@ -174,7 +173,7 @@ Input a matrix coefficient.
 
 The value is *added* to the existing contents.
 """
-function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:BlasInt, FT}
+function inaij!(p::Problem{IT,FT}, rnum, cnum, aij=zero(FT)) where {IT<:Integer, FT}
     if (rnum < 1 || cnum < 1)
         @warn "$(@__FILE__): invalid matrix subscripts $(rnum), $(cnum): input ignored"
         return false
@@ -255,7 +254,7 @@ end
 
 Input an entry of the right-hand side vector.
 """
-function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT<:BlasInt, FT}
+function inbi!(p::Problem{IT, FT}, rnum::IT, bi::FT) where {IT<:Integer, FT}
     if (rnum < 1)
         error("Invalid rhs subscript $(rnum).")
         return false
@@ -277,7 +276,7 @@ Input sparse matrix.
 
 Build a problem from a sparse matrix.
 """
-function insparse!(p::Problem{IT,FT}, spm) where {IT<:BlasInt, FT}
+function insparse!(p::Problem{IT,FT}, spm) where {IT<:Integer, FT}
     I, J, V = findnz(spm)
     return insparse!(p, I, J, V)
 end
@@ -288,7 +287,7 @@ end
 
 Build a problem from a sparse matrix in the COO format.
 """
-function insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT<:BlasInt, FT}
+function insparse!(p::Problem{IT,FT}, I::Vector{IT}, J::Vector{IT}, V::Vector{FT}) where {IT<:Integer, FT}
     for i in eachindex(I)
         if ! inaij!(p, I[i], J[i], V[i])
             return false 
@@ -302,7 +301,7 @@ end
 
 Output the sparse matrix.
 """
-function outsparse(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+function outsparse(p::Problem{IT,FT})  where {IT<:Integer, FT}
     if (p.nrows == 0 && p.ncols == 0) 
         return spzeros(p.nrows, p.ncols)
     end
@@ -337,7 +336,7 @@ Input:
 Output:
 - `p` - the Problem object to be filled
 """
-function makegridproblem(g::Grid{IT}) where {IT<:BlasInt}
+function makegridproblem(g::Grid{IT}) where {IT<:Integer}
     M1 = -1.0; FOUR = 4.0
     n = g.h * g.k
     p = Problem(n, n)
@@ -373,7 +372,7 @@ Input:
 Output:
 - `p` - the Problem object to be filled
 """
-function makegridproblem(h::IT, k::IT) where {IT<:BlasInt}
+function makegridproblem(h::IT, k::IT) where {IT<:Integer}
     g = Grid(h, k)
     return makegridproblem(g)
 end
@@ -509,7 +508,7 @@ Input:
 Updated:
 - `p` - the problem in which rhs is to be inserted.
 """
-function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT<:BlasInt, FT}
+function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT<:Integer, FT}
     for i in p.nrows:-1:1
         inbi!(p, i, FT(rhs[i]))
     end
@@ -517,21 +516,21 @@ function infullrhs!(p::Problem{IT,FT}, rhs)  where {IT<:BlasInt, FT}
 end
 
 """
-    zerorhs!(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+    zerorhs!(p::Problem{IT,FT})  where {IT<:Integer, FT}
 
 Zero out the right hand side vector.
 """
-function zerorhs!(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+function zerorhs!(p::Problem{IT,FT})  where {IT<:Integer, FT}
     p.rhs[:] .= zero(FT)
     return p
 end
 
 """
-    isstructuresymmetric(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+    isstructuresymmetric(p::Problem{IT,FT})  where {IT<:Integer, FT}
 
 Is the problem structurally symmetric?
 """
-function isstructuresymmetric(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
+function isstructuresymmetric(p::Problem{IT,FT})  where {IT<:Integer, FT}
     for cnum  in  1:p.ncols
         ptr = p.head[cnum]
         while ( ptr > 0 )
@@ -545,12 +544,12 @@ function isstructuresymmetric(p::Problem{IT,FT})  where {IT<:BlasInt, FT}
 end
 
 """
-    ijpresent(p::Problem{IT,FT} rnum, cnum) where {IT<:BlasInt, FT}
+    ijpresent(p::Problem{IT,FT} rnum, cnum) where {IT<:Integer, FT}
 
 Check to see if the entry (rnum, cnum) is present.
 If it is, the routine returns .true., otherwise .false. is returned.
 """
-function ijpresent(p::Problem{IT,FT}, rnum, cnum) where {IT<:BlasInt, FT}
+function ijpresent(p::Problem{IT,FT}, rnum, cnum) where {IT<:Integer, FT}
     ptr = p.head[cnum]
     while ( ptr > 0 )
         if ( p.rowSubs[ptr] > rnum ) 

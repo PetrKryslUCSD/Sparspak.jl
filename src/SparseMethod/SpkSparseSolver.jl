@@ -45,11 +45,11 @@ Create a sparse solver from a problem.
 
 The solver pulls all it needs from the problem.
 """
-function SparseSolver(p::Problem)
+function SparseSolver(p::Problem{IT,FT}) where {IT,FT}
     ma = p.nrows
     na = p.ncols
-    mc = 0
-    nc = 0
+    mc = zero(IT)
+    nc = zero(IT)
     n = ma
     slvr = _SparseBase(p)
     _orderdone = false

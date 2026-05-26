@@ -130,7 +130,7 @@ end
 # an elimination tree and an ordering object; these are also
 #  initialized in this routine.
 function _SparseBase(p::Problem{IT,FT}) where {IT,FT}
-    maxblocksize = 30   # This can be set by the user
+    maxblocksize = convert(IT, 30)   # This can be set by the user
 
     tempsizeneed = zero(IT)
     n = p.nrows
@@ -140,14 +140,14 @@ function _SparseBase(p::Problem{IT,FT}) where {IT,FT}
 
     nsuper = zero(IT)
     if (n > zero(IT))
-        nsuper = 1
+        nsuper = one(IT)
     end
 
     factorops = zero(FT)
     solveops = zero(FT)
     realstore = zero(FT)
     integerstore = zero(FT)
-    errflag = 0
+    errflag = zero(IT)
 
     order = Ordering(n)   # ordering object for the solver
     g = Graph(p)
