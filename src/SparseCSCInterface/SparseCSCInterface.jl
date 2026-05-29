@@ -10,17 +10,17 @@ import ..SpkSparseBase: _inmatrix!
 
 
 function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT,IT}
-    nv = size(m,1)
-    nrows = size(m,2)
-    ncols = size(m,1)
+    nv = convert(IT, size(m, 1))
+    nrows = convert(IT, size(m, 2))
+    ncols = convert(IT, size(m, 1))
     colptr = SparseArrays.getcolptr(m)
     rowval = SparseArrays.getrowval(m)
 
 
     if (diagonal)
-        nedges = SparseArrays.nnz(m)
+        nedges = convert(IT, SparseArrays.nnz(m))
     else
-        dedges=0
+        dedges = zero(IT)
         for i in 1:ncols
             for iptr in colptr[i]:colptr[i+one(IT)]-one(IT)
                 if  rowval[iptr]==i
@@ -29,12 +29,12 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
                 end
             end
         end
-        nedges = SparseArrays.nnz(m) - dedges
+        nedges = convert(IT, SparseArrays.nnz(m)) - dedges
     end
-    
+
     #jf if diagonal == true, we possibly can just use colptr & rowval
     #jf and skip the loop
-   
+
     xadj = zeros(IT, nv + one(IT))
     adj = zeros(IT, nedges)
 
@@ -49,32 +49,32 @@ function Graph(m::SparseArrays.SparseMatrixCSC{FT,IT}, diagonal=false) where {FT
             end
         end
     end
-    
-    xadj[ncols+1] = k
-    
+
+    xadj[ncols+one(IT)] = k
+
     return Graph(nv, nedges, nrows, ncols, xadj, adj)
 end
 
 
 function _SparseBase(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {IT,FT}
-    maxblocksize = convert(IT,30)   # This can be set by the user
-    
+    maxblocksize = convert(IT, 30)   # This can be set by the user
+
     tempsizeneed = zero(IT)
-    n = size(m,2)
-    nnz = SparseArrays.nnz(m)
+    n = convert(IT, size(m, 2))
+    nnz = convert(IT, SparseArrays.nnz(m))
     nnzl = zero(IT)
     nsub = zero(IT)
 
     nsuper = zero(IT)
     if (n > zero(IT))
-        nsuper = 1
+        nsuper = one(IT)
     end
 
     factorops = zero(FT)
     solveops = zero(FT)
     realstore = zero(FT)
     integerstore = zero(FT)
-    errflag = 0
+    errflag = zero(IT)
 
     order = Ordering(n)   # ordering object for the solver
     g = Graph(m)
@@ -169,8 +169,8 @@ function _inmatrix!(s::_SparseBase{IT, FT}, m::SparseArrays.SparseMatrixCSC{FT,I
 end
 
 function SparseSolver(m::SparseArrays.SparseMatrixCSC{FT,IT}) where {FT,IT}
-    ma = size(m,2)
-    na = size(m,1)
+    ma = convert(IT, size(m, 2))
+    na = convert(IT, size(m, 1))
     mc = zero(IT)
     nc = zero(IT)
     n = ma

@@ -38,7 +38,7 @@ end
 
 # output parameters:
 # lnz - contains columns modified by the update matrix.
-function _assmb!(tlen::IT, nj::IT, temp::Vector{FT}, relcol::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, relind::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, xlnz::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, lnz::Vector{FT}, jlen::IT) where {IT, FT}
+function _assmb!(tlen::Integer, nj::Integer, temp::AbstractVector{FT}, relcol::AbstractVector{<:Integer}, relind::AbstractVector{<:Integer}, xlnz::AbstractVector{<:Integer}, lnz::AbstractVector{FT}, jlen::Integer) where {FT}
     for j in 1:nj
         lbot = xlnz[jlen - relcol[j] + 1] - 1
         @inbounds for k in 1:tlen
@@ -67,7 +67,7 @@ end
 #                  relative to the last index in the list.  more
 #                  precisely, it gives the distance of each index
 #                  from the last index in the list.
-function _ldindx!(jlen::IT, lindx::LT, indmap::Vector{IT}) where {IT, LT}
+function _ldindx!(jlen::Integer, lindx, indmap::AbstractVector{<:Integer})
     # indmap[lindx[1:jlen]] .= (jlen - 1):-1:0
     @assert length(lindx) >= jlen
     kk = (jlen - 1)
@@ -91,7 +91,7 @@ end
 #        relind - list relative indices.
 #
 # *
-function _igathr!(klen::IT, lindx::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, indmap::Vector{IT}, relind::Vector{IT}) where {IT}
+function _igathr!(klen::Integer, lindx::AbstractVector{<:Integer}, indmap::AbstractVector{<:Integer}, relind::AbstractVector{<:Integer})
     # relind[1:klen] = indmap[lindx[1:klen]]
 
     @assert length(relind) >= klen
@@ -122,14 +122,14 @@ end
 
 # updated parameters -
 #     z       -   on output, z = z + xy.
-function _mmpyi!(m::IT, q::IT,
-    zindxr::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
-    zindxc::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}, 
-    x::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
-    y::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, 
-    iz::Vector{IT},
-    z::Vector{FT},
-    relind::Vector{IT}, diag = one(FT)) where {IT, FT}
+function _mmpyi!(m::Integer, q::Integer,
+    zindxr::AbstractVector{<:Integer},
+    zindxc::AbstractVector{<:Integer},
+    x::AbstractVector{FT},
+    y::AbstractVector{FT},
+    iz::AbstractVector{<:Integer},
+    z::AbstractVector{FT},
+    relind::AbstractVector{<:Integer}, diag = one(FT)) where {FT}
     @assert length(x) >= m
     @assert length(y) >= q
     for k in 1:q
@@ -165,7 +165,7 @@ end
 #    updated parameters -
 #        a - on output, a has its rows swapped according to
 #                    a[i, k] = a[ipvt[i], k] (i hope)
-function _luswap!(m::IT, n::IT, a::SubArray{FT, 1, Vector{FT}, Tuple{UnitRange{IT}}, true}, lda::IT, ipvt::SubArray{IT, 1, Vector{IT}, Tuple{UnitRange{IT}}, true}) where {IT, FT}
+function _luswap!(m::Integer, n::Integer, a::AbstractVector{FT}, lda::Integer, ipvt::AbstractVector{<:Integer}) where {FT}
     for k in 1:n
         i = ipvt[k]
         ks = (k - 1)*lda + 1
@@ -183,35 +183,40 @@ end
 # by generic ones. The methods  are wrappers around ggemm! etc functions
 # which call  corresponding implementations  from Julia  linear algebra.
 #
-function _gemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+# Scalar integer parameters are accepted as `Integer` (not `IT`) so the
+# pure-Julia path also works when arithmetic upstream has promoted some
+# of these scalars to a wider type than the index integer of the vectors.
+# This is important when `IT <: Integer` is narrower than `Int` (e.g.,
+# `Int32` index arrays + arithmetic with `Int` literals).
+function _gemm!(transA::AbstractChar, transB::AbstractChar, m::Integer, n::Integer, k::Integer,
                 alpha::FT,
-                A::AbstractVector{FT}, lda::IT,
-                B::AbstractVector{FT}, ldb::IT,
+                A::AbstractVector{FT}, lda::Integer,
+                B::AbstractVector{FT}, ldb::Integer,
                 beta::FT,
-                C::AbstractVector{FT}, ldc::IT) where {IT,FT}
+                C::AbstractVector{FT}, ldc::Integer) where {FT}
     ggemm!(transA,transB,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc)
 end
 
-function _gemv!(transA::AbstractChar, m::IT, n::IT,
+function _gemv!(transA::AbstractChar, m::Integer, n::Integer,
                 alpha::FT,
-                A::AbstractVector{FT}, lda::IT,
+                A::AbstractVector{FT}, lda::Integer,
                 X::AbstractVector{FT},
                 beta::FT,
-                Y::AbstractVector{FT}) where {IT,FT}
+                Y::AbstractVector{FT}) where {FT}
     ggemv!(transA,m,n,alpha,A,lda,X,beta,Y)
 end
 
-function _getrf!(m::IT, n::IT, A::AbstractVector{FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+function _getrf!(m::Integer, n::Integer, A::AbstractVector{FT}, lda::Integer, ipiv::AbstractVector{IT}) where {IT,FT}
     ggetrf!(m,n,A,lda,ipiv)
 end
 
-function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::FT,
-    A::AT, lda::IT,
-    B::BT, ldb::IT) where {IT,FT, AT, BT}
+function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::Integer, n::Integer, alpha::FT,
+    A::AT, lda::Integer,
+    B::BT, ldb::Integer) where {FT, AT, BT}
     gtrsm!(side,uplo,transa,diag, m,n,alpha,A, lda, B, ldb)
 end
 
-function _laswp!(a::AbstractVector{FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT,FT}
+function _laswp!(a::AbstractVector{FT}, lda::Integer, k1::Integer, k2::Integer, ipiv::AbstractVector{IT}) where {IT,FT}
     glaswp!(a,lda,k1,k2,ipiv)
 end
 
@@ -219,18 +224,24 @@ end
 # BLAS+LAPACK for standard floating point types
 #
 
+# BLAS-specialized variants. These require `BlasInt` for every integer scalar
+# and (for variants with an `ipiv`) `Vector{BlasInt}` for the pivoting array,
+# matching the C BLAS/LAPACK ABI. When the caller's index integer type is
+# narrower than `BlasInt` (e.g. `Int32` on a 64-bit system), dispatch falls
+# through to the generic `_gemm!` / `_getrf!` / … wrappers above, which call
+# the pure-Julia `ggemm!` / `ggetrf!` / … implementations.
 for (gemm, FT) in
         ((:dgemm_, :Float64),
          (:sgemm_, :Float32),
          (:zgemm_, :ComplexF64),
          (:cgemm_, :ComplexF32))
 @eval begin
-function _gemm!(transA::AbstractChar, transB::AbstractChar, m::IT, n::IT, k::IT,
+function _gemm!(transA::AbstractChar, transB::AbstractChar, m::BlasInt, n::BlasInt, k::BlasInt,
     alpha::$FT,
-    A::AbstractVector{$FT}, lda::IT,
-    B::AbstractVector{$FT}, ldb::IT,
+    A::AbstractVector{$FT}, lda::BlasInt,
+    B::AbstractVector{$FT}, ldb::BlasInt,
     beta::$FT,
-    C::AbstractVector{$FT}, ldc::IT) where {IT}
+    C::AbstractVector{$FT}, ldc::BlasInt)
     ccall((@blasfunc($gemm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
             Ref{BlasInt}, Ref{$FT}, Ptr{$FT}, Ref{BlasInt},
@@ -256,7 +267,7 @@ for (getrf, FT) in
          (:zgetrf_, :ComplexF64),
          (:cgetrf_, :ComplexF32))
 @eval begin
-function _getrf!(m::IT, n::IT, A::AbstractVector{$FT}, lda::IT, ipiv::AbstractVector{IT}) where {IT}
+function _getrf!(m::BlasInt, n::BlasInt, A::AbstractVector{$FT}, lda::BlasInt, ipiv::AbstractVector{BlasInt})
     info = Ref{BlasInt}()
     ccall((@blasfunc($getrf), libblas), Cvoid,
         (Ref{BlasInt}, Ref{BlasInt}, Ptr{$FT},
@@ -282,9 +293,9 @@ for (trsm, FT) in
          (:ztrsm_, :ComplexF64),
          (:ctrsm_, :ComplexF32))
 @eval begin
-    function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::IT, n::IT, alpha::$FT,
-                    A::AbstractVector{$FT}, lda::IT,
-                    B::AbstractVector{$FT}, ldb::IT) where {IT}
+    function _trsm!(side::AbstractChar, uplo::AbstractChar, transa::AbstractChar, diag::AbstractChar, m::BlasInt, n::BlasInt, alpha::$FT,
+                    A::AbstractVector{$FT}, lda::BlasInt,
+                    B::AbstractVector{$FT}, ldb::BlasInt)
     ccall((@blasfunc($trsm), libblas), Cvoid,
         (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8},
             Ref{BlasInt}, Ref{BlasInt}, Ref{$FT}, Ptr{$FT},
@@ -312,7 +323,7 @@ for (laswp, FT) in
          (:zlaswp_, :ComplexF64),
          (:claswp_, :ComplexF32))
 @eval begin
-function _laswp!(a::AbstractVector{$FT}, lda::IT, k1::IT, k2::IT, ipiv::AbstractVector{IT}) where {IT}
+function _laswp!(a::AbstractVector{$FT}, lda::BlasInt, k1::BlasInt, k2::BlasInt, ipiv::AbstractVector{BlasInt})
     # dlaswp(1, rhs(fj), nj, 1, nj, ipiv(fj), 1)
     ccall((@blasfunc($laswp), libblas), Cvoid,
         (Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt}, Ref{BlasInt}, Ref{BlasInt}, Ptr{BlasInt}, Ref{BlasInt}),
@@ -335,15 +346,15 @@ for (gemv, FT) in
          (:zgemv_, :ComplexF64),
          (:cgemv_, :ComplexF32))
 @eval begin
-    function _gemv!(trans::AbstractChar, m::IT, n::IT, alpha::$FT,
-    A::AbstractVector{$FT}, lda::IT,
+    function _gemv!(trans::AbstractChar, m::BlasInt, n::BlasInt, alpha::$FT,
+    A::AbstractVector{$FT}, lda::BlasInt,
     X::AbstractVector{$FT},
-    beta::$FT, Y::AbstractVector{$FT}) where {IT}
+    beta::$FT, Y::AbstractVector{$FT})
     ccall((@blasfunc($gemv), libblas), Cvoid,
         (Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt}, Ref{$FT},
             Ptr{$FT}, Ref{BlasInt}, Ptr{$FT}, Ref{BlasInt},
             Ref{$FT}, Ptr{$FT}, Ref{BlasInt}, Clong),
-        trans, m, n, alpha, A, lda, X, 1, beta, Y, 1, 
+        trans, m, n, alpha, A, lda, X, 1, beta, Y, 1,
         1)
     Y
 end

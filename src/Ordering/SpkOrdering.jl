@@ -106,8 +106,8 @@ Input Parameter:
 """
 function Ordering(nrows::IT, ncols::IT) where {IT}
     #       The default is to set nRowBlks and nColBlks to 0.
-    nrowblks = 0
-    ncolblks = 0
+    nrowblks = zero(IT)
+    ncolblks = zero(IT)
 
     rperm = zeros(IT, nrows)
     rinvp = zeros(IT, nrows)

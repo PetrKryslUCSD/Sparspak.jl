@@ -201,3 +201,53 @@ end
 _test_asymmetric(Float64)
 
 end
+
+
+# Int32-indexed CSC matrices.  Sparspak historically required the index integer
+# type to equal `BlasInt` (Int64) so a `SparseMatrixCSC{Float64,Int32}` failed
+# in the constructors of `Graph` / `_SparseBase` / `Ordering` / `SparseSolver`
+# (mismatched scalar/array element types) and in the LU factorization path
+# (BLAS-typed scalars expected throughout). Exercise both index types here so
+# the matrix builds, factors, and solves without copying to Int64.
+module csc_int32_solver
+using Test
+using LinearAlgebra
+using SparseArrays
+using Sparspak
+using Random
+
+function _test(T, IT, n=8)
+    Random.seed!(42)
+    spm_default = sprand(T, n, n, 0.4)
+    spm_default = spm_default + n * LinearAlgebra.I
+    spm = SparseMatrixCSC{T, IT}(spm_default)
+    @test typeof(spm) === SparseMatrixCSC{T, IT}
+
+    # Solver constructed without factorization (the path LinearSolve.jl uses
+    # during init_cacheval — this must not throw even if a downstream BLAS
+    # call would not yet support `IT`).
+    lu_nofact = sparspaklu(spm; factorize=false)
+    @test lu_nofact isa Sparspak.SpkSparseSolver.SparseSolver{IT, T}
+
+    # Full factor-and-solve.
+    exsol = ones(T, n)
+    rhs = spm * exsol
+    lu = sparspaklu(spm)
+    sol = lu \ rhs
+    @test sol ≈ exsol
+
+    # Update values only (same pattern) and re-solve.
+    spm.nzval .-= T(0.1)
+    rhs = spm * exsol
+    sparspaklu!(lu, spm)
+    sol = lu \ rhs
+    @test sol ≈ exsol
+end
+
+for IT in (Int32, Int64)
+    for T in (Float64, Float32, ComplexF64, ComplexF32)
+        _test(T, IT)
+    end
+end
+
+end
